@@ -93,9 +93,9 @@ function DualRange({ min, max, step, low, high, onChange }: {
     <div className="relative h-11" dir="ltr">
       <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-white/15" />
       <div className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full bg-brand" style={{ left: `${pct(low)}%`, right: `${100 - pct(high)}%` }} />
-      <input type="range" aria-label="מחיר מינימלי" min={min} max={max} step={step} value={low} className={thumb}
+      <input type="range" aria-label={he.a11y.priceMin} min={min} max={max} step={step} value={low} className={thumb}
         onChange={(e) => onChange(Math.min(Number(e.target.value), high - step), high)} />
-      <input type="range" aria-label="מחיר מקסימלי" min={min} max={max} step={step} value={high} className={thumb}
+      <input type="range" aria-label={he.a11y.priceMax} min={min} max={max} step={step} value={high} className={thumb}
         onChange={(e) => onChange(low, Math.max(Number(e.target.value), low + step))} />
     </div>
   );

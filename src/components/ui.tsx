@@ -93,13 +93,13 @@ export function Stepper({ value, min, max, onChange, dark, size = "md", label }:
   );
   return (
     <div className="flex items-center gap-3" role="group" aria-label={label}>
-      <button type="button" className={btn} aria-label="פחות" disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
+      <button type="button" className={btn} aria-label={he.a11y.less} disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
         <Minus className="size-5" />
       </button>
       <span className={clsx("ltr min-w-10 text-center font-extrabold tabular-nums", size === "lg" ? "text-3xl" : "text-2xl")} aria-live="polite">
         {value}
       </span>
-      <button type="button" className={btn} aria-label="יותר" disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>
+      <button type="button" className={btn} aria-label={he.a11y.more} disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>
         <Plus className="size-5" />
       </button>
     </div>

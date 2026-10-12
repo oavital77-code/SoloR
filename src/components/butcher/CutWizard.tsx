@@ -161,7 +161,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
           {isDraft ? <SaveIndicator state={saveState} onRetry={save} />
             : dirty ? <span className="text-sm font-semibold text-amber-700">{he.wizard.unsavedChanges}</span> : null}
         </div>
-        <ol className="mt-3 grid grid-cols-5 gap-1.5" aria-label="שלבים">
+        <ol className="mt-3 grid grid-cols-5 gap-1.5" aria-label={he.a11y.steps}>
           {he.wizard.steps.map((label, i) => (
             <li key={label}>
               <button type="button" onClick={() => goStep(i + 1)} className="flex w-full flex-col items-center gap-1" aria-current={step === i + 1 ? "step" : undefined}>
@@ -460,7 +460,7 @@ function StepWeight({ form, set, locked }: StepProps) {
             <div className="flex items-baseline justify-between">
               <h2 className="font-bold">{he.wizard.thickness}</h2>
               <span className="text-2xl font-extrabold">
-                {form.steak_thickness_cm ? <><Ltr>{Number(form.steak_thickness_cm)}</Ltr> <span className="text-sm text-neutral-500">ס״מ</span></> : he.app.none}
+                {form.steak_thickness_cm ? <><Ltr>{Number(form.steak_thickness_cm)}</Ltr> <span className="text-sm text-neutral-500">{he.units.cm}</span></> : he.app.none}
               </span>
             </div>
             <input

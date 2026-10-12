@@ -185,6 +185,24 @@ export const he = {
     ordersCount: (n: number) => (n === 0 ? "אין הזמנות" : n === 1 ? "הזמנה אחת" : `${n} הזמנות`),
     logout: "התנתק",
     untitled: "נתח ללא פרטים",
+    newOrderToast: (n: number) => `🔔 הזמנה חדשה #${n}`,
+    titleWithNew: (n: number) => `(${n}) SoloR — הזמנות חדשות`,
+    title: "SoloR — קצב",
+  },
+
+  units: {
+    kg: (n: string) => `${n} ק״ג`,
+    g: (n: number | string) => `${n} גר׳`,
+    approxG: (n: number) => `~${n} גר׳`,
+    cm: "ס״מ",
+  },
+
+  a11y: {
+    less: "פחות",
+    more: "יותר",
+    priceMin: "מחיר מינימלי",
+    priceMax: "מחיר מקסימלי",
+    steps: "שלבים",
   },
 
   wizard: {

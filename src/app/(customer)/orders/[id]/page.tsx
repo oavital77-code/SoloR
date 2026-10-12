@@ -120,7 +120,7 @@ export default function MyOrderPage({ params }: { params: Promise<{ id: string }
         )}
 
         {order.status === "new" && (
-          <Button variant="dark" className="text-red-300" onClick={() => setConfirm(true)}>{he.orders.cancel}</Button>
+          <Button variant="dark" className="text-red-300!" onClick={() => setConfirm(true)}>{he.orders.cancel}</Button>
         )}
       </div>
 

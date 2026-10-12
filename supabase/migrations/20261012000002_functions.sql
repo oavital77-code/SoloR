@@ -16,12 +16,12 @@ $$;
 
 -- price helpers — identical to src/lib/pricing.ts (integer rounding, half up)
 create or replace function price_for_weight(p_weight_g int, p_price_per_kg_agorot int) returns int
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select ((p_weight_g::bigint * p_price_per_kg_agorot + 500) / 1000)::int
 $$;
 
 create or replace function max_steaks(p_weight_g int, p_steak_weight_g int) returns int
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select case when p_weight_g is null or p_steak_weight_g is null or p_steak_weight_g = 0 then 0
               else p_weight_g / p_steak_weight_g end
 $$;
@@ -62,7 +62,7 @@ end $$;
 
 -- computes the stock columns of a cut from its content (used by publish and by edits of a live cut)
 create or replace function compute_stock(c cuts, out steaks_total int, out whole_available boolean)
-language plpgsql immutable as $$
+language plpgsql immutable set search_path = public as $$
 declare
   mx int;
 begin

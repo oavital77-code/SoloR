@@ -114,7 +114,7 @@ export function ButcherShell({ children }: { children: React.ReactNode }) {
           if (payload.eventType === "INSERT") {
             const o = payload.new as Order;
             beep();
-            toast(`🔔 הזמנה חדשה #${o.order_number}`, {
+            toast(he.butcher.newOrderToast(o.order_number), {
               tone: "live", duration: 8000,
               action: { label: he.feed.show, onClick: () => router.push(`/butcher/orders/${o.id}`) },
             });
@@ -131,7 +131,7 @@ export function ButcherShell({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    document.title = newOrders > 0 ? `(${newOrders}) SoloR — הזמנות חדשות` : "SoloR — קצב";
+    document.title = newOrders > 0 ? he.butcher.titleWithNew(newOrders) : he.butcher.title;
   }, [newOrders]);
 
   if (!profile || !butcher) {

@@ -154,7 +154,7 @@ create index on stock_events (cut_id, created_at);
 
 -- updated_at maintenance
 create or replace function set_updated_at() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
   return new;

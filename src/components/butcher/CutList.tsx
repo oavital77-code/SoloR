@@ -51,7 +51,7 @@ export function CutList() {
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3">
         {FILTERS.map((f) => (
           <Chip key={f} selected={filter === f} onClick={() => setFilter(f)} className="shrink-0">
-            {he.butcher.filters[f]}{counts[f] ? <span className="ltr ms-1.5 opacity-70">{counts[f]}</span> : null}
+            {he.butcher.filters[f]}{counts[f] ? <span className="ms-1.5 opacity-70"><Ltr>{counts[f]}</Ltr></span> : null}
           </Chip>
         ))}
       </div>
@@ -74,7 +74,7 @@ function CutRow({ cut, title }: { cut: Row; title: string }) {
   const activeOrders = cut.orders.filter((o) => o.status !== "cancelled").length;
   const stock = cut.status === "draft" ? null
     : cut.sale_mode === "whole" ? (cut.whole_available ? he.butcher.stockWhole : he.butcher.stockNone)
-    : <Ltr>{he.butcher.stockSteaks(cut.steaks_available, cut.steaks_total)}</Ltr>;
+    : he.butcher.stockSteaks(cut.steaks_available, cut.steaks_total);
   const href = cut.status === "draft" ? `/butcher/cuts/${cut.id}/edit` : `/butcher/cuts/${cut.id}`;
 
   return (

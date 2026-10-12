@@ -44,7 +44,7 @@ function ButcherHome() {
             >
               {t === "cuts" ? he.butcher.tabCuts : he.butcher.tabOrders}
               {t === "orders" && newOrders > 0 && (
-                <span className="ltr ms-2 inline-grid min-w-6 place-items-center rounded-full bg-brand px-1.5 text-sm text-white">{newOrders}</span>
+                <span className="ms-2 inline-grid min-w-6 place-items-center rounded-full bg-brand px-1.5 text-sm text-white" dir="ltr">{newOrders}</span>
               )}
             </button>
           ))}

@@ -1,3 +1,5 @@
+import { he } from "./i18n/he";
+
 // Price calculations — identical to the SQL helpers price_for_weight / max_steaks (SPEC §6.3).
 // All amounts are integer agorot. Rounding: half up (inputs are always positive).
 
@@ -53,7 +55,7 @@ export function agorotToShekelsInput(agorot: number | null | undefined): string 
 export function formatWeight(g: number): string {
   if (g >= 1000) {
     const kg = g / 1000;
-    return `${Number.isInteger(kg) ? kg : kg.toFixed(kg * 100 % 10 === 0 ? 1 : 2)} ק״ג`;
+    return he.units.kg(String(Number.isInteger(kg) ? kg : kg.toFixed(kg * 100 % 10 === 0 ? 1 : 2)));
   }
-  return `${g} גר׳`;
+  return he.units.g(g);
 }

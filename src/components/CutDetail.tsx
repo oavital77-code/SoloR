@@ -26,7 +26,7 @@ export function CutDetail({ cut, media, breeds, butcher }: {
   }
   if (cut.weight_g) rows.push([he.cut.weight, <Ltr key="w">{formatWeight(cut.weight_g)}</Ltr>]);
   if (cut.price_per_kg_agorot) rows.push([he.cut.pricePerKg, <Ltr key="p">₪{formatAgorot(cut.price_per_kg_agorot)}</Ltr>]);
-  if (hasSteaks && cut.steak_weight_g) rows.push([he.cut.steakWeight, <Ltr key="s">{`~${cut.steak_weight_g} גר׳`}</Ltr>]);
+  if (hasSteaks && cut.steak_weight_g) rows.push([he.cut.steakWeight, <Ltr key="s">{he.units.approxG(cut.steak_weight_g)}</Ltr>]);
   if (hasSteaks && cut.steak_thickness_cm) rows.push([he.cut.steakThickness, he.cut.thicknessCm(Number(cut.steak_thickness_cm))]);
   if (cut.butcher_marbling) {
     rows.push([he.cut.butcherScore, (
