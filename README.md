@@ -8,6 +8,12 @@
 
 Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Supabase (Postgres, Auth, Storage, Realtime) · Vercel · PWA.
 
+## סביבה חיה
+
+- אתר: https://solor-steel.vercel.app (פרויקט Vercel בשם `solor`, הפונקציות רצות בפרנקפורט `fra1`)
+- Supabase: פרויקט `SoloR` (`ckkzvlheczzdifvfvygv`, אזור `eu-central-1`)
+- כל push לענף `claude/funny-fermat-217fy0` מעלה גרסה חדשה לייצור.
+
 ## מבנה
 
 ```
@@ -40,9 +46,10 @@ src/
    <p style="font-size:28px;letter-spacing:6px"><b>{{ .Token }}</b></p>
    ```
    (מומלץ אותו דבר גם בתבנית **Confirm signup**.)
-4. **Auth → URL Configuration:** Site URL = כתובת ה-Vercel. ב-Redirect URLs מוסיפים `https://<domain>/auth/callback`.
-5. **Google (רשות):** מפעילים את הספק ב-Auth, ומגדירים ב-Vercel `NEXT_PUBLIC_ENABLE_GOOGLE=true`.
-6. **Storage:** ה-bucket `cut-media` נוצר במיגרציה, עם מגבלה של 200MB לקובץ. **שימו לב:** בתוכנית Free מגבלת הקובץ הגלובלית היא 50MB. כדי להעלות סרטונים גדולים יותר צריך תוכנית Pro, ולהעלות את המגבלה ב-Storage → Settings.
+4. **שליחת מיילים:** שירות המייל המובנה של Supabase שולח רק לכתובות של חברי הארגון ב-Supabase, ובקצב נמוך מאוד (כמה מיילים בשעה). כדי שהקצב והמייסדים יקבלו קוד, מגדירים SMTP חיצוני (למשל Resend) ב-**Auth → SMTP Settings**, או מוסיפים את הכתובות שלהם כחברים בארגון.
+5. **Auth → URL Configuration:** Site URL = כתובת ה-Vercel. ב-Redirect URLs מוסיפים `https://<domain>/auth/callback`.
+6. **Google (רשות):** מפעילים את הספק ב-Auth, ומגדירים ב-Vercel `NEXT_PUBLIC_ENABLE_GOOGLE=true`.
+7. **Storage:** ה-bucket `cut-media` נוצר במיגרציה, עם מגבלה של 200MB לקובץ. **שימו לב:** בתוכנית Free מגבלת הקובץ הגלובלית היא 50MB. כדי להעלות סרטונים גדולים יותר צריך תוכנית Pro, ולהעלות את המגבלה ב-Storage → Settings.
 
 ### 2. הגדרת חשבון הקצב
 
