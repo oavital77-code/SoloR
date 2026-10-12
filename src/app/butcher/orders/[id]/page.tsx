@@ -84,7 +84,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
         </Link>
 
         <section className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
-          <p className="text-xl font-extrabold">{orderWhat(order, order.cuts.steak_weight_g)}</p>
+          <p className="text-xl font-extrabold">{orderWhat(order)}</p>
           <p className="mt-1 text-2xl font-extrabold"><Ltr>₪{formatAgorot(order.total_agorot)}</Ltr></p>
           <p className="mt-1 text-sm text-neutral-500">{formatDateTime(order.created_at)}</p>
           {order.customer_note && (

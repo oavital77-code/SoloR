@@ -1,8 +1,8 @@
 // Display helpers shared by feed, cut page, butcher screens.
 import { he } from "./i18n/he";
 import { agingMethodLabel, cutTypeLabel, originFlag, originLabel } from "./labels";
-import { maxSteaks, plannedSteaks } from "./pricing";
-import type { Breed, Cut, CutMedia } from "./types";
+import { formatWeight, maxSteaks, plannedSteaks } from "./pricing";
+import type { Breed, Cut, CutMedia, Order } from "./types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 export const MEDIA_BUCKET = "cut-media";
@@ -126,4 +126,10 @@ export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("he-IL", {
     day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit",
   });
+}
+
+/** "3 סטייקים × 300 גר׳" / "נתח שלם 2.4 ק״ג" — the snapshot weight per steak is derived from the order itself */
+export function orderWhat(o: Pick<Order, "mode" | "steaks_qty" | "est_weight_g">): string {
+  const perSteak = o.steaks_qty ? Math.round(o.est_weight_g / o.steaks_qty) : null;
+  return he.orders.whatOrdered(o.mode, o.steaks_qty, perSteak, formatWeight(o.est_weight_g));
 }

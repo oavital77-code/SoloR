@@ -149,7 +149,7 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
               <li key={o.id}>
                 <Link href={`/butcher/orders/${o.id}`} className="flex items-center justify-between gap-2 rounded-2xl bg-white p-3 ring-1 ring-neutral-200">
                   <span className="flex flex-col">
-                    <span className="font-bold"><Ltr>#{o.order_number}</Ltr> · {orderWhat(o, cut.steak_weight_g)}</span>
+                    <span className="font-bold"><Ltr>#{o.order_number}</Ltr> · {orderWhat(o)}</span>
                     <span className="text-sm text-neutral-500">{o.profiles?.full_name} · {timeAgo(o.created_at, now)} · <Ltr>₪{formatAgorot(o.total_agorot)}</Ltr></span>
                   </span>
                   <OrderStatusBadge status={o.status} />

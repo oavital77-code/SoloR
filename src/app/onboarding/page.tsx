@@ -39,11 +39,11 @@ export default function OnboardingPage() {
       <h1 className="mt-10 text-3xl font-extrabold">{he.onboarding.title}</h1>
       <p className="mt-2 text-white/70">{he.onboarding.subtitle}</p>
       <form onSubmit={submit} className="mt-8 flex flex-col gap-5 [&_label]:text-white">
-        <Field label={he.onboarding.fullName} htmlFor="name" error={errors.full_name}>
+        <Field dark label={he.onboarding.fullName} htmlFor="name" error={errors.full_name}>
           <input id="name" autoComplete="name" className={inputDarkClass + " min-h-14 text-lg"}
             value={fullName} onChange={(e) => setFullName(e.target.value)} />
         </Field>
-        <Field label={he.onboarding.phone} htmlFor="phone" error={errors.phone}>
+        <Field dark label={he.onboarding.phone} htmlFor="phone" error={errors.phone}>
           <input id="phone" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" placeholder={he.onboarding.phonePlaceholder}
             className={inputDarkClass + " min-h-14 text-lg text-end"} value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Field>

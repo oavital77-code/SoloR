@@ -6,9 +6,10 @@ import { useButcher } from "./ButcherShell";
 import { Chip, EmptyState, ErrorState, Ltr, Skeleton } from "../ui";
 import { OrderStatusBadge } from "../OrderStatusBadge";
 import { he } from "@/lib/i18n/he";
-import { coverOf, cutTitle, mediaUrl, timeAgo } from "@/lib/cut-helpers";
+import { coverOf, cutTitle, mediaUrl, orderWhat, timeAgo } from "@/lib/cut-helpers";
+export { orderWhat };
 import { useBreeds, useNow, useRefetchOnFocus } from "@/lib/hooks";
-import { formatAgorot, formatWeight } from "@/lib/pricing";
+import { formatAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Cut, CutMedia, Order, OrderStatus } from "@/lib/types";
 
@@ -65,9 +66,6 @@ export function OrderList() {
   );
 }
 
-export function orderWhat(o: Pick<Order, "mode" | "steaks_qty" | "est_weight_g">, steakWeight: number | null) {
-  return he.orders.whatOrdered(o.mode, o.steaks_qty, steakWeight ?? (o.steaks_qty ? Math.round(o.est_weight_g / o.steaks_qty) : null), formatWeight(o.est_weight_g));
-}
 
 function OrderCard({ order: o, title, now }: { order: ButcherOrderRow; title: string; now: number }) {
   const cover = coverOf(o.cuts.cut_media);
@@ -94,7 +92,7 @@ function OrderCard({ order: o, title, now }: { order: ButcherOrderRow; title: st
             <OrderStatusBadge status={o.status} />
           </div>
           <p className="text-sm text-neutral-500">{timeAgo(o.created_at, now)} · <Ltr>{o.cuts.code}</Ltr></p>
-          <p className="font-semibold">{orderWhat(o, o.cuts.steak_weight_g)}</p>
+          <p className="font-semibold">{orderWhat(o)}</p>
           <p className="text-sm">
             <Ltr className="font-bold">₪{formatAgorot(o.total_agorot)}</Ltr>
             {o.profiles && <> · {o.profiles.full_name}</>}
