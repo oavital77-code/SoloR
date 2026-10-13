@@ -26,7 +26,7 @@ export const he = {
     emailPlaceholder: "name@example.com",
     sendCode: "שלחו לי קוד",
     sending: "שולח…",
-    codeSentTo: (email: string) => `שלחנו קוד בן 6 ספרות אל ${email}`,
+    codeSentTo: (email: string) => `שלחנו קוד כניסה אל ${email}`,
     codeLabel: "קוד מהמייל",
     verify: "כניסה",
     verifying: "בודק…",

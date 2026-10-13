@@ -78,8 +78,8 @@ function LoginForm() {
             <p className="text-white/80">{he.auth.codeSentTo(email)}</p>
             <label htmlFor="code" className="font-semibold">{he.auth.codeLabel}</label>
             <input
-              id="code" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength={6} autoFocus
-              className={inputDarkClass + " min-h-14 text-center text-2xl tracking-[0.5em]"}
+              id="code" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength={10} autoFocus
+              className={inputDarkClass + " min-h-14 text-center text-2xl tracking-[0.35em]"}
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required
             />
             <Button type="submit" size="lg" loading={busy}>{busy ? he.auth.verifying : he.auth.verify}</Button>

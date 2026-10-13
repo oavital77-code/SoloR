@@ -3,7 +3,7 @@ import { z } from "zod";
 import { he } from "./i18n/he";
 
 export const emailSchema = z.string().trim().toLowerCase().email(he.auth.invalidEmail);
-export const otpSchema = z.string().trim().regex(/^\d{6}$/, he.auth.invalidCode);
+export const otpSchema = z.string().trim().regex(/^\d{6,10}$/, he.auth.invalidCode);
 
 /** "0501234567" / "050-123-4567" / "+972501234567" → "050-1234567" */
 export function normalizePhone(input: string): string {

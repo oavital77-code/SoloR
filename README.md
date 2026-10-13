@@ -40,7 +40,7 @@ src/
 2. מריצים את המיגרציות לפי הסדר, ואז את ה-seed. אחת משתי דרכים:
    - **CLI:** `npx supabase link --project-ref <ref>` ואז `npx supabase db push`, ואחר כך מריצים את `supabase/seed.sql` ב-SQL Editor.
    - **ידנית:** מדביקים ב-SQL Editor את קבצי `supabase/migrations/*.sql` לפי הסדר, ואחריהם את `supabase/seed.sql`.
-3. **Auth → Providers → Email:** מופעל. כדי שיישלח **קוד בן 6 ספרות** (ולא רק לינק), ב-**Auth → Email Templates → Magic Link** מוסיפים לתבנית את `{{ .Token }}`, למשל:
+3. **Auth → Providers → Email:** מופעל. כדי שיישלח **קוד כניסה** (ולא רק לינק), ב-**Auth → Email Templates → Magic Link** מוסיפים לתבנית את `{{ .Token }}`, למשל:
    ```html
    <h2>קוד הכניסה שלך ל-SoloR</h2>
    <p style="font-size:28px;letter-spacing:6px"><b>{{ .Token }}</b></p>
