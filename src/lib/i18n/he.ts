@@ -39,6 +39,10 @@ export const he = {
     rateLimited: "יותר מדי ניסיונות. נסה שוב בעוד דקה",
     sendFailed: "לא הצלחנו לשלוח קוד. נסה שוב",
     callbackFailed: "ההתחברות נכשלה. נסה שוב",
+    usePassword: "כניסה עם סיסמה",
+    useCode: "כניסה עם קוד במייל",
+    passwordLabel: "סיסמה",
+    invalidPassword: "אימייל או סיסמה שגויים",
   },
 
   onboarding: {
