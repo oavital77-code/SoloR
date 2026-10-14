@@ -16,7 +16,7 @@ interface ButcherCtx {
   /** increments on every order change — screens refetch on it */
   ordersVersion: number;
   sound: boolean;
-  setSound: (on: boolean) => void;
+  setSound: (on: boolean, silent?: boolean) => void;
 }
 
 const Ctx = createContext<ButcherCtx | null>(null);
@@ -73,7 +73,7 @@ export function ButcherShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   // sound needs a user gesture to unlock — the toggle itself is that gesture
-  const setSound = useCallback((on: boolean) => {
+  const setSound = useCallback((on: boolean, silent = false) => {
     soundRef.current = on;
     setSoundState(on);
     safeStorage.set(SOUND_KEY, on);
@@ -83,14 +83,17 @@ export function ButcherShell({ children }: { children: React.ReactNode }) {
         audioRef.current = new AC();
       }
       audioRef.current.resume().catch(() => {});
-      beep();
+      if (!silent) beep();
     }
   }, [beep]);
 
-  // remember the preference, but audio can only start after a tap: unlock on first interaction
+  // sound is ON by default (review); browsers only allow audio after a tap, so the first tap unlocks it
   useEffect(() => {
-    if (!safeStorage.get(SOUND_KEY, false)) return;
-    const unlock = () => { setSound(true); window.removeEventListener("pointerdown", unlock); };
+    const on = safeStorage.get(SOUND_KEY, true);
+    soundRef.current = on;
+    setSoundState(on);
+    if (!on) return;
+    const unlock = () => { setSound(true, true); window.removeEventListener("pointerdown", unlock); };
     window.addEventListener("pointerdown", unlock, { once: true });
     return () => window.removeEventListener("pointerdown", unlock);
   }, [setSound]);

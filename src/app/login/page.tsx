@@ -6,6 +6,8 @@ import { Logo } from "@/components/Logo";
 import { he } from "@/lib/i18n/he";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { emailSchema, otpSchema } from "@/lib/validation";
+import { safeNext } from "@/lib/market";
+import Link from "next/link";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -16,6 +18,7 @@ function LoginForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(params.get("error") ? he.auth.callbackFailed : null);
   const googleEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE === "true";
+  const next = safeNext(params.get("next"));
 
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
@@ -45,7 +48,7 @@ function LoginForm() {
       return setError(error.status === 429 ? he.auth.rateLimited : he.auth.invalidCode);
     }
     // full navigation so middleware routes by role / profile completeness
-    window.location.assign("/");
+    window.location.assign(next);
   }
 
   // Password sign-in: for test accounts created by the founders (POC), alongside the email code flow
@@ -60,13 +63,13 @@ function LoginForm() {
       setBusy(false);
       return setError(error.status === 429 ? he.auth.rateLimited : he.auth.invalidPassword);
     }
-    window.location.assign("/");
+    window.location.assign(next);
   }
 
   async function google() {
     await supabaseBrowser().auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
   }
 
@@ -76,6 +79,7 @@ function LoginForm() {
       <div className="relative mb-auto pt-[18dvh]">
         <Logo className="text-5xl" />
         <p className="mt-4 text-2xl font-semibold leading-snug text-white/90">{he.app.tagline}</p>
+        {next !== "/" && <p className="mt-3 text-white/70">{he.auth.loginToOrder}</p>}
       </div>
 
       <div className="relative flex flex-col gap-4">
@@ -140,6 +144,10 @@ function LoginForm() {
             <Button variant="dark" size="lg" onClick={google}>{he.auth.google}</Button>
           </>
         )}
+
+        <Link href={next} className="min-h-11 py-2 text-center text-[15px] font-semibold text-white/60 underline underline-offset-4">
+          {he.auth.continueAsGuest}
+        </Link>
       </div>
     </main>
   );

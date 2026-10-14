@@ -26,6 +26,10 @@ export interface Butcher {
   phone: string;
   pickup_hours: string | null;
   logo_path: string | null;
+  slug: string;
+  city: string | null;
+  description: string | null;
+  is_test: boolean;
 }
 
 export interface Breed {

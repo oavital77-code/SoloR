@@ -22,7 +22,6 @@ export const BUTCHER_ORDER_SELECT =
   "*, cuts(code, cut_type, breed_key, breed_other, steak_weight_g, cut_media(*)), profiles(full_name, phone)";
 
 const ACTIVE: OrderStatus[] = ["new", "preparing", "ready"];
-const RANK: Record<OrderStatus, number> = { new: 0, preparing: 1, ready: 2, completed: 3, cancelled: 4 };
 
 export function OrderList() {
   const { butcher, ordersVersion } = useButcher();
@@ -40,7 +39,8 @@ export function OrderList() {
     if (error) return setError(true);
     setError(false);
     const list = (data ?? []) as ButcherOrderRow[];
-    if (tab === "active") list.sort((a, b) => RANK[a.status] - RANK[b.status] || b.created_at.localeCompare(a.created_at));
+    // active orders: oldest first, so nothing waits at the bottom (review); new ones are highlighted
+    if (tab === "active") list.sort((a, b) => a.created_at.localeCompare(b.created_at));
     setRows(list);
   }, [butcher.id, tab]);
 

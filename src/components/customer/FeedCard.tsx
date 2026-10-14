@@ -2,16 +2,18 @@
 // C2 — one full-screen Reels-style card.
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Volume2, VolumeX } from "lucide-react";
+import { Store, Volume2, VolumeX } from "lucide-react";
 import { clsx } from "clsx";
 import { Ltr } from "../ui";
 import { he } from "@/lib/i18n/he";
 import { canBuySteaks, canBuyWhole, cutTitle, isNew, mediaUrl, originAgingLine, photosOf, videoOf } from "@/lib/cut-helpers";
 import { formatAgorot, formatWeight } from "@/lib/pricing";
-import type { Breed, CutWithMedia } from "@/lib/types";
+import { shopPath } from "@/lib/market";
+import type { Breed, Butcher, CutWithMedia } from "@/lib/types";
 
-export function FeedCard({ cut, breeds, muted, onToggleMute, fresh, eager, now }: {
-  cut: CutWithMedia; breeds: Breed[]; muted: boolean; onToggleMute: () => void; fresh?: boolean; eager?: boolean; now: number;
+export function FeedCard({ cut, breeds, shop, muted, onToggleMute, fresh, eager, now }: {
+  cut: CutWithMedia; breeds: Breed[]; shop?: Butcher | null; muted: boolean; onToggleMute: () => void;
+  fresh?: boolean; eager?: boolean; now: number;
 }) {
   const ref = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -73,6 +75,11 @@ export function FeedCard({ cut, breeds, muted, onToggleMute, fresh, eager, now }
             {!soldOut && canBuyWhole(cut) && <Badge>{he.feed.wholeAvailable}</Badge>}
             {cut.butcher_marbling && <Badge>{he.feed.butcherScore(cut.butcher_marbling)}</Badge>}
           </div>
+          {shop && (
+            <Link href={shopPath(shop)} className="flex w-fit min-h-9 items-center gap-1.5 rounded-full bg-black/40 px-3 text-sm font-semibold backdrop-blur">
+              <Store className="size-4" aria-hidden /> {shop.name}
+            </Link>
+          )}
           <h2 className="text-[28px] font-extrabold leading-tight drop-shadow">{title}</h2>
           <p className="text-[15px] text-white/85">{originAgingLine(cut)}</p>
           <p className="text-[15px] font-semibold text-white/90">

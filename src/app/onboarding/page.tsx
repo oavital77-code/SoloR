@@ -6,6 +6,7 @@ import { he } from "@/lib/i18n/he";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { profileSchema } from "@/lib/validation";
 import { errorText } from "@/lib/errors";
+import { safeNext } from "@/lib/market";
 
 export default function OnboardingPage() {
   const [fullName, setFullName] = useState("");
@@ -30,7 +31,7 @@ export default function OnboardingPage() {
       setBusy(false);
       return setErrors({ form: errorText(error) });
     }
-    window.location.assign("/");
+    window.location.assign(safeNext(new URLSearchParams(window.location.search).get("next")));
   }
 
   return (

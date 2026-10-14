@@ -8,8 +8,10 @@ import { canBuySteaks, canBuyWhole } from "@/lib/cut-helpers";
 import { formatAgorot, formatWeight, steaksOrderPrice, wholePrice } from "@/lib/pricing";
 import type { Cut, OrderMode } from "@/lib/types";
 
-export function PurchaseBar({ cut, preview, inline, onOrder }: {
+export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initialQty }: {
   cut: Cut; preview?: boolean; inline?: boolean; onOrder?: (mode: OrderMode, qty: number | null) => void;
+  /** restores the customer's choice after logging in mid-purchase */
+  initialMode?: OrderMode | null; initialQty?: number | null;
 }) {
   const pos = inline ? "relative" : "sticky bottom-0 z-20";
   const offersWhole = cut.sale_mode === "whole" || cut.sale_mode === "both";
@@ -19,8 +21,8 @@ export function PurchaseBar({ cut, preview, inline, onOrder }: {
   const soldOut = cut.status !== "published" || (!wholeOk && !steaksOk);
 
   const defaultMode: OrderMode = offersSteaks && (steaksOk || !wholeOk) ? "steaks" : "whole";
-  const [mode, setMode] = useState<OrderMode>(defaultMode);
-  const [qty, setQty] = useState(1);
+  const [mode, setMode] = useState<OrderMode>(initialMode ?? defaultMode);
+  const [qty, setQty] = useState(initialQty && initialQty > 0 ? initialQty : 1);
 
   // keep the selection valid while stock changes live
   useEffect(() => {

@@ -219,3 +219,17 @@ select pg_temp.check(price_for_weight(2400, 22000) = 52800 and price_for_weight(
                      and max_steaks(2400, 300) = 8, 'pricing example');
 
 \echo 'RPC tests passed'
+
+-- ═════════ guests (anon): public catalogue only ═════════
+set role anon;
+select set_config('request.jwt.claim.sub', '', false);
+select pg_temp.check((select count(*) from cuts where status = 'draft') = 0, 'anon sees no drafts');
+select pg_temp.check((select count(*) from cuts where status = 'published') > 0, 'anon sees published cuts');
+select pg_temp.check((select count(*) from butchers) = 2, 'anon sees both shops');
+select pg_temp.expect_error('select count(*) from profiles', '42501');
+select pg_temp.expect_error('select count(*) from orders', '42501');
+select pg_temp.expect_error('select count(*) from stock_events', '42501');
+select pg_temp.expect_error(format('select place_order(%L, ''whole'', null, gen_random_uuid(), null)', current_setting('test.cut2')), '42501');
+reset role;
+
+\echo 'Guest access tests passed'

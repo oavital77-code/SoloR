@@ -12,6 +12,7 @@ import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { errorCode, errorText } from "@/lib/errors";
 import { useBreeds, useButchers, useRefetchOnFocus } from "@/lib/hooks";
 import { formatAgorot, formatWeight, steaksOrderPrice, wholePrice } from "@/lib/pricing";
+import { shopPath } from "@/lib/market";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Cut, CutMedia, Order, OrderMode } from "@/lib/types";
 
@@ -23,6 +24,29 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
   const [media, setMedia] = useState<CutMedia[]>([]);
   const [state, setState] = useState<"loading" | "ok" | "notfound" | "error">("loading");
   const [checkout, setCheckout] = useState<{ mode: OrderMode; qty: number | null } | null>(null);
+  const router = useRouter();
+  // choice carried through login (`?mode=&qty=&checkout=1`)
+  const [resume, setResume] = useState<{ mode: OrderMode | null; qty: number | null; open: boolean }>({ mode: null, qty: null, open: false });
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const m = sp.get("mode");
+    setResume({
+      mode: m === "whole" || m === "steaks" ? m : null,
+      qty: Number(sp.get("qty")) || null,
+      open: sp.get("checkout") === "1",
+    });
+  }, []);
+
+  // guests browse freely; identity is asked only when ordering, and the choice is kept
+  const startOrder = useCallback(async (mode: OrderMode, qty: number | null) => {
+    const { data: { session } } = await supabaseBrowser().auth.getSession();
+    if (!session) {
+      const back = `/cut/${encodeURIComponent(code)}?mode=${mode}&qty=${qty ?? ""}&checkout=1`;
+      router.push(`/login?next=${encodeURIComponent(back)}`);
+      return;
+    }
+    setCheckout({ mode, qty });
+  }, [code, router]);
 
   const load = useCallback(async () => {
     const { data, error } = await supabaseBrowser().from("cuts").select("*, cut_media(*)").eq("code", decodeURIComponent(code)).maybeSingle();
@@ -51,9 +75,17 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
 
   const butcher = butchers.find((b) => b.id === cut?.butcher_id) ?? null;
 
+  // back from login: reopen the confirmation sheet once the cut is loaded
+  useEffect(() => {
+    if (!resume.open || !cut || cut.status !== "published") return;
+    setResume((r) => ({ ...r, open: false }));
+    startOrder(resume.mode ?? (cut.sale_mode === "whole" ? "whole" : "steaks"), resume.mode === "whole" ? null : resume.qty ?? 1);
+    window.history.replaceState(null, "", `/cut/${cut.code}`);
+  }, [resume, cut, startOrder]);
+
   return (
     <main className="relative min-h-dvh">
-      <Link href="/" aria-label={he.app.back}
+      <Link href={butcher ? shopPath(butcher) : "/"} aria-label={he.app.back}
         className="absolute start-3 top-[max(0.75rem,env(safe-area-inset-top))] z-30 grid size-11 place-items-center rounded-full bg-black/50 backdrop-blur">
         <ChevronRight className="size-6" />
       </Link>
@@ -67,7 +99,7 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
       {state === "ok" && cut && cut.status !== "withdrawn" && (
         <>
           <CutDetail cut={cut} media={media} breeds={breeds} butcher={butcher} />
-          <PurchaseBar cut={cut} onOrder={(mode, qty) => setCheckout({ mode, qty })} />
+          <PurchaseBar cut={cut} onOrder={startOrder} initialMode={resume.mode} initialQty={resume.qty} key={`${resume.mode}-${resume.qty}`} />
           {checkout && (
             <CheckoutSheet
               cut={cut} media={media} title={cutTitle(cut, breeds)} butcher={butcher}

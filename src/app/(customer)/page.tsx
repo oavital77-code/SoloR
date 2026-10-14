@@ -1,230 +1,127 @@
 "use client";
-// C2 — live feed (Reels style) with realtime updates, filters and a feed/grid toggle.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// MARKETPLACE — the entry screen (review stage 1): shops to choose from, and clear entries to
+// Discover/Reels, Categories and Search. Open to guests.
 import Link from "next/link";
-import { LayoutGrid, Rows3, SlidersHorizontal, UserRound } from "lucide-react";
-import { clsx } from "clsx";
-import { FeedCard } from "@/components/customer/FeedCard";
-import { FilterSheet } from "@/components/customer/FilterSheet";
-import { useToast } from "@/components/Toast";
-import { Button, EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
+import { Gavel, LayoutGrid, LogIn, Search, Store, UserRound } from "lucide-react";
+import { CutTile } from "@/components/customer/CutTile";
+import { useCatalog } from "@/components/customer/useCatalog";
+import { Logo } from "@/components/Logo";
+import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
-import { canBuySteaks, canBuyWhole, coverOf, cutTitle, isNew, mediaUrl, SOLD_OUT_TAIL_MS } from "@/lib/cut-helpers";
-import {
-  EMPTY_FILTER, FILTER_STORAGE_KEY, activeFilterCount, matchesFilter, sanitizeFilter, type FeedFilter,
-} from "@/lib/feed-filter";
-import { safeStorage, useBreeds, useButchers, useNow, useRefetchOnFocus } from "@/lib/hooks";
-import { formatAgorot, formatWeight } from "@/lib/pricing";
-import { supabaseBrowser } from "@/lib/supabase/client";
-import type { Cut, CutWithMedia } from "@/lib/types";
+import { coverOf, mediaUrl } from "@/lib/cut-helpers";
+import { useBreeds, useButchers, useNow, useSession } from "@/lib/hooks";
+import { isAvailable, shopPath } from "@/lib/market";
+import type { Butcher, CutWithMedia } from "@/lib/types";
 
-const VIEW_KEY = "solor.feed.view";
-const FEED_SELECT = "*, cut_media(*)";
-
-function sortFeed(list: CutWithMedia[], now: number): CutWithMedia[] {
-  const live = list.filter((c) => c.status === "published")
-    .sort((a, b) => (b.published_at ?? "").localeCompare(a.published_at ?? ""));
-  const sold = list.filter((c) => c.status === "sold_out" && c.sold_out_at && now - new Date(c.sold_out_at).getTime() < SOLD_OUT_TAIL_MS)
-    .sort((a, b) => (b.sold_out_at ?? "").localeCompare(a.sold_out_at ?? ""));
-  return [...live, ...sold];
-}
-
-export default function FeedPage() {
+export default function MarketPage() {
   const breeds = useBreeds();
   const butchers = useButchers();
-  const toast = useToast();
+  const { user } = useSession();
   const now = useNow(60000);
-  const [cuts, setCuts] = useState<CutWithMedia[] | null>(null);
-  const [error, setError] = useState(false);
-  const [filter, setFilterState] = useState<FeedFilter>(EMPTY_FILTER);
-  const [view, setViewState] = useState<"feed" | "grid">("feed");
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const [fresh, setFresh] = useState<Set<string>>(new Set());
-  const [pill, setPill] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const idsRef = useRef<Set<string>>(new Set());
-  const filterRef = useRef(filter);
-  const breedsRef = useRef(breeds);
-  breedsRef.current = breeds;
+  const { cuts, error, reload } = useCatalog();
+  const available = (cuts ?? []).filter(isAvailable);
 
-  // restore persisted filter + view
-  useEffect(() => {
-    const f = sanitizeFilter(safeStorage.get(FILTER_STORAGE_KEY, EMPTY_FILTER));
-    setFilterState(f);
-    filterRef.current = f;
-    setViewState(safeStorage.get<"feed" | "grid">(VIEW_KEY, "feed") === "grid" ? "grid" : "feed");
-  }, []);
-  const setFilter = (f: FeedFilter) => { setFilterState(f); filterRef.current = f; safeStorage.set(FILTER_STORAGE_KEY, f); };
-  const setView = (v: "feed" | "grid") => { setViewState(v); safeStorage.set(VIEW_KEY, v); };
-
-  const load = useCallback(async () => {
-    const since = new Date(Date.now() - SOLD_OUT_TAIL_MS).toISOString();
-    const { data, error } = await supabaseBrowser()
-      .from("cuts").select(FEED_SELECT)
-      .or(`status.eq.published,and(status.eq.sold_out,sold_out_at.gt.${since})`)
-      .order("published_at", { ascending: false })
-      .limit(100);
-    if (error) { setError(true); return; }
-    setError(false);
-    const list = (data ?? []) as CutWithMedia[];
-    idsRef.current = new Set(list.map((c) => c.id));
-    setCuts(list);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-  useRefetchOnFocus(load);
-
-  const scrollTop = useCallback(() => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    setPill(false);
-  }, []);
-
-  // realtime: new cuts, stock changes, sold out, withdrawn
-  useEffect(() => {
-    const sb = supabaseBrowser();
-    const ch = sb.channel("feed-cuts")
-      .on("postgres_changes", { event: "*", schema: "public", table: "cuts" }, async (payload) => {
-        if (payload.eventType === "DELETE") return;
-        const row = payload.new as Cut;
-        const known = idsRef.current.has(row.id);
-
-        if (row.status !== "published" && row.status !== "sold_out") {
-          // withdrawn (or reverted to draft) → leaves the feed
-          idsRef.current.delete(row.id);
-          setCuts((cs) => cs?.filter((c) => c.id !== row.id) ?? cs);
-          return;
-        }
-        if (known) {
-          setCuts((cs) => cs?.map((c) => (c.id === row.id ? { ...c, ...row } : c)) ?? cs);
-          return;
-        }
-        if (row.status !== "published") return;
-        // a newly published cut: fetch it with its media
-        idsRef.current.add(row.id);
-        const { data } = await sb.from("cuts").select(FEED_SELECT).eq("id", row.id).maybeSingle();
-        if (!data) { idsRef.current.delete(row.id); return; }
-        const cut = data as CutWithMedia;
-        setCuts((cs) => (cs ? [cut, ...cs.filter((c) => c.id !== cut.id)] : [cut]));
-        setFresh((s) => new Set(s).add(cut.id));
-        if (matchesFilter(cut, filterRef.current)) {
-          const title = cutTitle(cut, breedsRef.current);
-          toast(he.feed.newCutToast(title), { tone: "live", duration: 7000, action: { label: he.feed.show, onClick: scrollTop } });
-          if ((scrollRef.current?.scrollTop ?? 0) > 50) setPill(true);
-        }
-      })
-      .subscribe();
-    return () => { sb.removeChannel(ch); };
-  }, [toast, scrollTop]);
-
-  const all = useMemo(() => (cuts ? sortFeed(cuts, now) : []), [cuts, now]);
-  const visible = useMemo(() => all.filter((c) => matchesFilter(c, filter)), [all, filter]);
-  const nFilters = activeFilterCount(filter);
-  const shopName = butchers[0]?.name;
+  // real shops first, test shops last
+  const shops = [...butchers].sort((a, b) => Number(a.is_test) - Number(b.is_test) || a.name.localeCompare(b.name, "he"));
 
   return (
-    <main className="relative h-dvh">
-      {/* top overlay */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/70 to-transparent px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-6">
-        <div className="pointer-events-auto flex items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-lg bg-live px-2 py-1 text-xs font-extrabold tracking-wider">
-            <span className="animate-live size-2 rounded-full bg-white" aria-hidden />
-            <span dir="ltr">{he.feed.live}</span>
-          </span>
-          <span className="min-w-0 flex-1 truncate font-bold drop-shadow">{shopName}</span>
-          <button type="button" onClick={() => setFilterOpen(true)} aria-label={he.feed.filter}
-            className="relative flex min-h-11 items-center gap-1.5 rounded-full bg-black/45 px-3 font-semibold backdrop-blur">
-            <SlidersHorizontal className="size-4" /> {he.feed.filter}
-            {nFilters > 0 && <span className="ltr grid size-5 place-items-center rounded-full bg-brand text-xs">{nFilters}</span>}
-          </button>
-          <button type="button" onClick={() => setView(view === "feed" ? "grid" : "feed")}
-            aria-label={view === "feed" ? he.feed.viewGrid : he.feed.viewFeed}
-            className="grid size-11 place-items-center rounded-full bg-black/45 backdrop-blur">
-            {view === "feed" ? <LayoutGrid className="size-5" /> : <Rows3 className="size-5" />}
-          </button>
-          <Link href="/profile" aria-label={he.nav.profile} className="grid size-11 place-items-center rounded-full bg-black/45 backdrop-blur">
-            <UserRound className="size-5" />
-          </Link>
+    <main className="min-h-dvh pb-24">
+      <header className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div>
+          <Logo className="text-3xl" />
+          <p className="text-xs font-extrabold tracking-[0.25em] text-white/50" dir="ltr">{he.market.title}</p>
         </div>
-      </div>
+        <Link href={user ? "/profile" : "/login"} aria-label={user ? he.nav.profile : he.nav.login}
+          className="flex min-h-11 items-center gap-2 rounded-full bg-white/10 px-3 text-sm font-semibold">
+          {user ? <UserRound className="size-5" /> : <><LogIn className="size-4" />{he.nav.login}</>}
+        </Link>
+      </header>
 
-      {pill && (
-        <button type="button" onClick={scrollTop}
-          className="animate-toast-in absolute inset-x-0 mx-auto w-fit top-[calc(4.25rem+env(safe-area-inset-top))] z-30 rounded-full bg-live px-4 py-2 font-extrabold shadow-lg">
-          {he.feed.newCutPill}
-        </button>
-      )}
+      <p className="px-4 pt-3 text-white/70">{he.market.subtitle}</p>
 
-      <div
-        ref={scrollRef}
-        onScroll={(e) => { if (pill && e.currentTarget.scrollTop < 50) setPill(false); }}
-        className={clsx("no-scrollbar h-full overflow-y-auto", view === "feed" && "snap-y snap-mandatory")}
-      >
-        {error && !cuts ? (
-          <div className="pt-24"><ErrorState dark onRetry={load} /></div>
-        ) : !cuts ? (
-          <FeedSkeleton />
-        ) : all.length === 0 ? (
-          <div className="grid h-full place-items-center"><EmptyState text={he.feed.empty} /></div>
-        ) : visible.length === 0 ? (
-          <div className="grid h-full place-items-center">
-            <EmptyState text={he.feed.emptyFiltered}>
-              <Button variant="dark" onClick={() => setFilter(EMPTY_FILTER)}>{he.feed.clearFilter}</Button>
-            </EmptyState>
-          </div>
-        ) : view === "feed" ? (
-          visible.map((c, i) => (
-            <div key={c.id} className="h-full">
-              <FeedCard cut={c} breeds={breeds} muted={muted} onToggleMute={() => setMuted((m) => !m)} fresh={fresh.has(c.id)} eager={i === 0} now={now} />
-            </div>
-          ))
-        ) : (
-          <ul className="grid grid-cols-2 gap-2 px-2 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-24">
-            {visible.map((c) => <GridItem key={c.id} cut={c} title={cutTitle(c, breeds)} now={now} />)}
+      <Link href="/search" className="mx-4 mt-4 flex min-h-14 items-center gap-3 rounded-2xl bg-white/10 px-4 text-white/60 ring-1 ring-white/10">
+        <Search className="size-5" aria-hidden /> {he.market.searchPlaceholder}
+      </Link>
+
+      <nav className="mx-4 mt-4 grid grid-cols-2 gap-3" aria-label={he.market.title}>
+        <Link href="/discover" className="relative col-span-2 flex min-h-24 flex-col justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-brand-dark p-4">
+          <span className="absolute top-3 start-3 flex items-center gap-1.5 rounded-lg bg-black/30 px-2 py-1 text-xs font-extrabold" dir="ltr">
+            <span className="animate-live size-2 rounded-full bg-white" aria-hidden /> LIVE
+          </span>
+          <span className="text-2xl font-extrabold" dir="ltr">{he.market.discover}</span>
+          <span className="text-sm text-white/80">{he.market.discoverSub}</span>
+        </Link>
+        <EntryTile href="/categories" icon={<LayoutGrid className="size-6" />} title={he.market.categories} sub={he.market.categoriesSub} />
+        <EntryTile href="/search" icon={<Search className="size-6" />} title={he.market.search} sub={he.market.searchSub} />
+        <div className="col-span-2 flex min-h-16 items-center justify-between rounded-2xl bg-white/5 px-4 text-white/45 ring-1 ring-white/10" aria-disabled>
+          <span className="flex items-center gap-3"><Gavel className="size-5" aria-hidden /><span className="font-bold" dir="ltr">{he.market.auctions}</span></span>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">{he.market.soon}</span>
+        </div>
+      </nav>
+
+      <section className="mt-7">
+        <h2 className="px-4 text-xl font-extrabold">{he.market.shops}</h2>
+        {error && !cuts ? <ErrorState dark onRetry={reload} /> : (
+          <ul className="mt-3 flex flex-col gap-3 px-4">
+            {shops.length === 0
+              ? [0, 1].map((i) => <li key={i}><Skeleton className="h-24" /></li>)
+              : shops.map((b) => <ShopCard key={b.id} shop={b} cuts={available.filter((c) => c.butcher_id === b.id)} loading={!cuts} />)}
           </ul>
         )}
-      </div>
+      </section>
 
-      <FilterSheet open={filterOpen} onClose={() => setFilterOpen(false)} value={filter} onApply={setFilter} cuts={all} breeds={breeds} />
+      {available.length > 0 && (
+        <section className="mt-7">
+          <div className="flex items-baseline justify-between px-4">
+            <h2 className="text-xl font-extrabold">{he.market.available}</h2>
+            <Link href="/search" className="text-sm font-semibold text-white/60 underline underline-offset-4">{he.market.search}</Link>
+          </div>
+          <ul className="no-scrollbar mt-3 grid auto-cols-[42%] grid-flow-col gap-3 overflow-x-auto px-4">
+            {available.slice(0, 10).map((c) => (
+              <CutTile key={c.id} cut={c} breeds={breeds} shop={butchers.find((b) => b.id === c.butcher_id)} now={now} />
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
   );
 }
 
-function GridItem({ cut, title, now }: { cut: CutWithMedia; title: string; now: number }) {
-  const cover = coverOf(cut.cut_media);
-  const soldOut = cut.status !== "published";
-  const inner = (
-    <>
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-ink-3">
-        {cover && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${cut.code}`} loading="lazy"
-            className={clsx("h-full w-full object-cover", soldOut && "grayscale")} />
-        )}
-        {soldOut && <span className="absolute inset-0 grid place-items-center bg-black/55 text-2xl font-extrabold">{he.feed.soldOut}</span>}
-        {!soldOut && isNew(cut, now) && <span className="absolute top-2 start-2 rounded-full bg-live px-2 py-0.5 text-xs font-extrabold">{he.feed.newBadge}</span>}
-        {!soldOut && (
-          <span className="absolute bottom-2 start-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-bold">
-            {canBuySteaks(cut) ? he.feed.steaksLeft(cut.steaks_available) : canBuyWhole(cut) ? he.feed.wholeAvailable : ""}
-          </span>
-        )}
-      </div>
-      <p className="mt-1.5 truncate font-bold leading-tight">{title}</p>
-      <p className="text-sm text-white/70">
-        {cut.weight_g && <Ltr>{formatWeight(cut.weight_g)}</Ltr>} · {cut.price_per_kg_agorot && <Ltr>₪{formatAgorot(cut.price_per_kg_agorot).replace(/\.00$/, "")}</Ltr>}
-      </p>
-    </>
+function EntryTile({ href, icon, title, sub }: { href: string; icon: React.ReactNode; title: string; sub: string }) {
+  return (
+    <Link href={href} className="flex min-h-24 flex-col justify-between rounded-3xl bg-white/10 p-4 ring-1 ring-white/10 active:bg-white/15">
+      <span className="text-white/80">{icon}</span>
+      <span>
+        <span className="block text-lg font-extrabold">{title}</span>
+        <span className="block text-sm text-white/60">{sub}</span>
+      </span>
+    </Link>
   );
-  return <li>{soldOut ? <div className="opacity-70">{inner}</div> : <Link href={`/cut/${cut.code}`}>{inner}</Link>}</li>;
 }
 
-function FeedSkeleton() {
+function ShopCard({ shop, cuts, loading }: { shop: Butcher; cuts: CutWithMedia[]; loading: boolean }) {
+  const cover = cuts.map((c) => coverOf(c.cut_media)).find(Boolean);
   return (
-    <div className="flex h-full flex-col justify-end gap-3 p-4 pb-24 text-white">
-      <Skeleton className="h-6 w-24" />
-      <Skeleton className="h-9 w-3/4" />
-      <Skeleton className="h-5 w-1/2" />
-      <Skeleton className="h-14 w-full" />
-    </div>
+    <li>
+      <Link href={shopPath(shop)} className="flex gap-3 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10 active:bg-white/10">
+        <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-ink-3">
+          {cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={shop.name} className="h-full w-full object-cover" loading="lazy" />
+          ) : <Store className="size-8 text-white/30" aria-hidden />}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-lg font-extrabold">{shop.name}</p>
+            {shop.is_test && <span className="shrink-0 rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-bold text-amber-300">{he.market.testBadge}</span>}
+          </div>
+          <p className="truncate text-sm text-white/60">{[shop.city, shop.address].filter(Boolean).join(" · ")}</p>
+          <p className="flex items-center gap-1.5 text-sm font-semibold">
+            {cuts.length > 0 && <span className="animate-live size-2 rounded-full bg-live" aria-hidden />}
+            {loading ? "…" : he.market.liveCount(cuts.length)}
+          </p>
+        </div>
+      </Link>
+    </li>
   );
 }
