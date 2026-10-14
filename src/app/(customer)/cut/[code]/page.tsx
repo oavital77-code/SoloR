@@ -3,10 +3,11 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Share2 } from "lucide-react";
 import { CutDetail } from "@/components/CutDetail";
 import { PurchaseBar } from "@/components/PurchaseBar";
 import { BottomSheet, Button, ErrorState, Ltr, Spinner, inputDarkClass } from "@/components/ui";
+import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { errorCode, errorText } from "@/lib/errors";
@@ -20,6 +21,7 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
   const { code } = use(params);
   const breeds = useBreeds();
   const butchers = useButchers();
+  const toast = useToast();
   const [cut, setCut] = useState<Cut | null>(null);
   const [media, setMedia] = useState<CutMedia[]>([]);
   const [state, setState] = useState<"loading" | "ok" | "notfound" | "error">("loading");
@@ -89,6 +91,19 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
         className="absolute start-3 top-[max(0.75rem,env(safe-area-inset-top))] z-30 grid size-11 place-items-center rounded-full bg-black/50 backdrop-blur">
         <ChevronRight className="size-6" />
       </Link>
+      {cut && (
+        <button type="button" aria-label={he.cut.share}
+          onClick={async () => {
+            const url = `${window.location.origin}/cut/${cut.code}`;
+            try {
+              if (navigator.share) await navigator.share({ title: cutTitle(cut, breeds), url });
+              else { await navigator.clipboard.writeText(url); toast(he.cut.linkCopied, { tone: "success" }); }
+            } catch { /* user cancelled */ }
+          }}
+          className="absolute end-3 top-[max(0.75rem,env(safe-area-inset-top))] z-30 grid size-11 place-items-center rounded-full bg-black/50 backdrop-blur">
+          <Share2 className="size-5" />
+        </button>
+      )}
 
       {state === "loading" && <div className="grid min-h-dvh place-items-center"><Spinner /></div>}
       {state === "error" && <div className="pt-20"><ErrorState dark onRetry={load} /></div>}

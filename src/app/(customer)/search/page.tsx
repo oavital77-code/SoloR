@@ -6,12 +6,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { CutTile } from "@/components/customer/CutTile";
+import { CategoryChips } from "@/components/customer/market-ui";
 import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { Button, Chip, EmptyState, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { EMPTY_FILTER, activeFilterCount, matchesFilter, type FeedFilter } from "@/lib/feed-filter";
-import { cutTypeLabel } from "@/lib/labels";
 import { useBreeds, useButchers, useNow } from "@/lib/hooks";
 import { isAvailable, matchesQuery, shopPath } from "@/lib/market";
 import type { CutType } from "@/lib/types";
@@ -84,19 +84,18 @@ function SearchView() {
             {nFilters > 0 && <span className="ltr absolute -top-1 -end-1 grid size-5 place-items-center rounded-full bg-brand text-xs">{nFilters}</span>}
           </button>
         </div>
-        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
-          {shop ? (
-            <Chip dark selected onClick={() => setParam("b", null)} className="shrink-0">
+        {shop && (
+          <div className="mt-3 flex">
+            <Chip dark selected onClick={() => setParam("b", null)} className="min-h-9 text-sm">
               {he.market.inShop(shop.name)} <X className="ms-1 inline size-4" aria-hidden />
             </Chip>
-          ) : (
-            <Chip dark className="shrink-0" disabled>{he.market.inMarket}</Chip>
-          )}
-          {cat && (
-            <Chip dark selected onClick={() => setParam("cat", null)} className="shrink-0">
-              {cutTypeLabel(cat)} <X className="ms-1 inline size-4" aria-hidden />
-            </Chip>
-          )}
+          </div>
+        )}
+        <div className="-mx-4 mt-3">
+          <CategoryChips
+            cuts={available.filter((c) => matchesQuery(c, query, breeds, shopOf(c.butcher_id)))}
+            active={cat} onSelect={(k) => setParam("cat", k)}
+          />
         </div>
       </header>
 
@@ -110,7 +109,7 @@ function SearchView() {
         ) : (
           <>
             <p className="mb-3 text-sm text-white/60">{he.market.results(results.length)} · {he.market.newestFirst}</p>
-            <ul className="grid grid-cols-2 gap-3">
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-5">
               {results.map((c) => <CutTile key={c.id} cut={c} breeds={breeds} shop={shop ? null : shopOf(c.butcher_id)} now={now} />)}
             </ul>
           </>

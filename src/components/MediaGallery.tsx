@@ -28,14 +28,14 @@ export function MediaGallery({ media, title, code }: { media: CutMedia[]; title:
   }, [slides.length]);
 
   if (slides.length === 0) {
-    return <div className="aspect-[4/5] w-full bg-ink-3" />;
+    return <div className="aspect-square w-full bg-ink-3" />;
   }
 
   const photoIndex = (i: number) => (video ? i - 1 : i);
 
   return (
     <div className="relative">
-      <div ref={trackRef} className="no-scrollbar flex aspect-[4/5] w-full snap-x snap-mandatory overflow-x-auto bg-black">
+      <div ref={trackRef} className="no-scrollbar flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-black">
         {slides.map((m, i) => (
           <div key={m.id} data-i={i} className="relative h-full w-full shrink-0 snap-center">
             {m.type === "video" ? (

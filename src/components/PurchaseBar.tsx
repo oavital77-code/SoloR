@@ -57,7 +57,7 @@ export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initia
         </div>
       )}
       {offersWhole && !wholeOk && cut.sale_mode === "both" && (
-        <p className="mb-3 text-sm text-white/60">{he.cut.wholeBlocked}</p>
+        <p className="-mt-1 mb-2 text-xs text-white/50">{he.cut.wholeBlocked}</p>
       )}
 
       {mode === "steaks" && cut.steak_weight_g && (
@@ -94,7 +94,7 @@ function ModeButton({ label, active, disabled, onClick }: { label: string; activ
     <button
       type="button" role="radio" aria-checked={active} disabled={disabled} onClick={onClick}
       className={clsx(
-        "min-h-12 rounded-2xl font-bold transition-colors disabled:opacity-35",
+        "min-h-11 rounded-xl font-bold transition-colors disabled:opacity-35",
         active ? "bg-white text-neutral-900" : "bg-white/10 text-white ring-1 ring-white/15",
       )}
     >
