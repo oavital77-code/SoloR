@@ -1,17 +1,19 @@
 "use client";
-// B5 — order screen for the butcher: details, customer phone, timeline, one big next-step button, cancel with reason.
+// B5 — order screen for the butcher: every line to pick and pack, customer phone, timeline, one big next-step button.
+// A single line can be cancelled with a reason (and the meat returned to stock or not); so can the whole order.
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useButcher } from "@/components/butcher/ButcherShell";
-import { BUTCHER_ORDER_SELECT, orderWhat, type ButcherOrderRow } from "@/components/butcher/OrderList";
+import { BUTCHER_ORDER_SELECT, orderWhat, sortedItems, type ButcherItemRow, type ButcherOrderRow } from "@/components/butcher/OrderList";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { useToast } from "@/components/Toast";
-import { BottomSheet, Button, Chip, ErrorState, Ltr, Spinner, inputClass } from "@/components/ui";
+import { BottomSheet, Button, Chip, ErrorState, Ltr, Spinner, Toggle, inputClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, formatDateTime, mediaUrl } from "@/lib/cut-helpers";
 import { errorText } from "@/lib/errors";
 import { useBreeds, useRefetchOnFocus } from "@/lib/hooks";
+import { clsx } from "clsx";
 import { formatAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { OrderEvent, OrderStatus } from "@/lib/types";
@@ -27,7 +29,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
   const [events, setEvents] = useState<OrderEvent[]>([]);
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancel, setCancel] = useState<{ item?: ButcherItemRow } | null>(null);
 
   const load = useCallback(async () => {
     const sb = supabaseBrowser();
@@ -57,8 +59,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
   if (error) return <ErrorState text={he.orders.notFound} onRetry={() => { setError(false); load(); }} />;
   if (!order) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
 
-  const cover = coverOf(order.cuts.cut_media);
-  const title = cutTitle(order.cuts, breeds);
+  const items = sortedItems(order);
   const next = NEXT[order.status];
   const canCancel = !["completed", "cancelled"].includes(order.status);
 
@@ -71,20 +72,18 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
       </header>
 
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <Link href={`/butcher/cuts/${order.cut_id}`} className="flex gap-3 rounded-2xl bg-white p-3 ring-1 ring-neutral-200">
-          <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-neutral-200">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${order.cuts.code}`} className="h-full w-full object-cover" />}
-          </div>
-          <div className="flex flex-col justify-center gap-0.5">
-            <p className="text-lg font-extrabold">{title}</p>
-            <Ltr className="text-sm text-neutral-500">{order.cuts.code}</Ltr>
-          </div>
-        </Link>
+        <section className="rounded-2xl bg-white p-3 ring-1 ring-neutral-200">
+          <h2 className="mb-2 px-1 font-extrabold">{he.butcherOrders.items} · {he.butcherOrders.itemsCount(items.filter((i) => i.status === "active").length)}</h2>
+          <ul className="flex flex-col divide-y divide-neutral-100">
+            {items.map((i) => (
+              <ItemRow key={i.id} item={i} title={cutTitle(i.cuts, breeds)}
+                onCancel={canCancel && i.status === "active" ? () => setCancel({ item: i }) : undefined} />
+            ))}
+          </ul>
+        </section>
 
         <section className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
-          <p className="text-xl font-extrabold">{orderWhat(order)}</p>
-          <p className="mt-1 text-2xl font-extrabold"><Ltr>₪{formatAgorot(order.total_agorot)}</Ltr></p>
+          <p className="text-2xl font-extrabold"><Ltr>₪{formatAgorot(order.total_agorot)}</Ltr></p>
           <p className="mt-1 text-sm text-neutral-500">{formatDateTime(order.created_at)}</p>
           {order.customer_note && (
             <div className="mt-3 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200">
@@ -124,17 +123,48 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
             </Button>
           )}
           {canCancel && (
-            <Button variant="ghost" className="text-red-700" onClick={() => setCancelOpen(true)}>{he.butcherOrders.cancel}</Button>
+            <Button variant="ghost" className="text-red-700" onClick={() => setCancel({})}>{he.butcherOrders.cancel}</Button>
           )}
         </footer>
       )}
 
-      <CancelSheet open={cancelOpen} orderId={order.id} onClose={() => setCancelOpen(false)} onDone={() => { setCancelOpen(false); load(); }} />
+      <CancelSheet open={!!cancel} orderId={order.id} item={cancel?.item} title={cancel?.item ? cutTitle(cancel.item.cuts, breeds) : null}
+        key={cancel?.item?.id ?? "order"} onClose={() => setCancel(null)} onDone={() => { setCancel(null); load(); }} />
     </main>
   );
 }
 
-function CancelSheet({ open, orderId, onClose, onDone }: { open: boolean; orderId: string; onClose: () => void; onDone: () => void }) {
+function ItemRow({ item: i, title, onCancel }: { item: ButcherItemRow; title: string; onCancel?: () => void }) {
+  const cover = coverOf(i.cuts.cut_media);
+  const cancelled = i.status === "cancelled";
+  return (
+    <li className="flex gap-3 py-3">
+      <Link href={`/butcher/cuts/${i.cuts.id}`} className={clsx("size-16 shrink-0 overflow-hidden rounded-xl bg-neutral-200", cancelled && "opacity-40 grayscale")}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${i.cuts.code}`} className="h-full w-full object-cover" />}
+      </Link>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className={clsx("text-lg font-extrabold leading-tight", cancelled && "text-neutral-400 line-through")}>{orderWhat(i)}</p>
+        <p className="text-sm text-neutral-600">{title} · <Ltr>{i.cuts.code}</Ltr> · <Ltr>₪{formatAgorot(i.total_agorot)}</Ltr></p>
+        {cancelled && (
+          <p className="text-sm font-semibold text-red-700">
+            {he.butcherOrders.lineCancelled}{i.cancel_reason && ` · ${i.cancel_reason}`}
+          </p>
+        )}
+      </div>
+      {onCancel && (
+        <button type="button" onClick={onCancel} className="min-h-11 shrink-0 self-center px-1 text-sm font-semibold text-red-700">
+          {he.butcherOrders.cancelItem}
+        </button>
+      )}
+    </li>
+  );
+}
+
+function CancelSheet({ open, orderId, item, title, onClose, onDone }: {
+  open: boolean; orderId: string; item?: ButcherItemRow; title: string | null; onClose: () => void; onDone: () => void;
+}) {
+  const [restock, setRestock] = useState(true);
   const toast = useToast();
   const reasons = he.butcherOrders.cancelReasons;
   const [reason, setReason] = useState<string | null>(null);
@@ -146,16 +176,21 @@ function CancelSheet({ open, orderId, onClose, onDone }: { open: boolean; orderI
   async function submit() {
     if (!finalReason) return;
     setBusy(true);
-    const { error } = await supabaseBrowser().rpc("cancel_order", { p_order_id: orderId, p_reason: finalReason });
+    const sb = supabaseBrowser();
+    const { error } = item
+      ? await sb.rpc("cancel_order_item", { p_item_id: item.id, p_reason: finalReason, p_restock: restock })
+      : await sb.rpc("cancel_order", { p_order_id: orderId, p_reason: finalReason });
     setBusy(false);
     if (error) return toast(errorText(error), { tone: "error" });
-    toast(he.orders.cancelled, { tone: "success" });
+    toast(item ? he.butcherOrders.itemCancelled : he.orders.cancelled, { tone: "success" });
     onDone();
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={he.butcherOrders.cancelReason}>
+    <BottomSheet open={open} onClose={onClose} title={item ? he.butcherOrders.cancelItemTitle : he.butcherOrders.cancelReason}>
       <div className="flex flex-col gap-3">
+        {item && title && <p className="font-bold">{orderWhat(item)} · {title}</p>}
+        {item && <p className="text-sm font-semibold text-neutral-500">{he.butcherOrders.cancelReason}</p>}
         <div className="flex flex-wrap gap-2">
           {reasons.map((r) => <Chip key={r} selected={reason === r} onClick={() => setReason(r)} className="min-h-12 text-lg">{r}</Chip>)}
         </div>
@@ -163,7 +198,15 @@ function CancelSheet({ open, orderId, onClose, onDone }: { open: boolean; orderI
           <input className={inputClass} placeholder={he.butcherOrders.cancelOtherPlaceholder} value={other}
             onChange={(e) => setOther(e.target.value)} aria-label={he.butcherOrders.cancelOtherPlaceholder} autoFocus />
         )}
-        <Button size="lg" variant="danger" loading={busy} disabled={!finalReason} onClick={submit}>{he.butcherOrders.cancelConfirm}</Button>
+        {item && (
+          <div>
+            <Toggle label={he.butcherOrders.restock} checked={restock} onChange={setRestock} />
+            <p className="text-sm text-neutral-500">{he.butcherOrders.restockHint}</p>
+          </div>
+        )}
+        <Button size="lg" variant="danger" loading={busy} disabled={!finalReason} onClick={submit}>
+          {item ? he.butcherOrders.cancelItem : he.butcherOrders.cancelConfirm}
+        </Button>
       </div>
     </BottomSheet>
   );

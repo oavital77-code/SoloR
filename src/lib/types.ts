@@ -88,17 +88,25 @@ export interface CutWithMedia extends Cut {
   cut_media: CutMedia[];
 }
 
+/** One purchase by a customer: one (simulated) payment for the whole cart. */
+export interface Checkout {
+  id: string;
+  checkout_number: number;
+  idempotency_key: string;
+  customer_id: string;
+  total_agorot: number;
+  payment_status: string;
+  created_at: string;
+}
+
+/** One shop's part of a checkout — what the butcher picks and packs as a single order. */
 export interface Order {
   id: string;
   order_number: number;
-  idempotency_key: string;
+  checkout_id: string;
   customer_id: string;
   butcher_id: string;
-  cut_id: string;
-  mode: OrderMode;
-  steaks_qty: number | null;
-  est_weight_g: number;
-  price_per_kg_agorot: number;
+  /** sum of the active lines (kept as the last value when the whole order is cancelled) */
   total_agorot: number;
   status: OrderStatus;
   payment_status: string;
@@ -107,6 +115,26 @@ export interface Order {
   cancelled_by: UserRole | null;
   created_at: string;
   updated_at: string;
+}
+
+export type OrderItemStatus = "active" | "cancelled";
+
+/** A cut line inside an order. */
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  cut_id: string;
+  mode: OrderMode;
+  steaks_qty: number | null;
+  est_weight_g: number;
+  price_per_kg_agorot: number;
+  total_agorot: number;
+  status: OrderItemStatus;
+  cancel_reason: string | null;
+  cancelled_by: UserRole | null;
+  cancelled_at: string | null;
+  restocked: boolean | null;
+  created_at: string;
 }
 
 export interface OrderEvent {

@@ -11,15 +11,25 @@ export { orderWhat };
 import { useBreeds, useNow, useRefetchOnFocus } from "@/lib/hooks";
 import { formatAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import type { Cut, CutMedia, Order, OrderStatus } from "@/lib/types";
+import type { Cut, CutMedia, Order, OrderItem, OrderStatus } from "@/lib/types";
 
+export type ButcherItemRow = OrderItem & {
+  cuts: Pick<Cut, "id" | "code" | "cut_type" | "breed_key" | "breed_other" | "steak_weight_g"> & { cut_media: CutMedia[] };
+};
+/** A shop order with all its lines (stage 2: one order per shop per purchase). */
 export type ButcherOrderRow = Order & {
-  cuts: Pick<Cut, "code" | "cut_type" | "breed_key" | "breed_other" | "steak_weight_g"> & { cut_media: CutMedia[] };
+  order_items: ButcherItemRow[];
   profiles: { full_name: string; phone: string } | null;
 };
 
 export const BUTCHER_ORDER_SELECT =
-  "*, cuts(code, cut_type, breed_key, breed_other, steak_weight_g, cut_media(*)), profiles(full_name, phone)";
+  "*, order_items(*, cuts(id, code, cut_type, breed_key, breed_other, steak_weight_g, cut_media(*))), profiles(full_name, phone)";
+
+/** Active lines first, then in the order they were bought. */
+export function sortedItems(o: ButcherOrderRow): ButcherItemRow[] {
+  return [...o.order_items].sort((a, b) =>
+    Number(a.status === "cancelled") - Number(b.status === "cancelled") || a.created_at.localeCompare(b.created_at));
+}
 
 const ACTIVE: OrderStatus[] = ["new", "preparing", "ready"];
 
@@ -59,7 +69,7 @@ export function OrderList() {
         : rows.length === 0 ? <EmptyState text={tab === "active" ? he.butcherOrders.empty : he.butcherOrders.emptyHistory} />
         : (
           <ul className="flex flex-col gap-3 px-4 pb-8">
-            {rows.map((o) => <OrderCard key={o.id} order={o} title={cutTitle(o.cuts, breeds)} now={now} />)}
+            {rows.map((o) => <OrderCard key={o.id} order={o} breeds={breeds} now={now} />)}
           </ul>
         )}
     </div>
@@ -67,8 +77,12 @@ export function OrderList() {
 }
 
 
-function OrderCard({ order: o, title, now }: { order: ButcherOrderRow; title: string; now: number }) {
-  const cover = coverOf(o.cuts.cut_media);
+function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: ReturnType<typeof useBreeds>; now: number }) {
+  const items = sortedItems(o);
+  const active = items.filter((i) => i.status === "active");
+  const first = (active[0] ?? items[0])?.cuts;
+  const title = first ? cutTitle(first, breeds) : "";
+  const cover = first ? coverOf(first.cut_media) : undefined;
   return (
     <li>
       <Link
@@ -81,7 +95,7 @@ function OrderCard({ order: o, title, now }: { order: ButcherOrderRow; title: st
         <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-neutral-200">
           {cover && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${o.cuts.code}`} className="h-full w-full object-cover" loading="lazy" />
+            <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${first?.code}`} className="h-full w-full object-cover" loading="lazy" />
           )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -91,8 +105,10 @@ function OrderCard({ order: o, title, now }: { order: ButcherOrderRow; title: st
             </span>
             <OrderStatusBadge status={o.status} />
           </div>
-          <p className="text-sm text-neutral-500">{timeAgo(o.created_at, now)} · <Ltr>{o.cuts.code}</Ltr></p>
-          <p className="font-semibold">{orderWhat(o)}</p>
+          <p className="text-sm text-neutral-500">{timeAgo(o.created_at, now)} · {he.butcherOrders.itemsCount(active.length || items.length)}</p>
+          <p className="font-semibold">
+            {title}{items.length > 1 && <span className="font-normal text-neutral-500"> {he.orders.moreItems(items.length - 1)}</span>}
+          </p>
           <p className="text-sm">
             <Ltr className="font-bold">₪{formatAgorot(o.total_agorot)}</Ltr>
             {o.profiles && <> · {o.profiles.full_name}</>}

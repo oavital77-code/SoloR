@@ -1,5 +1,6 @@
 "use client";
-// Sticky purchase area of the cut page (C4). In preview mode it renders identically but disabled.
+// Sticky purchase area of the cut page (C4): choose whole / steaks and quantity, then add to the cart.
+// In preview mode (butcher wizard) it renders identically but disabled.
 import { useEffect, useState } from "react";
 import { clsx } from "clsx";
 import { Button, Ltr, Stepper } from "./ui";
@@ -8,10 +9,10 @@ import { canBuySteaks, canBuyWhole } from "@/lib/cut-helpers";
 import { formatAgorot, formatWeight, steaksOrderPrice, wholePrice } from "@/lib/pricing";
 import type { Cut, OrderMode } from "@/lib/types";
 
-export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initialQty }: {
-  cut: Cut; preview?: boolean; inline?: boolean; onOrder?: (mode: OrderMode, qty: number | null) => void;
-  /** restores the customer's choice after logging in mid-purchase */
-  initialMode?: OrderMode | null; initialQty?: number | null;
+export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initialQty, inCart }: {
+  cut: Cut; preview?: boolean; inline?: boolean; onOrder?: (mode: OrderMode, qty: number | null, total: number) => void;
+  /** the line already in the cart, if any */
+  initialMode?: OrderMode | null; initialQty?: number | null; inCart?: boolean;
 }) {
   const pos = inline ? "relative" : "sticky bottom-0 z-20";
   const offersWhole = cut.sale_mode === "whole" || cut.sale_mode === "both";
@@ -43,7 +44,7 @@ export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initia
     return (
       <div className={`${pos} border-t border-ivory/10 bg-ink-2/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur`}>
         <div className="mb-3 py-2 text-center font-display text-2xl font-bold text-ivory/80">{he.cut.soldBanner}</div>
-        <Button size="lg" className="w-full" disabled>{he.cut.order}</Button>
+        <Button size="lg" className="w-full" disabled>{he.cart.add}</Button>
       </div>
     );
   }
@@ -78,11 +79,11 @@ export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initia
           <div className="text-xs text-stone">{he.cut.priceNote}</div>
         </div>
         <Button
-          size="lg" className="min-w-32"
+          size="lg" className="min-w-40"
           disabled={preview || (mode === "whole" ? !wholeOk : !steaksOk)}
-          onClick={() => onOrder?.(mode, mode === "steaks" ? qty : null)}
+          onClick={() => onOrder?.(mode, mode === "steaks" ? qty : null, total)}
         >
-          {he.cut.order}
+          {inCart ? he.cart.update : he.cart.add}
         </Button>
       </div>
     </div>

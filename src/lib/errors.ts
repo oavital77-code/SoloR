@@ -10,7 +10,7 @@ export interface DbError {
 export const ERROR_CODES = [
   "CUT_NOT_AVAILABLE", "WHOLE_NOT_AVAILABLE", "NOT_ENOUGH_STEAKS", "INVALID_QTY", "MISSING_FIELDS",
   "NOT_ALLOWED", "INVALID_TRANSITION", "HAS_ACTIVE_ORDERS", "STOCK_CHANGED", "REASON_REQUIRED",
-  "NOTE_TOO_LONG", "LAST_PHOTO",
+  "NOTE_TOO_LONG", "LAST_PHOTO", "CART_UNAVAILABLE", "INVALID_CART",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
@@ -31,6 +31,29 @@ export function errorText(err: DbError | null | undefined): string {
     return `${he.errors.MISSING_FIELDS}: ${list.join(", ")}`;
   }
   return he.errors[code] as string;
+}
+
+/** One line of the cart that could not be bought (place_checkout → CART_UNAVAILABLE, details = JSON list). */
+export interface CartProblem {
+  cut_id: string;
+  code?: string;
+  reason: "CUT_NOT_AVAILABLE" | "WHOLE_NOT_AVAILABLE" | "NOT_ENOUGH_STEAKS";
+  available?: number;
+}
+
+export function cartProblemsOf(err: DbError | null | undefined): CartProblem[] {
+  if (errorCode(err) !== "CART_UNAVAILABLE" || !err?.details) return [];
+  try {
+    const list = JSON.parse(err.details);
+    return Array.isArray(list) ? (list as CartProblem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function cartProblemText(p: Pick<CartProblem, "reason" | "available">): string {
+  if (p.reason === "NOT_ENOUGH_STEAKS") return he.errors.NOT_ENOUGH_STEAKS(p.available ?? 0);
+  return he.errors[p.reason];
 }
 
 export function missingFieldsOf(err: DbError | null | undefined): string[] {

@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { StatusPill } from "@/components/butcher/CutList";
-import { BUTCHER_ORDER_SELECT, orderWhat, type ButcherOrderRow } from "@/components/butcher/OrderList";
+import { orderWhat } from "@/components/butcher/OrderList";
+import type { Order, OrderItem } from "@/lib/types";
+
+/** A line bought from this cut, with the shop order it belongs to. */
+type CutLineRow = OrderItem & { orders: Order & { profiles: { full_name: string; phone: string } | null } };
 import { CutDetail } from "@/components/CutDetail";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { useToast } from "@/components/Toast";
@@ -32,7 +36,7 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
   const now = useNow();
   const [cut, setCut] = useState<Cut | null>(null);
   const [media, setMedia] = useState<CutMedia[]>([]);
-  const [orders, setOrders] = useState<ButcherOrderRow[]>([]);
+  const [lines, setLines] = useState<CutLineRow[]>([]);
   const [error, setError] = useState(false);
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [busy, setBusy] = useState(false);
@@ -42,14 +46,14 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
     const sb = supabaseBrowser();
     const [{ data: c, error }, { data: os }] = await Promise.all([
       sb.from("cuts").select("*, cut_media(*)").eq("id", id).maybeSingle(),
-      sb.from("orders").select(BUTCHER_ORDER_SELECT).eq("cut_id", id).order("created_at", { ascending: false }),
+      sb.from("order_items").select("*, orders(*, profiles(full_name, phone))").eq("cut_id", id).order("created_at", { ascending: false }),
     ]);
     if (error || !c) return setError(true);
     const { cut_media, ...rest } = c as Cut & { cut_media: CutMedia[] };
     if (rest.status === "draft") return router.replace(`/butcher/cuts/${id}/edit`);
     setCut(rest);
     setMedia(cut_media);
-    setOrders((os ?? []) as ButcherOrderRow[]);
+    setLines((os ?? []) as CutLineRow[]);
   }, [id, router]);
 
   useEffect(() => { load(); }, [load, ordersVersion]);
@@ -90,8 +94,8 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
 
   const title = cutTitle(cut, breeds);
   const hasSteaks = cut.sale_mode === "steaks" || cut.sale_mode === "both";
-  const activeOrders = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status)).length;
-  const anyOrders = orders.length > 0;
+  const activeOrders = lines.filter((l) => l.status === "active" && ["new", "preparing", "ready"].includes(l.orders.status)).length;
+  const anyOrders = lines.length > 0;
 
   return (
     <main className="pb-10">
@@ -142,16 +146,18 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
 
       <section className="m-4">
         <h2 className="mb-2 font-extrabold">{he.cutManage.orders}</h2>
-        {orders.length === 0 ? <p className="text-neutral-500">{he.cutManage.noOrders}</p> : (
+        {lines.length === 0 ? <p className="text-neutral-500">{he.cutManage.noOrders}</p> : (
           <ul className="flex flex-col gap-2">
-            {orders.map((o) => (
-              <li key={o.id}>
-                <Link href={`/butcher/orders/${o.id}`} className="flex items-center justify-between gap-2 rounded-2xl bg-white p-3 ring-1 ring-neutral-200">
+            {lines.map((l) => (
+              <li key={l.id}>
+                <Link href={`/butcher/orders/${l.order_id}`} className="flex items-center justify-between gap-2 rounded-2xl bg-white p-3 ring-1 ring-neutral-200">
                   <span className="flex flex-col">
-                    <span className="font-bold"><Ltr>#{o.order_number}</Ltr> · {orderWhat(o)}</span>
-                    <span className="text-sm text-neutral-500">{o.profiles?.full_name} · {timeAgo(o.created_at, now)} · <Ltr>₪{formatAgorot(o.total_agorot)}</Ltr></span>
+                    <span className={l.status === "cancelled" ? "font-bold text-neutral-400 line-through" : "font-bold"}>
+                      <Ltr>#{l.orders.order_number}</Ltr> · {orderWhat(l)}
+                    </span>
+                    <span className="text-sm text-neutral-500">{l.orders.profiles?.full_name} · {timeAgo(l.created_at, now)} · <Ltr>₪{formatAgorot(l.total_agorot)}</Ltr></span>
                   </span>
-                  <OrderStatusBadge status={o.status} />
+                  <OrderStatusBadge status={l.status === "cancelled" ? "cancelled" : l.orders.status} />
                 </Link>
               </li>
             ))}

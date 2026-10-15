@@ -2,7 +2,7 @@
 import { he } from "./i18n/he";
 import { agingMethodLabel, cutTypeLabel, originLabel } from "./labels";
 import { formatWeight, maxSteaks, plannedSteaks } from "./pricing";
-import type { Breed, Cut, CutMedia, Order } from "./types";
+import type { Breed, Cut, CutMedia, OrderItem } from "./types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 export const MEDIA_BUCKET = "cut-media";
@@ -130,7 +130,7 @@ export function formatDateTime(iso: string): string {
 }
 
 /** "3 סטייקים × 300 גר׳" / "נתח שלם 2.4 ק״ג" — the snapshot weight per steak is derived from the order itself */
-export function orderWhat(o: Pick<Order, "mode" | "steaks_qty" | "est_weight_g">): string {
+export function orderWhat(o: Pick<OrderItem, "mode" | "steaks_qty" | "est_weight_g">): string {
   const perSteak = o.steaks_qty ? Math.round(o.est_weight_g / o.steaks_qty) : null;
   return he.orders.whatOrdered(o.mode, o.steaks_qty, perSteak, formatWeight(o.est_weight_g));
 }

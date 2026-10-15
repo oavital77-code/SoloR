@@ -23,7 +23,7 @@ order_sql() {
   # The first statement locks the cut row for 1s from a third session so both orders queue on the same lock.
   cat <<SQL
 set role authenticated; set request.jwt.claim.sub = '$1';
-select 'OK:' || order_number from place_order('$CUT', 'steaks', 1, gen_random_uuid(), null);
+select 'OK:' || checkout_number from place_checkout(jsonb_build_array(jsonb_build_object('cut_id', '$CUT', 'mode', 'steaks', 'steaks_qty', 1)), gen_random_uuid(), '{}');
 SQL
 }
 
@@ -39,8 +39,8 @@ R1=$(cat "$OUT1"); R2=$(cat "$OUT2")
 echo "client 1: $R1"
 echo "client 2: $R2"
 OKS=$(printf '%s\n%s\n' "$R1" "$R2" | grep -c '^OK:' || true)
-FAILS=$(printf '%s\n%s\n' "$R1" "$R2" | grep -c 'NOT_ENOUGH_STEAKS' || true)
-ORDERS=$("${PSQL[@]}" -c "select count(*) from orders where cut_id = '$CUT'")
+FAILS=$(printf '%s\n%s\n' "$R1" "$R2" | grep -c 'CART_UNAVAILABLE' || true)
+ORDERS=$("${PSQL[@]}" -c "select count(*) from order_items where cut_id = '$CUT'")
 STOCK=$("${PSQL[@]}" -c "select steaks_available || '/' || status from cuts where id = '$CUT'")
 echo "orders=$ORDERS stock=$STOCK"
 if [[ "$OKS" == 1 && "$FAILS" == 1 && "$ORDERS" == 1 && "$STOCK" == "0/sold_out" ]]; then
@@ -62,12 +62,12 @@ insert into cut_media (cut_id, type, storage_path) values ('$CUT2', 'photo', 'p/
 set role authenticated; set request.jwt.claim.sub = '$B';
 select publish_cut('$CUT2');
 SQL
-dbl() { printf "set role authenticated; set request.jwt.claim.sub = '%s';\nselect order_number from place_order('%s', 'steaks', 2, '%s', null);\n" "$C1" "$CUT2" "$KEY" | "${PSQL[@]}"; }
+dbl() { printf "set role authenticated; set request.jwt.claim.sub = '%s';\nselect checkout_number from place_checkout(jsonb_build_array(jsonb_build_object('cut_id', '%s', 'mode', 'steaks', 'steaks_qty', 2)), '%s', '{}');\n" "$C1" "$CUT2" "$KEY" | "${PSQL[@]}"; }
 ( "${PSQL[@]}" -c "begin; select 1 from cuts where id = '$CUT2' for update; select pg_sleep(1); commit;" >/dev/null ) &
 sleep 0.2
 dbl > "$OUT1" 2>&1 & dbl > "$OUT2" 2>&1 & wait
 echo "double tap: $(cat "$OUT1") / $(cat "$OUT2")"
-N=$("${PSQL[@]}" -c "select count(*) || '/' || (select steaks_available from cuts where id = '$CUT2') from orders where cut_id = '$CUT2'")
+N=$("${PSQL[@]}" -c "select count(*) || '/' || (select steaks_available from cuts where id = '$CUT2') from order_items where cut_id = '$CUT2'")
 if [[ "$N" == "1/8" && "$(cat "$OUT1")" == "$(cat "$OUT2")" ]]; then
   echo "Idempotency test passed"
 else

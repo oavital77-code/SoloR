@@ -69,7 +69,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
     const sb = supabaseBrowser();
     const [{ data: c, error }, { data: orders }, { count: storeSales }] = await Promise.all([
       sb.from("cuts").select("*, cut_media(*)").eq("id", cutId).maybeSingle(),
-      sb.from("orders").select("status").eq("cut_id", cutId),
+      sb.from("order_items").select("status, orders(status)").eq("cut_id", cutId),
       sb.from("stock_events").select("id", { count: "exact", head: true }).eq("cut_id", cutId).eq("type", "store_sale"),
     ]);
     if (error || !c) return setLoadError(true);
@@ -79,9 +79,10 @@ export function CutWizard({ cutId }: { cutId: string }) {
     const content = pickContent(rest);
     setForm(content);
     savedRef.current = content;
-    const os = (orders ?? []) as { status: string }[];
-    setActiveOrders(os.filter((o) => ["new", "preparing", "ready"].includes(o.status)).length);
-    setStockTouched(os.some((o) => o.status !== "cancelled") || (storeSales ?? 0) > 0 || rest.status !== "published");
+    const lines = (orders ?? []) as unknown as { status: string; orders: { status: string } | null }[];
+    const sold = lines.filter((l) => l.status === "active");
+    setActiveOrders(sold.filter((l) => ["new", "preparing", "ready"].includes(l.orders?.status ?? "")).length);
+    setStockTouched(sold.length > 0 || (storeSales ?? 0) > 0 || rest.status !== "published");
   }, [cutId]);
 
   useEffect(() => { load(); }, [load]);
