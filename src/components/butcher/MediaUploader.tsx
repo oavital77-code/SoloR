@@ -1,5 +1,7 @@
 "use client";
-// Wizard step 1: take photos / video, per-file progress, cover selection, ordering, delete, retry.
+// Wizard step 1, in the order the work happens: film the butchering, then photograph the finished cut.
+// Camera only (founders' decision 15.10.2026): no gallery pickers, and a file must have been captured just now.
+// Per-file progress, cover selection, ordering, delete, retry.
 import { useRef, useState } from "react";
 import { clsx } from "clsx";
 import { Button, Ltr } from "../ui";
@@ -23,6 +25,19 @@ interface Pending {
   abort?: () => void;
 }
 
+const FRESH_MS = 15 * 60 * 1000;
+
+function StepHeading({ n, title, hint }: { n: number; title: string; hint: string }) {
+  return (
+    <div>
+      <h2 className="flex items-baseline gap-2 text-lg font-extrabold">
+        <span className="text-neutral-400">{n}.</span>{title}
+      </h2>
+      <p className="mt-0.5 text-sm text-neutral-500">{hint}</p>
+    </div>
+  );
+}
+
 export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
   cutId: string; butcherId: string; media: CutMedia[]; onChange: () => Promise<void> | void; disabled?: boolean;
 }) {
@@ -30,8 +45,6 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
   const [pending, setPending] = useState<Pending[]>([]);
   const camPhoto = useRef<HTMLInputElement>(null);
   const camVideo = useRef<HTMLInputElement>(null);
-  const galPhoto = useRef<HTMLInputElement>(null);
-  const galVideo = useRef<HTMLInputElement>(null);
 
   const photos = photosOf(media);
   const ordered = sortedMedia(media).filter((m) => m.type === "photo");
@@ -109,11 +122,15 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
     }
   }
 
-  function addFiles(files: FileList | null, kind: "photo" | "video") {
-    if (!files?.length) return;
+  function addFiles(input: FileList | null, kind: "photo" | "video") {
+    if (!input?.length) return;
+    // a capture made now has a fresh timestamp; an old file from the device library does not
+    const files = Array.from(input).filter((f) => Date.now() - f.lastModified < FRESH_MS);
+    if (files.length < input.length) toast(he.wizard.notFresh, { tone: "error" });
+    if (!files.length) return;
     if (kind === "photo") {
       const room = MEDIA_LIMITS.maxPhotos - photos.length - pendingPhotos;
-      const list = Array.from(files).slice(0, Math.max(0, room));
+      const list = files.slice(0, Math.max(0, room));
       if (files.length > list.length) toast(he.wizard.maxPhotos, { tone: "error" });
       list.forEach((file) => {
         const item: Pending = { key: crypto.randomUUID(), kind, file, preview: URL.createObjectURL(file), progress: 0, status: "processing" };
@@ -164,31 +181,41 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
   const retry = (p: Pending) => (p.kind === "photo" ? uploadPhoto(p) : uploadVideo(p));
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 gap-3">
-        <Button size="xl" onClick={() => camPhoto.current?.click()} disabled={disabled || photos.length + pendingPhotos >= MEDIA_LIMITS.maxPhotos}>
+    <div className="flex flex-col gap-6">
+      <p className="text-sm text-neutral-500">{he.wizard.cameraOnly}</p>
+      <input ref={camPhoto} hidden type="file" accept="image/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "photo"); e.target.value = ""; }} />
+      <input ref={camVideo} hidden type="file" accept="video/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "video"); e.target.value = ""; }} />
+
+      {/* 1 — the butchering */}
+      <section className="flex flex-col gap-3">
+        <StepHeading n={1} title={he.wizard.videoTitle} hint={he.wizard.videoHint} />
+        {!video && !pendingVideo && (
+          <Button size="xl" onClick={() => camVideo.current?.click()} disabled={disabled}>{he.wizard.takeVideo}</Button>
+        )}
+        {video && (
+          <div className="relative overflow-hidden rounded-2xl bg-black">
+            <video src={mediaUrl(video.storage_path)} poster={mediaUrl(video.poster_path)} controls playsInline preload="metadata" className="max-h-72 w-full" />
+            <button type="button" onClick={() => remove(video)} disabled={disabled}
+              className="absolute top-2 end-2 min-h-10 rounded-full bg-black/60 px-3 text-sm font-bold text-white">
+              {he.wizard.remove}
+            </button>
+          </div>
+        )}
+        {pending.filter((p) => p.kind === "video").map((p) => (
+          <div key={p.key} className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
+            <ProgressLine p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />
+          </div>
+        ))}
+      </section>
+
+      {/* 2 — the finished cut */}
+      <section className="flex flex-col gap-3 border-t border-neutral-200 pt-5">
+        <StepHeading n={2} title={he.wizard.photosTitle} hint={he.wizard.photosHint} />
+        <Button size={video ? "xl" : "lg"} variant={video ? "primary" : "secondary"} onClick={() => camPhoto.current?.click()}
+          disabled={disabled || photos.length + pendingPhotos >= MEDIA_LIMITS.maxPhotos}>
           {he.wizard.takePhoto}
         </Button>
-        <Button size="lg" variant="secondary" onClick={() => camVideo.current?.click()} disabled={disabled || !!video || pendingVideo}>
-          {he.wizard.takeVideo}
-        </Button>
-        {!video && !pendingVideo && <p className="-mt-1 text-center text-sm text-neutral-500">{he.wizard.videoNudge}</p>}
-        <div className="flex justify-center gap-4 text-[15px] font-semibold text-brand">
-          <button type="button" className="min-h-11 underline underline-offset-4 disabled:opacity-40" disabled={disabled} onClick={() => galPhoto.current?.click()}>
-            {he.wizard.galleryPhotos}
-          </button>
-          <button type="button" className="min-h-11 underline underline-offset-4 disabled:opacity-40" disabled={disabled || !!video || pendingVideo} onClick={() => galVideo.current?.click()}>
-            {he.wizard.galleryVideo}
-          </button>
-        </div>
-      </div>
-
-      <input ref={camPhoto} hidden type="file" accept="image/*" capture="environment" multiple onChange={(e) => { addFiles(e.target.files, "photo"); e.target.value = ""; }} />
-      <input ref={camVideo} hidden type="file" accept="video/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "video"); e.target.value = ""; }} />
-      <input ref={galPhoto} hidden type="file" accept="image/*" multiple onChange={(e) => { addFiles(e.target.files, "photo"); e.target.value = ""; }} />
-      <input ref={galVideo} hidden type="file" accept="video/*" onChange={(e) => { addFiles(e.target.files, "video"); e.target.value = ""; }} />
-
-      {(ordered.length > 0 || pending.length > 0) && <p className="text-sm text-neutral-500">{he.wizard.coverHint}</p>}
+        {(ordered.length > 0 || pending.length > 0) && <p className="text-sm text-neutral-500">{he.wizard.coverHint}</p>}
 
       <ul className="grid grid-cols-3 gap-2">
         {ordered.map((m, i) => (
@@ -219,27 +246,8 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
           </li>
         ))}
         {pending.filter((p) => p.kind === "photo").map((p) => <PendingTile key={p.key} p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />)}
-      </ul>
-
-      {(video || pendingVideo) && (
-        <div className="flex flex-col gap-2">
-          <p className="font-bold">{he.cut.video}</p>
-          {video && (
-            <div className="relative overflow-hidden rounded-2xl bg-black">
-              <video src={mediaUrl(video.storage_path)} poster={mediaUrl(video.poster_path)} controls playsInline preload="metadata" className="max-h-72 w-full" />
-              <button type="button" onClick={() => remove(video)} disabled={disabled}
-                className="absolute top-2 end-2 min-h-10 rounded-full bg-black/60 px-3 text-sm font-bold text-white">
-                {he.wizard.remove}
-              </button>
-            </div>
-          )}
-          {pending.filter((p) => p.kind === "video").map((p) => (
-            <div key={p.key} className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
-              <ProgressLine p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />
-            </div>
-          ))}
-        </div>
-      )}
+        </ul>
+      </section>
     </div>
   );
 }

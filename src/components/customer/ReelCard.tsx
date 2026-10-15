@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Ltr } from "../ui";
 import { he } from "@/lib/i18n/he";
-import { cutTitle, mediaUrl, photosOf, videoOf } from "@/lib/cut-helpers";
+import { cutTitle, mediaUrl, photosOf, timeAgo, videoOf } from "@/lib/cut-helpers";
 import { formatAgorot } from "@/lib/pricing";
 import type { Breed, Butcher, CutWithMedia } from "@/lib/types";
 
@@ -24,6 +24,8 @@ export function ReelCard({ cut, breeds, shop, muted, onToggleMute, onVisible }: 
   const poster = video?.poster_path ?? photosOf(cut.cut_media)[0]?.storage_path;
   const soldOut = cut.status !== "published";
   const href = `/cut/${cut.code}`;
+  // recorded clips that feel live: say how recently the cut was made (video upload or publish, whichever is earlier)
+  const cutAt = [video?.created_at, cut.published_at].filter(Boolean).sort()[0];
 
   useEffect(() => {
     const el = ref.current;
@@ -70,7 +72,7 @@ export function ReelCard({ cut, breeds, shop, muted, onToggleMute, onVisible }: 
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink via-ink/60 to-transparent px-5 pt-28 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
         <div className="pointer-events-auto" onClick={open}>
-          {shop && <p className="eyebrow">{shop.name}</p>}
+          <p className="eyebrow">{[shop?.name, cutAt ? he.reels.cutAgo(timeAgo(cutAt)) : null].filter(Boolean).join("  ·  ")}</p>
           <h2 className="mt-1.5 font-display text-[30px] font-bold leading-[1.1] text-ivory drop-shadow">{title}</h2>
           <div className="mt-2 flex items-baseline justify-between gap-4">
             {cut.price_per_kg_agorot ? (

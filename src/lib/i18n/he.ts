@@ -80,6 +80,7 @@ export const he = {
     watchCut: "צפה בקיצוב",
     details: "לפרטים",
     newVideo: (title: string) => `סרטון חדש: ${title}`,
+    cutAgo: (ago: string) => `נחתך ${ago}`,
   },
 
   market: {
@@ -282,10 +283,12 @@ export const he = {
     // step 1
     takePhoto: "צלם תמונה",
     takeVideo: "צלם וידאו קיצוב",
-    videoNudge: "נתחים עם וידאו קיצוב מופיעים ב־Live",
-    fromGallery: "בחר מהגלריה",
-    galleryPhotos: "תמונות מהגלריה",
-    galleryVideo: "וידאו מהגלריה",
+    videoTitle: "וידאו הקיצוב",
+    videoHint: "מצלמים בזמן החיתוך: טלפון לאורך, 15–40 שניות. זה מה שהלקוח רואה ב־Live.",
+    photosTitle: "תמונות הנתח המוכן",
+    photosHint: "תמונה סופית ונקייה של הנתח, כמו שהלקוח יקבל אותו.",
+    cameraOnly: "מצלמים רק מתוך האפליקציה, כדי שהלקוח יראה את הנתח האמיתי.",
+    notFresh: "אפשר להעלות רק צילום שנעשה עכשיו במצלמה",
     coverHint: "לחיצה על תמונה קובעת אותה כתמונה הראשית",
     maxPhotos: "אפשר עד 6 תמונות",
     oneVideo: "אפשר וידאו אחד בלבד",

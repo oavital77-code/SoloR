@@ -69,8 +69,8 @@ export function CutCard({ cut, breeds, shop, now, eager }: {
           </span>
         )}
         {photos.length > 1 && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1">
-            {photos.map((p, i) => <span key={p.id} className={clsx("h-px w-5 transition-colors", i === active ? "bg-ivory" : "bg-ivory/35")} />)}
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-2" aria-hidden>
+            {photos.map((p, i) => <span key={p.id} className={clsx("size-1.5 rounded-full transition-colors", i === active ? "bg-ivory" : "bg-ivory/40")} />)}
           </div>
         )}
       </div>

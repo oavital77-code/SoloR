@@ -1,5 +1,6 @@
 "use client";
-// Cut page gallery: video first (full controls), then photos. Horizontal swipe, tap → fullscreen with zoom.
+// Cut page gallery: the butchering video first (plays muted, full controls), then the photos of the finished cut.
+// Horizontal swipe; small dots under the media show how many slides there are; tap a photo → fullscreen with zoom.
 import { useEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { he } from "@/lib/i18n/he";
@@ -15,16 +16,11 @@ export function MediaGallery({ media, title, code }: { media: CutMedia[]; title:
   const [viewer, setViewer] = useState<number | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && setActive(Number((e.target as HTMLElement).dataset.i))),
-      { root: track, threshold: 0.6 },
-    );
-    track.querySelectorAll("[data-i]").forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [slides.length]);
+  // slide index from the scroll position (RTL-safe: scrollLeft is negative in right-to-left containers)
+  const onScroll = () => {
+    const t = trackRef.current;
+    if (t) setActive(Math.round(Math.abs(t.scrollLeft) / t.clientWidth));
+  };
 
   if (slides.length === 0) {
     return <div className="aspect-square w-full bg-ink-3" />;
@@ -34,14 +30,14 @@ export function MediaGallery({ media, title, code }: { media: CutMedia[]; title:
 
   return (
     <div className="relative">
-      <div ref={trackRef} className="no-scrollbar flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-black">
+      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-black">
         {slides.map((m, i) => (
           <div key={m.id} data-i={i} className="relative h-full w-full shrink-0 snap-center">
             {m.type === "video" ? (
               <video
                 src={mediaUrl(m.storage_path)}
                 poster={mediaUrl(m.poster_path ?? cover?.storage_path)}
-                controls playsInline preload="metadata"
+                controls playsInline muted autoPlay loop preload="metadata"
                 className="h-full w-full object-contain"
                 aria-label={he.cut.video}
               />
@@ -60,9 +56,9 @@ export function MediaGallery({ media, title, code }: { media: CutMedia[]; title:
         ))}
       </div>
       {slides.length > 1 && (
-        <div className="pointer-events-none flex justify-center gap-1 bg-ink pt-3">
+        <div className="pointer-events-none flex justify-center gap-2 bg-ink pt-3" aria-hidden>
           {slides.map((m, i) => (
-            <span key={m.id} className={clsx("h-px w-5 transition-colors", i === active ? "bg-ivory" : "bg-ivory/35")} />
+            <span key={m.id} className={clsx("size-1.5 rounded-full transition-colors", i === active ? "bg-ivory" : "bg-ivory/30")} />
           ))}
         </div>
       )}
