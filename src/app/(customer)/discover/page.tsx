@@ -118,7 +118,7 @@ function Reels() {
   return (
     <main className="relative h-dvh bg-ink">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-ink/80 to-transparent px-5 pt-[max(0.9rem,env(safe-area-inset-top))] pb-8">
-        <div className="pointer-events-auto flex items-baseline justify-between gap-3">
+        <div className="pointer-events-auto flex flex-col items-center gap-1">
           <div className="min-w-0">
             <h1 className="font-display text-2xl font-bold text-ivory">{he.reels.title}</h1>
             <p className="truncate text-xs tracking-wide text-ivory/60">{shop ? shop.name : he.reels.subtitle}</p>

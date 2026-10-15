@@ -185,12 +185,12 @@ function CheckoutSheet({ cut, media, title, butcher, mode, qty, onClose, onStock
   return (
     <BottomSheet open onClose={onClose} title={he.checkout.title} dark>
       <div className="flex flex-col gap-4">
-        <div className="flex gap-3">
+        <div className="flex flex-col items-center gap-2">
           <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-ink-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${cut.code}`} className="h-full w-full object-cover" />}
           </div>
-          <div className="flex flex-col justify-center gap-0.5">
+          <div className="flex flex-col items-center gap-0.5">
             <p className="font-display text-xl font-bold text-ivory">{title}</p>
             <p className="text-sm text-stone">{what}</p>
             <p className="font-display text-2xl font-bold text-ivory"><Ltr>₪{formatAgorot(total)}</Ltr></p>

@@ -57,23 +57,23 @@ export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initia
         </div>
       )}
       {offersWhole && !wholeOk && cut.sale_mode === "both" && (
-        <p className="-mt-1 mb-2 text-xs text-stone">{he.cut.wholeBlocked}</p>
+        <p className="-mt-1 mb-2 text-center text-xs text-stone">{he.cut.wholeBlocked}</p>
       )}
 
       {mode === "steaks" && cut.steak_weight_g && (
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3 flex flex-col items-center gap-1.5">
           <Stepper dark value={qty} min={1} max={Math.max(1, cut.steaks_available)} onChange={setQty} label={he.cut.steaks} />
-          <p className="text-end text-sm text-stone">
+          <p className="text-sm text-stone">
             {he.cut.steaksSummary(qty, cut.steak_weight_g, formatWeight(cut.steak_weight_g * qty))}
           </p>
         </div>
       )}
       {mode === "whole" && (
-        <p className="mb-3 text-sm text-stone">{he.cut.whole} · <Ltr>{formatWeight(cut.weight_g)}</Ltr></p>
+        <p className="mb-3 text-center text-sm text-stone">{he.cut.whole} · <Ltr>{formatWeight(cut.weight_g)}</Ltr></p>
       )}
 
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
+      <div className="flex items-center justify-center gap-6 text-center">
+        <div>
           <div className="font-display text-3xl font-bold text-ivory"><Ltr>₪{formatAgorot(total)}</Ltr></div>
           <div className="text-xs text-stone">{he.cut.priceNote}</div>
         </div>

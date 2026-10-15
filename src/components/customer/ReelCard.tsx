@@ -75,12 +75,12 @@ export function ReelCard({ cut, breeds, shop, muted, onToggleMute, onVisible }: 
         <div className="pointer-events-auto" onClick={open}>
           <p className="eyebrow">{[shop?.name, cutAt ? he.reels.cutAgo(timeAgo(cutAt)) : null].filter(Boolean).join("  ·  ")}</p>
           <h2 className="mt-1.5 font-display text-[30px] font-bold leading-[1.1] text-ivory drop-shadow">{title}</h2>
-          <div className="mt-2 flex items-baseline justify-between gap-4">
+          <div className="mt-2 flex flex-col items-center gap-2">
             {cut.price_per_kg_agorot ? (
               <p className="text-sm text-ivory/75">
                 <Ltr>₪{formatAgorot(cut.price_per_kg_agorot).replace(/\.00$/, "")}</Ltr> {he.feed.perKg}
               </p>
-            ) : <span />}
+            ) : null}
             {!soldOut && (
               <span className="cursor-pointer border-b border-ivory/40 pb-0.5 text-sm font-medium text-ivory">{he.reels.details}</span>
             )}

@@ -45,7 +45,7 @@ export function FilterSheet({ open, onClose, value, onApply, cuts, breeds }: {
         <Toggle dark label={he.filter.agedOnly} checked={f.agedOnly} onChange={(v) => setF({ ...f, agedOnly: v })} />
 
         <section>
-          <div className="mb-2 flex items-baseline justify-between">
+          <div className="mb-2 flex flex-col items-center gap-0.5">
             <h3 className="font-bold">{he.filter.priceRange}</h3>
             <span className="text-sm text-stone">
               <Ltr>₪{lo / 100} – ₪{hi / 100}{hi >= PRICE_SLIDER.max ? "+" : ""}</Ltr>
@@ -75,7 +75,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   return (
     <section>
       <h3 className="mb-2 font-bold">{title}</h3>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <div className="flex flex-wrap justify-center gap-2">{children}</div>
     </section>
   );
 }

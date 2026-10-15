@@ -47,7 +47,7 @@ export function CutDetail({ cut, media, breeds, butcher }: {
   if (cut.butcher_marbling) facts.push(he.feed.butcherScore(cut.butcher_marbling));
 
   return (
-    <article className="bg-ink text-ivory">
+    <article className="bg-ink text-center text-ivory">
       <MediaGallery media={media} title={title} code={cut.code} />
       <div className="flex flex-col gap-7 px-5 pt-3 pb-8">
         <header>
@@ -55,13 +55,13 @@ export function CutDetail({ cut, media, breeds, butcher }: {
             <Link href={shopPath(butcher)} className="eyebrow inline-block min-h-6">{butcher.name}</Link>
           )}
           <h1 className="mt-2 font-display text-[34px] font-bold leading-[1.1]">{title}</h1>
-          <div className="mt-3 flex items-baseline justify-between gap-3">
+          <div className="mt-3 flex flex-col items-center gap-1">
             {cut.price_per_kg_agorot ? (
               <span className="font-display text-2xl font-bold">
                 <Ltr>₪{formatAgorot(cut.price_per_kg_agorot).replace(/\.00$/, "")}</Ltr>
                 <span className="ms-1.5 font-sans text-sm font-normal text-stone">{he.feed.perKg}</span>
               </span>
-            ) : <span />}
+            ) : null}
             <span className="text-xs text-stone/80">{he.cut.realPhoto}  ·  <Ltr className="tracking-wider">{cut.code}</Ltr></span>
           </div>
           {facts.length > 0 && (
@@ -78,11 +78,11 @@ export function CutDetail({ cut, media, breeds, butcher }: {
         {rows.length > 0 && (
           <section aria-label={he.cut.details}>
             <h2 className="eyebrow mb-3">{he.cut.details}</h2>
-            <dl className="divide-y divide-ivory/10 border-y border-ivory/10">
+            <dl className="grid grid-cols-2 border-t border-ivory/10">
               {rows.map(([k, v]) => (
-                <div key={k} className="flex items-start justify-between gap-4 py-3.5 text-[15px]">
-                  <dt className="text-stone">{k}</dt>
-                  <dd className="text-end">{v}</dd>
+                <div key={k} className="flex flex-col items-center gap-0.5 border-b border-ivory/10 px-2 py-3.5 text-[15px]">
+                  <dt className="text-xs text-stone">{k}</dt>
+                  <dd>{v}</dd>
                 </div>
               ))}
             </dl>

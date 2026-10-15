@@ -43,7 +43,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
           {shop.description && <p className="mt-2 font-display text-[17px] leading-relaxed text-ivory/80">{shop.description}</p>}
           <div className="mt-4 border-y border-ivory/10 py-3 text-sm">
             <p className="text-ivory/80">{shop.address}{shop.pickup_hours && `  ·  ${shop.pickup_hours}`}</p>
-            <div className="mt-1 flex flex-wrap gap-x-6">
+            <div className="mt-1 flex flex-wrap justify-center gap-x-6">
               <a className={action} target="_blank" rel="noreferrer"
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([shop.address, shop.city].filter(Boolean).join(", "))}`}>
                 {he.market.navigate}

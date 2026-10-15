@@ -35,7 +35,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col bg-ink px-6 py-10 text-white">
+    <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col bg-ink px-6 py-10 text-center text-white">
       <Logo className="text-3xl" />
       <h1 className="mt-10 text-3xl font-extrabold">{he.onboarding.title}</h1>
       <p className="mt-2 text-white/70">{he.onboarding.subtitle}</p>
@@ -46,7 +46,7 @@ export default function OnboardingPage() {
         </Field>
         <Field dark label={he.onboarding.phone} htmlFor="phone" error={errors.phone}>
           <input id="phone" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" placeholder={he.onboarding.phonePlaceholder}
-            className={inputDarkClass + " min-h-14 text-lg text-end"} value={phone} onChange={(e) => setPhone(e.target.value)} />
+            className={inputDarkClass + " min-h-14 text-lg"} value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Field>
         {errors.form && <p role="alert" className="rounded-2xl bg-red-900/60 px-4 py-3 font-semibold">{errors.form}</p>}
         <Button type="submit" size="lg" loading={busy} className="mt-4">{he.onboarding.submit}</Button>

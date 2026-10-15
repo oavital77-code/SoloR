@@ -30,7 +30,7 @@ export default function ShopsPage() {
             return (
               <li key={b.id}>
                 <Link href={shopPath(b)} className="block min-h-16 py-4 active:bg-ivory/[0.03]">
-                  <span className="flex items-baseline gap-3">
+                  <span className="flex items-baseline justify-center gap-3">
                     <span className="truncate font-display text-xl font-bold text-ivory">{b.name}</span>
                     {b.is_test && <span className="shrink-0 text-xs text-gold">{he.market.testBadge}</span>}
                   </span>

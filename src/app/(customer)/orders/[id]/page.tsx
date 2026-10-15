@@ -65,7 +65,7 @@ export default function MyOrderPage({ params }: { params: Promise<{ id: string }
     <main className="min-h-dvh pb-28">
       <header className="sticky top-0 z-20 bg-ink/90 px-5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
         <BackLink href="/orders" label={he.app.back} />
-        <div className="mt-1 flex items-center justify-between gap-2">
+        <div className="mt-1 flex flex-col items-center gap-1.5">
           <h1 className="font-display text-3xl font-bold text-ivory"><Ltr>#{order.order_number}</Ltr></h1>
           <OrderStatusBadge status={order.status} dark />
         </div>
@@ -88,12 +88,12 @@ export default function MyOrderPage({ params }: { params: Promise<{ id: string }
           )}
         </section>
 
-        <section className="flex gap-4">
+        <section className="flex flex-col items-center gap-3">
           <div className="size-20 shrink-0 overflow-hidden rounded-md bg-ink-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${order.cuts.code}`} className="h-full w-full object-cover" />}
           </div>
-          <div className="flex flex-col justify-center gap-0.5">
+          <div className="flex flex-col items-center gap-0.5">
             <p className="font-display text-lg font-bold text-ivory">{title}</p>
             <p className="text-sm text-stone">{orderWhat(order)}</p>
             <p className="font-display text-xl font-bold text-ivory"><Ltr>₪{formatAgorot(order.total_agorot)}</Ltr></p>
@@ -114,7 +114,7 @@ export default function MyOrderPage({ params }: { params: Promise<{ id: string }
             <p className="font-display text-xl font-bold text-ivory">{butcher.name}</p>
             <p className="mt-1 text-[15px] text-ivory/80">{butcher.address}</p>
             {butcher.pickup_hours && <p className="text-sm text-stone">{butcher.pickup_hours}</p>}
-            <div className="mt-1 flex gap-6 text-sm">
+            <div className="mt-1 flex justify-center gap-6 text-sm">
               <a className="min-h-10 py-2.5 text-gold underline-offset-4 hover:underline" target="_blank" rel="noreferrer"
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(butcher.address)}`}>{he.market.navigate}</a>
               <a href={`tel:${butcher.phone.replace(/-/g, "")}`} className="min-h-10 py-2.5 text-gold"><Ltr>{butcher.phone}</Ltr></a>

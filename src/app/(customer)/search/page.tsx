@@ -65,7 +65,7 @@ function SearchView() {
   return (
     <main className="min-h-dvh px-4 pb-24">
       <header className="sticky top-0 z-20 -mx-4 bg-ink/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center gap-6">
           <BackLink href={shop ? shopPath(shop) : "/"} label={shop ? he.market.backToShop : he.market.backToMarket} />
           <button type="button" onClick={() => setFilterOpen(true)} className="min-h-11 text-sm text-ivory/80">
             {he.feed.filter}{nFilters > 0 && <span className="ltr ms-1.5 text-gold">({nFilters})</span>}

@@ -77,23 +77,23 @@ export function CutCard({ cut, breeds, shop, now, eager }: {
       </div>
 
       <div className="pt-4">
-        <div className="flex items-baseline justify-between gap-4">
+        <div className="flex flex-col items-center gap-1">
           <Link href={href} className="min-w-0">
             <h3 className="font-display text-[26px] font-bold leading-[1.15] text-ivory">{title}</h3>
           </Link>
           {cut.price_per_kg_agorot && (
-            <p className="shrink-0 text-end">
+            <p>
               <span className="font-display text-[22px] font-bold text-ivory"><Ltr>₪{formatAgorot(cut.price_per_kg_agorot).replace(/\.00$/, "")}</Ltr></span>
               <span className="ms-1 text-xs text-stone">{he.feed.perKg}</span>
             </p>
           )}
         </div>
         {facts.length > 0 && <p className="mt-1.5 text-[15px] leading-relaxed text-stone">{facts.join("  ·  ")}</p>}
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-ivory/10 pt-3 text-sm">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 border-t border-ivory/10 pt-2 text-sm">
           {shop ? (
             <Link href={shopPath(shop)} className="min-h-9 truncate py-2 text-ivory/70">{shop.name}</Link>
           ) : <span className="text-ivory/50">{stock}</span>}
-          <span className="flex shrink-0 items-center gap-4">
+          <span className="flex items-center gap-4">
             {shop && stock && <span className="text-stone">{stock}</span>}
             {hasVideo && (
               <Link href={`/discover?c=${encodeURIComponent(cut.code)}`} className="min-h-9 py-2 font-medium text-gold underline-offset-4 hover:underline">

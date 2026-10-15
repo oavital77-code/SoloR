@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
+import { Heebo } from "next/font/google";
 import { ToastProvider } from "@/components/Toast";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { Splash } from "@/components/Splash";
 import { he } from "@/lib/i18n/he";
 import "./globals.css";
 
-const heebo = Heebo({ subsets: ["hebrew", "latin"], weight: ["300", "400", "500", "600", "800"], variable: "--font-heebo" });
-// editorial serif for display type (cut names, headings) — the luxury voice of the brand
-const frank = Frank_Ruhl_Libre({ subsets: ["hebrew", "latin"], weight: ["500", "700", "900"], variable: "--font-frank" });
+// one typeface across the app (founders' request): Heebo, set a touch heavier than regular
+const heebo = Heebo({ subsets: ["hebrew", "latin"], weight: ["300", "400", "500", "600", "700", "800"], variable: "--font-heebo" });
 
 export const metadata: Metadata = {
   title: "SoloR",
@@ -26,8 +26,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} ${frank.variable}`}>
+    <html lang="he" dir="rtl" className={heebo.variable}>
       <body className="min-h-dvh antialiased">
+        <Splash />
         <ToastProvider>{children}</ToastProvider>
         <ServiceWorker />
       </body>

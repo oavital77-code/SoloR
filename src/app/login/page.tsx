@@ -74,7 +74,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="relative mx-auto flex min-h-dvh max-w-[480px] flex-col justify-end overflow-hidden bg-ink px-6 pb-[max(2rem,env(safe-area-inset-bottom))] text-white">
+    <main className="relative mx-auto flex min-h-dvh max-w-[480px] flex-col justify-end overflow-hidden bg-ink px-6 pb-[max(2rem,env(safe-area-inset-bottom))] text-center text-white">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,16,46,0.45),transparent_60%)]" aria-hidden />
       <div className="relative mb-auto pt-[18dvh]">
         <Logo className="text-5xl" />
@@ -125,7 +125,7 @@ function LoginForm() {
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required
             />
             <Button type="submit" size="lg" loading={busy}>{busy ? he.auth.verifying : he.auth.verify}</Button>
-            <div className="flex justify-between">
+            <div className="flex justify-center gap-6">
               <Button type="button" variant="ghost" className="text-white/70" onClick={() => { setStage("email"); setCode(""); }}>
                 {he.auth.changeEmail}
               </Button>

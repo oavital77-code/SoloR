@@ -51,12 +51,10 @@ function Market() {
   return (
     <main className="min-h-dvh pb-28">
       <header className="sticky top-0 z-30 bg-ink/90 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-md">
-        <div className="flex items-center justify-between gap-2 px-4">
-          <div className="flex items-baseline gap-3">
-            <Logo className="text-[28px]" />
-            <span className="eyebrow" dir="ltr">{he.market.title}</span>
-          </div>
-          <nav className="flex items-center gap-5 text-sm">
+        <div className="flex flex-col items-center px-4">
+          <Logo className="text-[30px] leading-none" />
+          <span className="eyebrow mt-1.5" dir="ltr">{he.market.title}</span>
+          <nav className="mt-1 flex items-center justify-center gap-6 text-sm">
             <Link href="/shops" className="min-h-10 py-2.5 text-ivory/75">{he.market.shops}</Link>
             <Link href={user ? "/profile" : "/login"} className="min-h-10 py-2.5 text-ivory/75">
               {user ? he.nav.profile : he.nav.login}
@@ -71,7 +69,7 @@ function Market() {
 
       {error && !cuts ? <ErrorState dark onRetry={reload} /> : (
         <section className="px-4">
-          <div className="flex items-center justify-between border-t border-ivory/10 py-2">
+          <div className="flex items-center justify-center gap-4 border-t border-ivory/10 py-2">
             <p className="text-[13px] tracking-wide text-stone">
               {cuts ? he.market.results(shown.length) : "…"}  ·  {he.market.newestFirst}
             </p>

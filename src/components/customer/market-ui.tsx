@@ -10,7 +10,7 @@ import type { Cut, CutType } from "@/lib/types";
 export function SearchLink({ href, placeholder }: { href: string; placeholder: string }) {
   return (
     <Link href={href} role="search"
-      className="flex min-h-12 items-center rounded-xl px-4 text-[15px] text-stone ring-1 ring-ivory/15 transition-colors active:bg-ivory/[0.04]">
+      className="flex min-h-12 items-center justify-center rounded-xl px-4 text-[15px] text-stone ring-1 ring-ivory/15 transition-colors active:bg-ivory/[0.04]">
       <span className="truncate">{placeholder}</span>
     </Link>
   );
@@ -26,7 +26,7 @@ export function BackLink({ href, label, onClick }: { href?: string; label: strin
 
 export function SectionHeader({ title, href, linkLabel }: { title: string; href?: string; linkLabel?: string }) {
   return (
-    <div className="flex items-baseline justify-between px-4">
+    <div className="flex flex-col items-center px-4">
       <h2 className="font-display text-xl font-bold text-ivory">{title}</h2>
       {href && (
         <Link href={href} className="min-h-11 py-2 text-sm text-ivory/60 underline-offset-4 hover:underline">
@@ -48,7 +48,8 @@ export function CategoryChips({ cuts, hrefFor, active, onSelect }: {
     on ? "font-semibold text-ivory after:absolute after:inset-x-1 after:bottom-1 after:h-px after:bg-gold" : "text-stone",
   );
   return (
-    <div className="no-scrollbar flex gap-5 overflow-x-auto px-4">
+    <div className="no-scrollbar overflow-x-auto px-4">
+     <div className="mx-auto flex w-max gap-5">
       {onSelect && (
         <button type="button" className={cls(!active)} onClick={() => onSelect(null)}>{he.market.allCategories}</button>
       )}
@@ -58,6 +59,7 @@ export function CategoryChips({ cuts, hrefFor, active, onSelect }: {
           ? <button key={c.key} type="button" aria-pressed={active === c.key} className={cls(active === c.key)} onClick={() => onSelect(active === c.key ? null : c.key)}>{body}</button>
           : <Link key={c.key} href={hrefFor!(c.key)} className={cls(false)}>{body}</Link>;
       })}
+     </div>
     </div>
   );
 }

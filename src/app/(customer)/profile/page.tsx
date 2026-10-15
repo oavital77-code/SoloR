@@ -52,10 +52,10 @@ export default function ProfilePage() {
           <input id="name" className={inputDarkClass + " min-h-14 text-lg"} value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
         </Field>
         <Field dark label={he.onboarding.phone} htmlFor="phone" error={errors.phone}>
-          <input id="phone" type="tel" inputMode="tel" dir="ltr" className={inputDarkClass + " min-h-14 text-end text-lg"} value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+          <input id="phone" type="tel" inputMode="tel" dir="ltr" className={inputDarkClass + " min-h-14 text-lg"} value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
         </Field>
         <Field dark label={he.profile.email} htmlFor="email">
-          <input id="email" dir="ltr" readOnly className={inputDarkClass + " min-h-14 text-end text-lg opacity-60"} value={user?.email ?? ""} />
+          <input id="email" dir="ltr" readOnly className={inputDarkClass + " min-h-14 text-lg opacity-60"} value={user?.email ?? ""} />
         </Field>
         <Button type="submit" size="lg" loading={busy}>{he.app.save}</Button>
       </form>

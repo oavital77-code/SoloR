@@ -57,7 +57,7 @@ export function Toggle({ checked, onChange, label, dark, disabled }: {
   checked: boolean; onChange: (v: boolean) => void; label: string; dark?: boolean; disabled?: boolean;
 }) {
   return (
-    <label className={clsx("flex min-h-11 cursor-pointer items-center justify-between gap-3", disabled && "opacity-50")}>
+    <label className={clsx("flex min-h-11 cursor-pointer items-center gap-3", dark ? "justify-center" : "justify-between", disabled && "opacity-50")}>
       <span className="font-semibold">{label}</span>
       <button
         type="button"
@@ -209,7 +209,7 @@ export function Field({ label, hint, error, children, htmlFor, dark }: {
 export const inputClass =
   "min-h-14 w-full rounded-2xl bg-white px-4 text-lg ring-1 ring-neutral-300 outline-none focus:ring-2 focus:ring-brand disabled:bg-neutral-100 disabled:text-neutral-500";
 export const inputDarkClass =
-  "min-h-12 w-full rounded-xl bg-ivory/[0.04] px-4 text-base text-ivory ring-1 ring-ivory/15 outline-none placeholder:text-stone/80 focus:ring-ivory/50";
+  "min-h-12 w-full rounded-xl bg-ivory/[0.04] px-4 text-center text-base text-ivory ring-1 ring-ivory/15 outline-none placeholder:text-stone/80 focus:ring-ivory/50";
 
 /** Shows numbers/codes LTR inside Hebrew text */
 export function Ltr({ children, className }: { children: React.ReactNode; className?: string }) {
