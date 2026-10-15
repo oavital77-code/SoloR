@@ -44,7 +44,7 @@ select n.id, 'photo', '/demo/' || n.key || '/' || k || '.jpg', '/demo/' || n.key
 from demo_new n cross join generate_series(1, 3) k;
 
 insert into cut_media (cut_id, type, storage_path, thumb_path, poster_path, is_cover, sort_order, width, height, duration_s)
-select n.id, 'video', '/demo/' || n.key || '/clip.mp4', null, '/demo/' || n.key || '/1.jpg', false, 10, 720, 1280, 7
+select n.id, 'video', '/demo/' || n.key || '/clip.mp4', null, '/demo/' || n.key || '/1.jpg', false, 10, 720, 900, 8
 from demo_new n join demo_in d using (key) where d.video;
 
 update cuts c set status = 'published',

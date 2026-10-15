@@ -1,5 +1,6 @@
 "use client";
-// One full-screen reel: the butchering video of a single cut, a quiet caption, a hairline progress bar.
+// One full-screen reel: the butchering video of a single cut, shown whole as recorded (never cropped or zoomed),
+// a quiet caption, a hairline progress bar.
 // Tapping the reel opens the cut itself (all the details and the order).
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -55,7 +56,7 @@ export function ReelCard({ cut, breeds, shop, muted, onToggleMute, onVisible }: 
           muted={muted} loop playsInline preload="metadata"
           onTimeUpdate={(e) => { const v = e.currentTarget; if (v.duration) setProgress(v.currentTime / v.duration); }}
           onClick={open}
-          className={clsx("absolute inset-0 h-full w-full cursor-pointer object-cover", soldOut && "grayscale")}
+          className={clsx("absolute inset-0 h-full w-full cursor-pointer object-contain", soldOut && "grayscale")}
         />
       )}
 
