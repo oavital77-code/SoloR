@@ -9,7 +9,6 @@ import { CategoryChips, SearchLink, SectionHeader } from "@/components/customer/
 import { useCatalog } from "@/components/customer/useCatalog";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
-import { coverOf, mediaUrl } from "@/lib/cut-helpers";
 import { useBreeds, useButchers, useNow } from "@/lib/hooks";
 import { isAvailable } from "@/lib/market";
 
@@ -21,7 +20,6 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
   const shop = butchers.find((b) => b.slug === slug) ?? null;
   const { cuts, error, reload } = useCatalog(shop?.id ?? null, !!shop);
   const available = (cuts ?? []).filter(isAvailable);
-  const cover = available.map((c) => coverOf(c.cut_media)).find(Boolean);
   const scope = `b=${encodeURIComponent(slug)}`;
 
   if (butchers.length > 0 && !shop) {
@@ -30,27 +28,18 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
 
   return (
     <main className="min-h-dvh pb-28">
-      {/* cover */}
-      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-brand-dark to-ink">
-        {cover && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={mediaUrl(cover.storage_path)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
+      {/* header — no photo here: the cuts below are the photos */}
+      <div className="bg-gradient-to-b from-brand-dark/60 to-ink px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4">
+        <BackToMarket />
+        {!shop ? <Skeleton className="mt-4 h-8 w-2/3" /> : (
+          <div className="mt-4">
+            <div className="flex items-center gap-2">
+              <h1 className="text-[28px] font-extrabold leading-tight">{shop.name}</h1>
+              {shop.is_test && <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-bold text-amber-300">{he.market.testBadge}</span>}
+            </div>
+            <p className="text-sm text-white/70">{cuts ? he.market.shopCuts(available.length) : "…"}{shop.city && ` · ${shop.city}`}</p>
+          </div>
         )}
-        <span className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-black/30" aria-hidden />
-        <div className="absolute inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))]"><BackToMarket /></div>
-        <div className="absolute inset-x-4 bottom-3">
-          {!shop ? <Skeleton className="h-8 w-2/3" /> : (
-            <>
-              <div className="flex items-center gap-2">
-                <h1 className="text-[28px] font-extrabold leading-tight drop-shadow">{shop.name}</h1>
-                {shop.is_test && <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-bold text-amber-300">{he.market.testBadge}</span>}
-              </div>
-              <p className="text-sm text-white/80">
-                {cuts ? he.market.shopCuts(available.length) : "…"}{shop.city && ` · ${shop.city}`}
-              </p>
-            </>
-          )}
-        </div>
       </div>
 
       {shop && (
@@ -108,7 +97,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
 
 function BackToMarket() {
   return (
-    <Link href="/" className="inline-flex min-h-10 items-center gap-1 rounded-full bg-black/45 px-3 text-xs font-extrabold tracking-wide backdrop-blur">
+    <Link href="/" className="inline-flex min-h-10 items-center gap-1 rounded-full bg-white/10 px-3 text-xs font-extrabold tracking-wide">
       <ChevronRight className="size-4" aria-hidden /><span dir="ltr">BACK TO MARKET</span>
     </Link>
   );

@@ -76,9 +76,10 @@ export const he = {
   market: {
     title: "MARKETPLACE",
     seeAll: "הכל",
+    allCuts: (n: number) => `לכל ${n} הנתחים`,
     allCategories: "הכל",
     liveNow: "באוויר עכשיו",
-    watchLive: "לצפייה בלייב",
+    watchLive: "לייב",
     navigate: "ניווט",
     call: "התקשר",
     watchShopLive: "רילסים מהקצבייה",

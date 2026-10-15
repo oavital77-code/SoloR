@@ -4,10 +4,8 @@ import Link from "next/link";
 import { ChevronLeft, Search } from "lucide-react";
 import { clsx } from "clsx";
 import { he } from "@/lib/i18n/he";
-import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
-import { cutTypeLabel } from "@/lib/labels";
 import { categoryCounts } from "@/lib/market";
-import type { Breed, Cut, CutType, CutWithMedia } from "@/lib/types";
+import type { Cut, CutType } from "@/lib/types";
 
 /** The single search entry: looks like a field, opens the search screen (scoped to a shop when given). */
 export function SearchLink({ href, placeholder }: { href: string; placeholder: string }) {
@@ -58,32 +56,5 @@ export function CategoryChips({ cuts, hrefFor, active, onSelect }: {
           : <Link key={c.key} href={hrefFor!(c.key)} className={cls(false)}>{body}</Link>;
       })}
     </div>
-  );
-}
-
-/** "Stories" row of what just went live — real meat first, one tap to the cut. */
-export function LiveStories({ cuts, breeds }: { cuts: CutWithMedia[]; breeds: Breed[] }) {
-  if (cuts.length === 0) return null;
-  return (
-    <ul className="no-scrollbar flex gap-3 overflow-x-auto px-4 pb-1">
-      {cuts.map((c) => {
-        const cover = coverOf(c.cut_media);
-        return (
-          <li key={c.id} className="w-[72px] shrink-0">
-            <Link href={`/cut/${c.code}`} className="flex flex-col items-center gap-1.5" aria-label={cutTitle(c, breeds)}>
-              <span className="rounded-full bg-gradient-to-tr from-live via-brand to-amber-400 p-[2.5px]">
-                <span className="block size-[66px] overflow-hidden rounded-full border-2 border-ink bg-ink-3">
-                  {cover && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className="h-full w-full object-cover" loading="lazy" />
-                  )}
-                </span>
-              </span>
-              <span className="w-full truncate text-center text-xs font-semibold text-white/80">{cutTypeLabel(c.cut_type)}</span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
