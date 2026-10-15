@@ -46,8 +46,9 @@ export function CutCard({ cut, breeds, shop, now, eager }: {
   return (
     <article>
       <div className="relative overflow-hidden rounded-2xl bg-ink-3">
-        <Link href={href} aria-label={`${title} ${cut.code}`} tabIndex={-1}>
-          <div ref={track} className="no-scrollbar flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto">
+        {/* horizontal-only strip in a fixed-ratio box: a vertical swipe always scrolls the page (iOS) */}
+        <Link href={href} aria-label={`${title} ${cut.code}`} tabIndex={-1} className="relative block aspect-[4/5]">
+          <div ref={track} className="no-scrollbar absolute inset-0 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
             {photos.map((p, i) => (
               <div key={p.id} data-i={i} className="h-full w-full shrink-0 snap-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -30,30 +30,33 @@ export function MediaGallery({ media, title, code }: { media: CutMedia[]; title:
 
   return (
     <div className="relative">
-      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-black">
-        {slides.map((m, i) => (
-          <div key={m.id} data-i={i} className="relative h-full w-full shrink-0 snap-center">
-            {m.type === "video" ? (
-              <video
-                src={mediaUrl(m.storage_path)}
-                poster={mediaUrl(m.poster_path ?? cover?.storage_path)}
-                controls playsInline muted autoPlay loop preload="metadata"
-                className="h-full w-full object-contain"
-                aria-label={he.cut.video}
-              />
-            ) : (
-              <button type="button" className="h-full w-full" onClick={() => setViewer(photoIndex(i))} aria-label={he.cut.mediaAlt(title, code, photoIndex(i) + 1)}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+      {/* horizontal-only strip in a fixed-ratio box: a vertical swipe always scrolls the page (iOS) */}
+      <div className="relative aspect-square w-full bg-black">
+        <div ref={trackRef} onScroll={onScroll} className="no-scrollbar absolute inset-0 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
+          {slides.map((m, i) => (
+            <div key={m.id} data-i={i} className="relative h-full w-full shrink-0 snap-center">
+              {m.type === "video" ? (
+                <video
                   src={mediaUrl(m.storage_path)}
-                  alt={he.cut.mediaAlt(title, code, photoIndex(i) + 1)}
-                  className="h-full w-full object-cover"
-                  loading={i === 0 ? "eager" : "lazy"}
+                  poster={mediaUrl(m.poster_path ?? cover?.storage_path)}
+                  controls playsInline muted autoPlay loop preload="metadata"
+                  className="h-full w-full object-contain"
+                  aria-label={he.cut.video}
                 />
-              </button>
-            )}
-          </div>
-        ))}
+              ) : (
+                <button type="button" className="h-full w-full" onClick={() => setViewer(photoIndex(i))} aria-label={he.cut.mediaAlt(title, code, photoIndex(i) + 1)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={mediaUrl(m.storage_path)}
+                    alt={he.cut.mediaAlt(title, code, photoIndex(i) + 1)}
+                    className="h-full w-full object-cover"
+                    loading={i === 0 ? "eager" : "lazy"}
+                  />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
       {slides.length > 1 && (
         <div className="pointer-events-none flex justify-center gap-2 bg-ink pt-3" aria-hidden>
