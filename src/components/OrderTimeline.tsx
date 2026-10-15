@@ -1,5 +1,5 @@
 // 4-step order timeline with real timestamps from order_events (never shows a step that didn't happen).
-import { Check, X } from "lucide-react";
+// Numbered steps on a hairline — no icons.
 import { clsx } from "clsx";
 import { ORDER_STATUS_SHORT } from "@/lib/labels";
 import { formatDateTime } from "@/lib/cut-helpers";
@@ -25,19 +25,20 @@ export function OrderTimeline({ status, events, dark }: { status: OrderStatus; e
             <div className="flex flex-col items-center">
               <span
                 className={clsx(
-                  "grid size-8 place-items-center rounded-full text-sm font-bold",
-                  s === "cancelled" ? "bg-neutral-500 text-white"
-                    : done ? (current ? "bg-brand text-white" : "bg-emerald-600 text-white")
-                    : dark ? "bg-white/10 text-white/40" : "bg-neutral-200 text-neutral-400",
+                  "grid size-8 place-items-center rounded-full font-display text-sm font-bold",
+                  s === "cancelled" ? (dark ? "text-stone ring-1 ring-stone/50" : "text-neutral-500 ring-1 ring-neutral-400")
+                    : current ? (dark ? "bg-ivory text-ink" : "bg-ink text-white")
+                    : done ? (dark ? "text-gold ring-1 ring-gold/70" : "text-ink ring-1 ring-ink/60")
+                    : dark ? "text-ivory/35 ring-1 ring-ivory/15" : "text-neutral-400 ring-1 ring-neutral-300",
                 )}
               >
-                {s === "cancelled" ? <X className="size-4" /> : done ? <Check className="size-4" /> : i + 1}
+                {i + 1}
               </span>
-              {!last && <span className={clsx("w-0.5 flex-1 min-h-6", done ? "bg-emerald-600" : dark ? "bg-white/10" : "bg-neutral-200")} />}
+              {!last && <span className={clsx("w-px flex-1 min-h-6", done ? (dark ? "bg-gold/60" : "bg-ink/50") : dark ? "bg-ivory/10" : "bg-neutral-200")} />}
             </div>
             <div className={clsx("pb-5", !done && "opacity-50")}>
-              <p className={clsx("font-bold", current && "text-lg")}>{ORDER_STATUS_SHORT[s]}</p>
-              {time && <p className={clsx("text-sm", dark ? "text-white/60" : "text-neutral-500")}>{formatDateTime(time)}</p>}
+              <p className={clsx("font-semibold", current && "font-display text-lg font-bold")}>{ORDER_STATUS_SHORT[s]}</p>
+              {time && <p className={clsx("text-sm", dark ? "text-stone" : "text-neutral-500")}>{formatDateTime(time)}</p>}
             </div>
           </li>
         );

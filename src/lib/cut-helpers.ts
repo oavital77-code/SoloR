@@ -1,6 +1,6 @@
 // Display helpers shared by feed, cut page, butcher screens.
 import { he } from "./i18n/he";
-import { agingMethodLabel, cutTypeLabel, originFlag, originLabel } from "./labels";
+import { agingMethodLabel, cutTypeLabel, originLabel } from "./labels";
 import { formatWeight, maxSteaks, plannedSteaks } from "./pricing";
 import type { Breed, Cut, CutMedia, Order } from "./types";
 
@@ -22,10 +22,10 @@ export function cutTitle(cut: Pick<Cut, "cut_type" | "breed_key" | "breed_other"
   return [cutTypeLabel(cut.cut_type), breedLabel(cut, breeds)].filter(Boolean).join(" · ");
 }
 
-/** "🇦🇷 ארגנטינה · יושן 28 יום (יבש)" */
+/** "ארגנטינה · יושן 28 יום (יבש)" */
 export function originAgingLine(cut: Cut): string {
   const parts: string[] = [];
-  if (cut.origin_country) parts.push(`${originFlag(cut.origin_country)} ${originLabel(cut.origin_country)}`);
+  if (cut.origin_country) parts.push(originLabel(cut.origin_country));
   if (cut.is_aged && cut.aging_days) {
     const m = agingMethodLabel(cut.aging_method);
     parts.push(`${he.feed.agedDays(cut.aging_days)}${m ? ` (${m})` : ""}`);

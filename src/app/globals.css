@@ -2,12 +2,16 @@
 
 @theme {
   --font-sans: var(--font-heebo), "Rubik", system-ui, sans-serif;
-  --color-brand: #c8102e;
-  --color-brand-dark: #9e0c24;
-  --color-live: #ff1f3d;
-  --color-ink: #0e0e0e;
-  --color-ink-2: #1a1a1a;
-  --color-ink-3: #262626;
+  --font-display: var(--font-frank), "Frank Ruhl Libre", Georgia, serif;
+  --color-brand: #a3122a;       /* deep burgundy — primary actions only */
+  --color-brand-dark: #7d0d20;
+  --color-live: #e0233f;
+  --color-ink: #0b0b0b;
+  --color-ink-2: #161514;
+  --color-ink-3: #22201e;
+  --color-ivory: #f3efe8;       /* primary text on dark */
+  --color-stone: #9b958c;       /* secondary text */
+  --color-gold: #c6ab7c;        /* hairline accents, small labels */
 }
 
 :root {
@@ -16,7 +20,7 @@
 
 html,
 body {
-  background: #0e0e0e;
+  background: #0b0b0b;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -134,3 +138,13 @@ input[type="range"].big-range::-moz-range-thumb {
     scroll-behavior: auto !important;
   }
 }
+
+/* small editorial label: letter-spaced, quiet */
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+.eyebrow:lang(en), .eyebrow[dir="ltr"] { letter-spacing: 0.25em; font-size: 11px; }

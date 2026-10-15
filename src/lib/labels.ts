@@ -11,13 +11,13 @@ export const CUT_TYPES: { key: CutType; label: string }[] = [
   { key: "denver", label: "דנוור" },
 ];
 
-export const ORIGINS: { key: OriginCountry; label: string; flag: string }[] = [
-  { key: "IL", label: "ישראל", flag: "🇮🇱" },
-  { key: "AR", label: "ארגנטינה", flag: "🇦🇷" },
-  { key: "UY", label: "אורוגוואי", flag: "🇺🇾" },
-  { key: "PY", label: "פרגוואי", flag: "🇵🇾" },
-  { key: "JP", label: "יפן", flag: "🇯🇵" },
-  { key: "AU", label: "אוסטרליה", flag: "🇦🇺" },
+export const ORIGINS: { key: OriginCountry; label: string }[] = [
+  { key: "IL", label: "ישראל" },
+  { key: "AR", label: "ארגנטינה" },
+  { key: "UY", label: "אורוגוואי" },
+  { key: "PY", label: "פרגוואי" },
+  { key: "JP", label: "יפן" },
+  { key: "AU", label: "אוסטרליה" },
 ];
 
 export const AGING_METHODS: { key: AgingMethod; label: string }[] = [
@@ -57,6 +57,5 @@ export const CUT_STATUS_LABEL: Record<CutStatus, string> = {
 
 export const cutTypeLabel = (k: CutType | null | undefined) => CUT_TYPES.find((c) => c.key === k)?.label ?? "";
 export const originLabel = (k: OriginCountry | null | undefined) => ORIGINS.find((c) => c.key === k)?.label ?? "";
-export const originFlag = (k: OriginCountry | null | undefined) => ORIGINS.find((c) => c.key === k)?.flag ?? "";
 export const agingMethodLabel = (k: AgingMethod | null | undefined) =>
   AGING_METHODS.find((c) => c.key === k)?.label ?? null;

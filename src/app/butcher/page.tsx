@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
-import { LogOut } from "lucide-react";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { CutList } from "@/components/butcher/CutList";
 import { OrderList } from "@/components/butcher/OrderList";
@@ -22,12 +21,12 @@ function ButcherHome() {
         <div className="flex items-center justify-between gap-3">
           <h1 className="truncate text-2xl font-extrabold">{butcher.name}</h1>
           <form action="/auth/signout" method="post">
-            <button className="grid size-11 place-items-center rounded-xl text-neutral-500" aria-label={he.butcher.logout}>
-              <LogOut className="size-5" />
+            <button className="min-h-11 px-1 text-sm font-semibold text-neutral-500">
+              {he.butcher.logout}
             </button>
           </form>
         </div>
-        <Toggle label={`🔔 ${he.butcher.soundAlerts}`} checked={sound} onChange={setSound} />
+        <Toggle label={he.butcher.soundAlerts} checked={sound} onChange={setSound} />
         <Link
           href="/butcher/cuts/new"
           className="mt-2 flex min-h-16 w-full items-center justify-center rounded-2xl bg-brand text-xl font-extrabold text-white shadow-md active:scale-[0.99]"

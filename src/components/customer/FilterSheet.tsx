@@ -37,7 +37,7 @@ export function FilterSheet({ open, onClose, value, onApply, cuts, breeds }: {
         <Group title={he.filter.origin}>
           {ORIGINS.map((o) => (
             <Chip dark key={o.key} selected={f.origins.includes(o.key)} onClick={() => setF({ ...f, origins: toggle(f.origins, o.key) })}>
-              <span className="me-1">{o.flag}</span>{o.label}
+              {o.label}
             </Chip>
           ))}
         </Group>
@@ -47,7 +47,7 @@ export function FilterSheet({ open, onClose, value, onApply, cuts, breeds }: {
         <section>
           <div className="mb-2 flex items-baseline justify-between">
             <h3 className="font-bold">{he.filter.priceRange}</h3>
-            <span className="text-sm text-white/70">
+            <span className="text-sm text-stone">
               <Ltr>₪{lo / 100} – ₪{hi / 100}{hi >= PRICE_SLIDER.max ? "+" : ""}</Ltr>
             </span>
           </div>
@@ -91,7 +91,7 @@ function DualRange({ min, max, step, low, high, onChange }: {
     "[&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:size-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-brand";
   return (
     <div className="relative h-11" dir="ltr">
-      <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-white/15" />
+      <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-ivory/15" />
       <div className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full bg-brand" style={{ left: `${pct(low)}%`, right: `${100 - pct(high)}%` }} />
       <input type="range" aria-label={he.a11y.priceMin} min={min} max={max} step={step} value={low} className={thumb}
         onChange={(e) => onChange(Math.min(Number(e.target.value), high - step), high)} />

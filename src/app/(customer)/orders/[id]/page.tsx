@@ -2,9 +2,9 @@
 // C6 — order screen: live 4-step timeline, pickup details, cancel (only while "new").
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, MapPin } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { OrderTimeline } from "@/components/OrderTimeline";
+import { BackLink } from "@/components/customer/market-ui";
 import { MY_ORDER_SELECT, useMyOrdersRealtime, type MyOrderRow } from "@/components/customer/useMyOrders";
 import { useToast } from "@/components/Toast";
 import { Button, ConfirmDialog, ErrorState, Ltr, Spinner } from "@/components/ui";
@@ -63,64 +63,67 @@ export default function MyOrderPage({ params }: { params: Promise<{ id: string }
 
   return (
     <main className="min-h-dvh pb-28">
-      <header className="sticky top-0 z-20 flex items-center gap-2 bg-ink/90 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
-        <Link href="/orders" aria-label={he.app.back} className="grid size-11 place-items-center"><ChevronRight className="size-6" /></Link>
-        <h1 className="flex-1 text-2xl font-extrabold"><Ltr>#{order.order_number}</Ltr></h1>
-        <OrderStatusBadge status={order.status} dark />
+      <header className="sticky top-0 z-20 bg-ink/90 px-5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
+        <BackLink href="/orders" label={he.app.back} />
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <h1 className="font-display text-3xl font-bold text-ivory"><Ltr>#{order.order_number}</Ltr></h1>
+          <OrderStatusBadge status={order.status} dark />
+        </div>
       </header>
 
-      <div className="flex flex-col gap-4 px-4 pt-2">
+      <div className="flex flex-col gap-6 px-5 pt-2">
         {order.status === "ready" && (
-          <div className="animate-fade-in rounded-2xl bg-emerald-500 p-4 text-center text-xl font-extrabold text-white shadow-lg" role="status">
+          <div className="animate-fade-in rounded-xl bg-ivory p-4 text-center font-display text-xl font-bold text-ink" role="status">
             {he.orders.readyBanner}
           </div>
         )}
-        <p className="text-lg font-bold">{ORDER_STATUS_LABEL[order.status]}</p>
+        <p className="font-display text-xl text-ivory">{ORDER_STATUS_LABEL[order.status]}</p>
 
-        <section className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
+        <section className="border-y border-ivory/10 py-5">
           <OrderTimeline status={order.status} events={events} dark />
           {order.status === "cancelled" && order.cancelled_by && (
-            <p className="text-sm text-white/70">
+            <p className="text-sm text-stone">
               {he.orders.cancelledBy(order.cancelled_by)}{order.cancel_reason && ` · ${he.orders.reason}: ${order.cancel_reason}`}
             </p>
           )}
         </section>
 
-        <section className="flex gap-3 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-          <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-ink-3">
+        <section className="flex gap-4">
+          <div className="size-20 shrink-0 overflow-hidden rounded-md bg-ink-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${order.cuts.code}`} className="h-full w-full object-cover" />}
           </div>
           <div className="flex flex-col justify-center gap-0.5">
-            <p className="font-extrabold">{title}</p>
-            <p className="text-sm text-white/75">{orderWhat(order)}</p>
-            <p className="text-xl font-extrabold"><Ltr>₪{formatAgorot(order.total_agorot)}</Ltr></p>
-            <Link href={`/cut/${order.cuts.code}`} className="text-sm font-semibold text-white/70 underline underline-offset-4">{he.orders.toCut}</Link>
+            <p className="font-display text-lg font-bold text-ivory">{title}</p>
+            <p className="text-sm text-stone">{orderWhat(order)}</p>
+            <p className="font-display text-xl font-bold text-ivory"><Ltr>₪{formatAgorot(order.total_agorot)}</Ltr></p>
+            <Link href={`/cut/${order.cuts.code}`} className="min-h-9 py-1 text-sm text-gold underline-offset-4 hover:underline">{he.orders.toCut}</Link>
           </div>
         </section>
 
         {order.customer_note && (
-          <section className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-            <p className="text-sm text-white/60">{he.orders.note}</p>
+          <section>
+            <p className="eyebrow mb-1.5">{he.orders.note}</p>
             <p className="whitespace-pre-line">{order.customer_note}</p>
           </section>
         )}
 
         {butcher && (
-          <section className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-            <h2 className="mb-2 font-extrabold">{he.orders.pickupDetails}</h2>
-            <p className="font-bold">{butcher.name}</p>
-            <a className="flex min-h-11 items-center gap-2 text-white/80 underline underline-offset-4" target="_blank" rel="noreferrer"
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(butcher.address)}`}>
-              <MapPin className="size-4 text-brand" />{butcher.address}
-            </a>
-            {butcher.pickup_hours && <p className="text-sm text-white/60">{butcher.pickup_hours}</p>}
-            <a href={`tel:${butcher.phone.replace(/-/g, "")}`} className="text-sm text-white/70"><Ltr>{butcher.phone}</Ltr></a>
+          <section className="border-t border-ivory/10 pt-5">
+            <h2 className="eyebrow mb-2">{he.orders.pickupDetails}</h2>
+            <p className="font-display text-xl font-bold text-ivory">{butcher.name}</p>
+            <p className="mt-1 text-[15px] text-ivory/80">{butcher.address}</p>
+            {butcher.pickup_hours && <p className="text-sm text-stone">{butcher.pickup_hours}</p>}
+            <div className="mt-1 flex gap-6 text-sm">
+              <a className="min-h-10 py-2.5 text-gold underline-offset-4 hover:underline" target="_blank" rel="noreferrer"
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(butcher.address)}`}>{he.market.navigate}</a>
+              <a href={`tel:${butcher.phone.replace(/-/g, "")}`} className="min-h-10 py-2.5 text-gold"><Ltr>{butcher.phone}</Ltr></a>
+            </div>
           </section>
         )}
 
         {order.status === "new" && (
-          <Button variant="dark" className="text-red-300!" onClick={() => setConfirm(true)}>{he.orders.cancel}</Button>
+          <Button variant="dark" className="text-[#e8a0a8]!" onClick={() => setConfirm(true)}>{he.orders.cancel}</Button>
         )}
       </div>
 

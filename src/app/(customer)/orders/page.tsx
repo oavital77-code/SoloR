@@ -2,7 +2,6 @@
 // C6 — my orders, live status.
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { UserRound } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { MY_ORDER_SELECT, useMyOrdersRealtime, type MyOrderRow } from "@/components/customer/useMyOrders";
 import { Button, EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
@@ -39,32 +38,32 @@ export default function MyOrdersPage() {
   return (
     <main className="min-h-dvh pb-24">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-ink/90 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
-        <h1 className="text-2xl font-extrabold">{he.orders.title}</h1>
-        <Link href="/profile" aria-label={he.nav.profile} className="grid size-11 place-items-center rounded-full bg-white/10"><UserRound className="size-5" /></Link>
+        <h1 className="font-display text-3xl font-bold text-ivory">{he.orders.title}</h1>
+        <Link href="/profile" className="min-h-10 py-2.5 text-sm text-ivory/75">{he.nav.profile}</Link>
       </header>
       {error && !rows ? <ErrorState dark onRetry={load} />
         : !rows ? <div className="flex flex-col gap-3 px-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-24" />)}</div>
         : rows.length === 0 ? (
           <EmptyState text={he.orders.empty}><Link href="/"><Button variant="dark">{he.orders.toFeed}</Button></Link></EmptyState>
         ) : (
-          <ul className="flex flex-col gap-3 px-4">
+          <ul className="mx-4 divide-y divide-ivory/10 border-y border-ivory/10">
             {rows.map((o) => {
               const cover = coverOf(o.cuts.cut_media);
               const title = cutTitle(o.cuts, breeds);
               return (
                 <li key={o.id}>
-                  <Link href={`/orders/${o.id}`} className="flex gap-3 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10 active:bg-white/10">
-                    <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-ink-3">
+                  <Link href={`/orders/${o.id}`} className="flex gap-4 py-4 active:bg-ivory/[0.03]">
+                    <div className="size-20 shrink-0 overflow-hidden rounded-md bg-ink-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${o.cuts.code}`} className="h-full w-full object-cover" loading="lazy" />}
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate font-extrabold">{title}</p>
+                        <p className="truncate font-display text-lg font-bold text-ivory">{title}</p>
                         <OrderStatusBadge status={o.status} dark />
                       </div>
-                      <p className="text-sm text-white/75">{orderWhat(o)}</p>
-                      <p className="text-sm"><Ltr className="font-bold">₪{formatAgorot(o.total_agorot)}</Ltr> · <span className="text-white/60">{formatDateTime(o.created_at)}</span></p>
+                      <p className="text-sm text-stone">{orderWhat(o)}</p>
+                      <p className="text-sm"><Ltr className="font-semibold text-ivory">₪{formatAgorot(o.total_agorot)}</Ltr>  ·  <span className="text-stone">{formatDateTime(o.created_at)}</span></p>
                     </div>
                   </Link>
                 </li>

@@ -2,7 +2,6 @@
 // B5 — order screen for the butcher: details, customer phone, timeline, one big next-step button, cancel with reason.
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Phone } from "lucide-react";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { BUTCHER_ORDER_SELECT, orderWhat, type ButcherOrderRow } from "@/components/butcher/OrderList";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
@@ -66,7 +65,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
   return (
     <main className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-neutral-200 bg-neutral-50/95 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
-        <Link href="/butcher?tab=orders" className="grid size-11 place-items-center" aria-label={he.app.back}><ChevronRight className="size-6" /></Link>
+        <Link href="/butcher?tab=orders" className="flex min-h-11 items-center px-2 text-sm font-semibold text-neutral-600">{he.app.back}</Link>
         <h1 className="flex-1 text-2xl font-extrabold"><Ltr>#{order.order_number}</Ltr></h1>
         <OrderStatusBadge status={order.status} />
       </header>
@@ -106,7 +105,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
               <Ltr className="text-neutral-600">{order.profiles.phone}</Ltr>
             </div>
             <a href={`tel:${order.profiles.phone.replace(/-/g, "")}`} className="flex min-h-12 items-center gap-2 rounded-2xl bg-emerald-600 px-4 font-bold text-white">
-              <Phone className="size-5" /> {he.butcherOrders.call}
+              {he.butcherOrders.call}
             </a>
           </section>
         )}

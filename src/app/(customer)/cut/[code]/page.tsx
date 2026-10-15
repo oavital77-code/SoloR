@@ -1,9 +1,7 @@
 "use client";
 // C4 + C5 — cut page with live stock, purchase bar and the order confirmation sheet.
 import { use, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Share2 } from "lucide-react";
 import { CutDetail } from "@/components/CutDetail";
 import { PurchaseBar } from "@/components/PurchaseBar";
 import { BottomSheet, Button, ErrorState, Ltr, Spinner, inputDarkClass } from "@/components/ui";
@@ -16,6 +14,8 @@ import { formatAgorot, formatWeight, steaksOrderPrice, wholePrice } from "@/lib/
 import { shopPath } from "@/lib/market";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Cut, CutMedia, Order, OrderMode } from "@/lib/types";
+
+const overlayBtn = "pointer-events-auto min-h-10 rounded-full bg-ink/55 px-4 text-sm tracking-wide text-ivory backdrop-blur-md ring-1 ring-ivory/15";
 
 export default function CutPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
@@ -87,23 +87,26 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
 
   return (
     <main className="relative min-h-dvh">
-      <Link href={butcher ? shopPath(butcher) : "/"} aria-label={he.app.back}
-        className="absolute start-3 top-[max(0.75rem,env(safe-area-inset-top))] z-30 grid size-11 place-items-center rounded-full bg-black/50 backdrop-blur">
-        <ChevronRight className="size-6" />
-      </Link>
-      {cut && (
-        <button type="button" aria-label={he.cut.share}
-          onClick={async () => {
-            const url = `${window.location.origin}/cut/${cut.code}`;
-            try {
-              if (navigator.share) await navigator.share({ title: cutTitle(cut, breeds), url });
-              else { await navigator.clipboard.writeText(url); toast(he.cut.linkCopied, { tone: "success" }); }
-            } catch { /* user cancelled */ }
-          }}
-          className="absolute end-3 top-[max(0.75rem,env(safe-area-inset-top))] z-30 grid size-11 place-items-center rounded-full bg-black/50 backdrop-blur">
-          <Share2 className="size-5" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-between px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <button type="button"
+          onClick={() => (window.history.length > 1 ? router.back() : router.push(butcher ? shopPath(butcher) : "/"))}
+          className={overlayBtn}>
+          {he.app.back}
         </button>
-      )}
+        {cut && (
+          <button type="button"
+            onClick={async () => {
+              const url = `${window.location.origin}/cut/${cut.code}`;
+              try {
+                if (navigator.share) await navigator.share({ title: cutTitle(cut, breeds), url });
+                else { await navigator.clipboard.writeText(url); toast(he.cut.linkCopied, { tone: "success" }); }
+              } catch { /* user cancelled */ }
+            }}
+            className={overlayBtn}>
+            {he.cut.share}
+          </button>
+        )}
+      </div>
 
       {state === "loading" && <div className="grid min-h-dvh place-items-center"><Spinner /></div>}
       {state === "error" && <div className="pt-20"><ErrorState dark onRetry={load} /></div>}
@@ -172,7 +175,7 @@ function CheckoutSheet({ cut, media, title, butcher, mode, qty, onClose, onStock
     return (
       <BottomSheet open onClose={() => router.push(`/orders/${done.id}`)} dark>
         <div className="flex flex-col items-center gap-4 py-8 text-center">
-          <p className="text-3xl font-extrabold">{he.checkout.success(done.order_number)}</p>
+          <p className="font-display text-3xl font-bold text-ivory">{he.checkout.success(done.order_number)}</p>
           <Button size="lg" onClick={() => router.push(`/orders/${done.id}`)}>{he.checkout.toOrder}</Button>
         </div>
       </BottomSheet>
@@ -188,30 +191,30 @@ function CheckoutSheet({ cut, media, title, butcher, mode, qty, onClose, onStock
             {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${cut.code}`} className="h-full w-full object-cover" />}
           </div>
           <div className="flex flex-col justify-center gap-0.5">
-            <p className="text-lg font-extrabold">{title}</p>
-            <p className="text-sm text-white/75">{what}</p>
-            <p className="text-2xl font-extrabold"><Ltr>₪{formatAgorot(total)}</Ltr></p>
+            <p className="font-display text-xl font-bold text-ivory">{title}</p>
+            <p className="text-sm text-stone">{what}</p>
+            <p className="font-display text-2xl font-bold text-ivory"><Ltr>₪{formatAgorot(total)}</Ltr></p>
           </div>
         </div>
-        <p className="text-xs text-white/55">{he.cut.priceNoteLong}</p>
+        <p className="text-xs leading-relaxed text-stone">{he.cut.priceNoteLong}</p>
 
         {butcher && (
-          <p className="rounded-2xl bg-white/5 p-3 text-[15px] ring-1 ring-white/10">
+          <p className="border-y border-ivory/10 py-3 text-[15px] leading-relaxed text-ivory/85">
             {he.checkout.pickup(butcher.name, butcher.address, butcher.pickup_hours)}
           </p>
         )}
 
         <label className="flex flex-col gap-2">
-          <span className="font-semibold">{he.checkout.note}</span>
+          <span className="text-sm text-ivory/80">{he.checkout.note}</span>
           <textarea rows={2} maxLength={300} className={inputDarkClass + " py-3"} placeholder={he.checkout.notePlaceholder}
             value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
 
-        <div className="rounded-2xl bg-yellow-300 px-4 py-3 text-center font-extrabold text-yellow-950">{he.app.prototypeBanner}</div>
+        <div className="rounded-xl px-4 py-3 text-center text-sm text-gold ring-1 ring-gold/40">{he.app.prototypeBanner}</div>
 
         {error && (
-          <div role="alert" className="flex flex-col items-center gap-2 rounded-2xl bg-red-950/70 p-4 text-center ring-1 ring-red-500/40">
-            {error.busted && <p className="animate-busted text-2xl font-extrabold text-live">{he.checkout.busted}</p>}
+          <div role="alert" className="flex flex-col items-center gap-2 rounded-xl p-4 text-center ring-1 ring-live/40">
+            {error.busted && <p className="animate-busted font-display text-2xl font-bold text-live">{he.checkout.busted}</p>}
             <p className="font-bold">{error.text}</p>
           </div>
         )}

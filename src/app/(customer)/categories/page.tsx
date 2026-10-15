@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { BackLink } from "@/components/customer/market-ui";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
@@ -26,13 +26,10 @@ function Categories() {
 
   return (
     <main className="min-h-dvh px-4 pb-24">
-      <header className="flex items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <Link href={shop ? shopPath(shop) : "/"} aria-label={shop ? he.market.backToShop : he.market.backToMarket}
-          className="grid size-11 place-items-center rounded-full bg-white/10"><ChevronRight className="size-5" /></Link>
-        <div>
-          <h1 className="text-2xl font-extrabold">{he.market.categories}</h1>
-          <p className="text-sm text-white/60">{shop ? he.market.inShop(shop.name) : he.market.inMarket}</p>
-        </div>
+      <header className="pt-[max(0.75rem,env(safe-area-inset-top))] pb-5">
+        <BackLink href={shop ? shopPath(shop) : "/"} label={shop ? he.market.backToShop : he.market.backToMarket} />
+        <h1 className="mt-2 font-display text-3xl font-bold text-ivory">{he.market.categories}</h1>
+        <p className="mt-1 text-sm text-stone">{shop ? he.market.inShop(shop.name) : he.market.inMarket}</p>
       </header>
 
       {error && !cuts ? <ErrorState dark onRetry={reload} /> : (
@@ -42,15 +39,15 @@ function Categories() {
             const cover = sample ? coverOf(sample.cut_media) : undefined;
             const body = (
               <>
-                <div className="relative aspect-square overflow-hidden rounded-2xl bg-ink-3">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-ink-3">
                   {!cuts ? <Skeleton className="h-full w-full rounded-none" /> : cover && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={c.label} className="h-full w-full object-cover" loading="lazy" />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink/85 to-transparent" />
                   <div className="absolute inset-x-3 bottom-3">
-                    <p className="text-xl font-extrabold">{c.label}</p>
-                    <p className="text-sm text-white/75">{cuts ? (c.count > 0 ? he.market.results(c.count) : he.market.categoryEmpty) : "…"}</p>
+                    <p className="font-display text-xl font-bold text-ivory">{c.label}</p>
+                    <p className="text-xs tracking-wide text-ivory/70">{cuts ? (c.count > 0 ? he.market.results(c.count) : he.market.categoryEmpty) : "…"}</p>
                   </div>
                 </div>
               </>

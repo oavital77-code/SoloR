@@ -2,14 +2,12 @@
 // Search — across the market (results tagged with their shop) or inside one shop (`?b=<slug>`).
 // Shows only stock that can be bought now; keeps all the existing filters. `?cat=<cut_type>` narrows by category.
 import { Suspense, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { CutTile } from "@/components/customer/CutTile";
-import { CategoryChips } from "@/components/customer/market-ui";
+import { BackLink, CategoryChips } from "@/components/customer/market-ui";
 import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
-import { Button, Chip, EmptyState, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
+import { Button, EmptyState, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { EMPTY_FILTER, activeFilterCount, matchesFilter, type FeedFilter } from "@/lib/feed-filter";
 import { useBreeds, useButchers, useNow } from "@/lib/hooks";
@@ -67,29 +65,24 @@ function SearchView() {
   return (
     <main className="min-h-dvh px-4 pb-24">
       <header className="sticky top-0 z-20 -mx-4 bg-ink/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <Link href={shop ? shopPath(shop) : "/"} aria-label={shop ? he.market.backToShop : he.market.backToMarket}
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-white/10"><ChevronRight className="size-5" /></Link>
-          <label className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 start-4 size-5 -translate-y-1/2 text-white/50" aria-hidden />
-            <input
-              type="search" autoFocus enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)}
-              placeholder={shop ? he.market.searchIn(shop.name) : he.market.searchPlaceholder}
-              aria-label={he.market.search} className={inputDarkClass + " min-h-12 ps-12"}
-            />
-          </label>
-          <button type="button" onClick={() => setFilterOpen(true)} aria-label={he.feed.filter}
-            className="relative grid size-12 shrink-0 place-items-center rounded-2xl bg-white/10">
-            <SlidersHorizontal className="size-5" />
-            {nFilters > 0 && <span className="ltr absolute -top-1 -end-1 grid size-5 place-items-center rounded-full bg-brand text-xs">{nFilters}</span>}
+        <div className="flex items-center justify-between">
+          <BackLink href={shop ? shopPath(shop) : "/"} label={shop ? he.market.backToShop : he.market.backToMarket} />
+          <button type="button" onClick={() => setFilterOpen(true)} className="min-h-11 text-sm text-ivory/80">
+            {he.feed.filter}{nFilters > 0 && <span className="ltr ms-1.5 text-gold">({nFilters})</span>}
           </button>
         </div>
+        <input
+          type="search" autoFocus enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)}
+          placeholder={shop ? he.market.searchIn(shop.name) : he.market.searchPlaceholder}
+          aria-label={he.market.search} className={inputDarkClass + " mt-1 min-h-12"}
+        />
         {shop && (
-          <div className="mt-3 flex">
-            <Chip dark selected onClick={() => setParam("b", null)} className="min-h-9 text-sm">
-              {he.market.inShop(shop.name)} <X className="ms-1 inline size-4" aria-hidden />
-            </Chip>
-          </div>
+          <p className="mt-2 text-sm text-stone">
+            {he.market.inShop(shop.name)}
+            <button type="button" onClick={() => setParam("b", null)} className="ms-3 min-h-9 text-gold underline-offset-4 hover:underline">
+              {he.market.inMarket}
+            </button>
+          </p>
         )}
         <div className="-mx-4 mt-3">
           <CategoryChips
@@ -103,13 +96,13 @@ function SearchView() {
         : !cuts ? <div className="grid grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[3/4]" />)}</div>
         : results.length === 0 ? (
           <EmptyState text={he.market.noResults}>
-            <p className="text-sm text-white/50">{he.market.noResultsHint}</p>
+            <p className="text-sm text-stone">{he.market.noResultsHint}</p>
             {nFilters > 0 && <Button variant="dark" onClick={() => setFilter(EMPTY_FILTER)}>{he.feed.clearFilter}</Button>}
           </EmptyState>
         ) : (
           <>
-            <p className="mb-3 text-sm text-white/60">{he.market.results(results.length)} · {he.market.newestFirst}</p>
-            <ul className="grid grid-cols-2 gap-x-3 gap-y-5">
+            <p className="mb-4 text-[13px] tracking-wide text-stone">{he.market.results(results.length)}  ·  {he.market.newestFirst}</p>
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-7">
               {results.map((c) => <CutTile key={c.id} cut={c} breeds={breeds} shop={shop ? null : shopOf(c.butcher_id)} now={now} />)}
             </ul>
           </>

@@ -1,8 +1,7 @@
 "use client";
 // C7 — profile: name, phone (editable), email (read only), logout.
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { BackLink } from "@/components/customer/market-ui";
 import { useToast } from "@/components/Toast";
 import { Button, Field, Spinner, inputDarkClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
@@ -43,10 +42,10 @@ export default function ProfilePage() {
   if (loading) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
 
   return (
-    <main className="min-h-dvh px-4 pb-24">
-      <header className="flex items-center gap-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-4">
-        <Link href="/" aria-label={he.app.back} className="grid size-11 place-items-center"><ChevronRight className="size-6" /></Link>
-        <h1 className="text-2xl font-extrabold">{he.profile.title}</h1>
+    <main className="min-h-dvh px-5 pb-24">
+      <header className="pt-[max(0.5rem,env(safe-area-inset-top))] pb-6">
+        <BackLink href="/" label={he.app.back} />
+        <h1 className="mt-1 font-display text-3xl font-bold text-ivory">{he.profile.title}</h1>
       </header>
       <form onSubmit={save} className="flex flex-col gap-5">
         <Field dark label={he.onboarding.fullName} htmlFor="name" error={errors.full_name}>

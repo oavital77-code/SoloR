@@ -1,7 +1,6 @@
 "use client";
 // Wizard step 1: take photos / video, per-file progress, cover selection, ordering, delete, retry.
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Camera, Images, RotateCcw, Star, Video, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Ltr } from "../ui";
 import { useToast } from "../Toast";
@@ -168,14 +167,15 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-3">
         <Button size="xl" onClick={() => camPhoto.current?.click()} disabled={disabled || photos.length + pendingPhotos >= MEDIA_LIMITS.maxPhotos}>
-          <Camera className="size-6" /> {he.wizard.takePhoto}
+          {he.wizard.takePhoto}
         </Button>
         <Button size="lg" variant="secondary" onClick={() => camVideo.current?.click()} disabled={disabled || !!video || pendingVideo}>
-          <Video className="size-5" /> {he.wizard.takeVideo}
+          {he.wizard.takeVideo}
         </Button>
+        {!video && !pendingVideo && <p className="-mt-1 text-center text-sm text-neutral-500">{he.wizard.videoNudge}</p>}
         <div className="flex justify-center gap-4 text-[15px] font-semibold text-brand">
           <button type="button" className="min-h-11 underline underline-offset-4 disabled:opacity-40" disabled={disabled} onClick={() => galPhoto.current?.click()}>
-            <Images className="me-1 inline size-4" />{he.wizard.galleryPhotos}
+            {he.wizard.galleryPhotos}
           </button>
           <button type="button" className="min-h-11 underline underline-offset-4 disabled:opacity-40" disabled={disabled || !!video || pendingVideo} onClick={() => galVideo.current?.click()}>
             {he.wizard.galleryVideo}
@@ -198,22 +198,22 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
               <img src={mediaUrl(m.thumb_path ?? m.storage_path)} alt="" className="h-full w-full object-cover" />
             </button>
             {m.id === coverId && (
-              <span className="absolute top-1.5 start-1.5 flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold text-amber-950">
-                <Star className="size-3 fill-current" /> {he.wizard.cover}
+              <span className="absolute top-1.5 start-1.5 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-neutral-900">
+                {he.wizard.cover}
               </span>
             )}
-            <button type="button" onClick={() => remove(m)} disabled={disabled} aria-label={he.wizard.remove}
-              className="absolute top-1 end-1 grid size-9 place-items-center rounded-full bg-black/60 text-white">
-              <X className="size-4" />
+            <button type="button" onClick={() => remove(m)} disabled={disabled}
+              className="absolute top-1 end-1 min-h-9 rounded-full bg-black/60 px-2.5 text-xs font-bold text-white">
+              {he.wizard.remove}
             </button>
             <div className="absolute inset-x-1 bottom-1 flex justify-between">
               <button type="button" onClick={() => move(m, -1)} disabled={i === 0 || disabled} aria-label={he.wizard.moveEarlier}
-                className="grid size-9 place-items-center rounded-full bg-black/60 text-white disabled:opacity-0">
-                <ArrowRight className="size-4" />
+                className="min-h-9 rounded-full bg-black/60 px-2 text-[11px] font-bold text-white disabled:opacity-0">
+                {he.wizard.moveEarlier}
               </button>
               <button type="button" onClick={() => move(m, 1)} disabled={i === ordered.length - 1 || disabled} aria-label={he.wizard.moveLater}
-                className="grid size-9 place-items-center rounded-full bg-black/60 text-white disabled:opacity-0">
-                <ArrowLeft className="size-4" />
+                className="min-h-9 rounded-full bg-black/60 px-2 text-[11px] font-bold text-white disabled:opacity-0">
+                {he.wizard.moveLater}
               </button>
             </div>
           </li>
@@ -227,9 +227,9 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
           {video && (
             <div className="relative overflow-hidden rounded-2xl bg-black">
               <video src={mediaUrl(video.storage_path)} poster={mediaUrl(video.poster_path)} controls playsInline preload="metadata" className="max-h-72 w-full" />
-              <button type="button" onClick={() => remove(video)} disabled={disabled} aria-label={he.wizard.remove}
-                className="absolute top-2 end-2 grid size-10 place-items-center rounded-full bg-black/60 text-white">
-                <X className="size-5" />
+              <button type="button" onClick={() => remove(video)} disabled={disabled}
+                className="absolute top-2 end-2 min-h-10 rounded-full bg-black/60 px-3 text-sm font-bold text-white">
+                {he.wizard.remove}
               </button>
             </div>
           )}
@@ -254,7 +254,7 @@ function PendingTile({ p, onRetry, onCancel }: { p: Pending; onRetry: () => void
           <>
             <span className="text-xs font-bold text-red-700">{p.error}</span>
             <button type="button" onClick={onRetry} className="flex min-h-9 items-center gap-1 rounded-full bg-white px-3 text-sm font-bold shadow">
-              <RotateCcw className="size-4" /> {he.app.retry}
+              {he.app.retry}
             </button>
           </>
         ) : (
@@ -266,8 +266,8 @@ function PendingTile({ p, onRetry, onCancel }: { p: Pending; onRetry: () => void
           <div className="h-full bg-brand transition-[width]" style={{ width: `${p.progress}%` }} />
         </div>
       )}
-      <button type="button" onClick={onCancel} aria-label={he.wizard.cancelUpload} className="absolute top-1 end-1 grid size-9 place-items-center rounded-full bg-black/60 text-white">
-        <X className="size-4" />
+      <button type="button" onClick={onCancel} className="absolute top-1 end-1 min-h-9 rounded-full bg-black/60 px-2.5 text-xs font-bold text-white">
+        {he.app.cancel}
       </button>
     </li>
   );
@@ -288,7 +288,7 @@ function ProgressLine({ p, onRetry, onCancel }: { p: Pending; onRetry: () => voi
         </div>
       </div>
       {p.status === "error" ? (
-        <Button size="md" variant="secondary" onClick={onRetry}><RotateCcw className="size-4" />{he.app.retry}</Button>
+        <Button size="md" variant="secondary" onClick={onRetry}>{he.app.retry}</Button>
       ) : (
         <Button size="md" variant="ghost" onClick={onCancel}>{he.app.cancel}</Button>
       )}

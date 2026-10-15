@@ -1,7 +1,6 @@
 "use client";
 // Cut page gallery: video first (full controls), then photos. Horizontal swipe, tap → fullscreen with zoom.
 import { useEffect, useRef, useState } from "react";
-import { X, ZoomIn } from "lucide-react";
 import { clsx } from "clsx";
 import { he } from "@/lib/i18n/he";
 import { mediaUrl, photosOf, videoOf } from "@/lib/cut-helpers";
@@ -55,16 +54,15 @@ export function MediaGallery({ media, title, code }: { media: CutMedia[]; title:
                   className="h-full w-full object-cover"
                   loading={i === 0 ? "eager" : "lazy"}
                 />
-                <ZoomIn className="absolute bottom-3 start-3 size-5 text-white/70 drop-shadow" aria-hidden />
               </button>
             )}
           </div>
         ))}
       </div>
       {slides.length > 1 && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+        <div className="pointer-events-none flex justify-center gap-1 bg-ink pt-3">
           {slides.map((m, i) => (
-            <span key={m.id} className={clsx("h-1.5 rounded-full transition-all", i === active ? "w-5 bg-white" : "w-1.5 bg-white/50")} />
+            <span key={m.id} className={clsx("h-px w-5 transition-colors", i === active ? "bg-ivory" : "bg-ivory/35")} />
           ))}
         </div>
       )}
@@ -97,8 +95,8 @@ function PhotoViewer({ photos, start, title, code, onClose }: {
     <div className="fixed inset-0 z-[70] flex flex-col bg-black" role="dialog" aria-modal="true" aria-label={title}>
       <div className="flex items-center justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-white">
         <span className="ltr text-sm opacity-70">{i + 1}/{photos.length}</span>
-        <button className="grid size-11 place-items-center rounded-full bg-white/10" onClick={onClose} aria-label={he.app.close}>
-          <X className="size-6" />
+        <button className="min-h-11 px-2 text-sm tracking-wide text-ivory/85" onClick={onClose}>
+          {he.app.close}
         </button>
       </div>
       <div className="flex-1 overflow-auto" style={{ touchAction: "pan-x pan-y pinch-zoom" }}>
@@ -114,7 +112,7 @@ function PhotoViewer({ photos, start, title, code, onClose }: {
       {photos.length > 1 && (
         <div className="no-scrollbar flex gap-2 overflow-x-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {photos.map((ph, k) => (
-            <button key={ph.id} onClick={() => { setI(k); setZoom(1); }} className={clsx("size-14 shrink-0 overflow-hidden rounded-xl", k === i ? "ring-2 ring-white" : "opacity-60")}>
+            <button key={ph.id} onClick={() => { setI(k); setZoom(1); }} className={clsx("size-14 shrink-0 overflow-hidden rounded-md", k === i ? "ring-1 ring-ivory" : "opacity-50")}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={mediaUrl(ph.thumb_path ?? ph.storage_path)} alt="" className="h-full w-full object-cover" />
             </button>

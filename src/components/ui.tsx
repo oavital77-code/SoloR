@@ -1,7 +1,6 @@
 "use client";
 // Small RTL-friendly UI primitives (shadcn-inspired, Tailwind only).
 import { clsx } from "clsx";
-import { Loader2, Minus, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { he } from "@/lib/i18n/he";
 
@@ -23,11 +22,11 @@ export function Button({
         variant === "secondary" && "bg-neutral-100 text-neutral-900 ring-1 ring-neutral-300 hover:bg-neutral-200",
         variant === "ghost" && "text-current hover:bg-black/5",
         variant === "danger" && "bg-white text-red-700 ring-1 ring-red-300 hover:bg-red-50",
-        variant === "dark" && "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/15",
+        variant === "dark" && "bg-transparent text-ivory ring-1 ring-ivory/20 hover:bg-ivory/[0.06]",
         className,
       )}
     >
-      {loading && <Loader2 className="size-5 animate-spin" />}
+      {loading && <Ring className="size-4" />}
       {children}
     </button>
   );
@@ -44,7 +43,7 @@ export function Chip({
       className={clsx(
         "min-h-11 rounded-2xl px-4 text-[15px] font-semibold transition-colors duration-150 disabled:opacity-40",
         dark
-          ? selected ? "bg-brand text-white" : "bg-white/10 text-white ring-1 ring-white/15"
+          ? selected ? "bg-ivory text-ink" : "bg-transparent text-ivory/85 ring-1 ring-ivory/15"
           : selected ? "bg-brand text-white ring-2 ring-brand" : "bg-white text-neutral-900 ring-1 ring-neutral-300",
         className,
       )}
@@ -94,13 +93,13 @@ export function Stepper({ value, min, max, onChange, dark, size = "md", label }:
   return (
     <div className="flex items-center gap-3" role="group" aria-label={label}>
       <button type="button" className={btn} aria-label={he.a11y.less} disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
-        <Minus className="size-5" />
+        <span className="text-2xl leading-none">−</span>
       </button>
       <span className={clsx("ltr min-w-10 text-center font-extrabold tabular-nums", size === "lg" ? "text-3xl" : "text-2xl")} aria-live="polite">
         {value}
       </span>
       <button type="button" className={btn} aria-label={he.a11y.more} disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>
-        <Plus className="size-5" />
+        <span className="text-2xl leading-none">+</span>
       </button>
     </div>
   );
@@ -160,8 +159,16 @@ export function ConfirmDialog({ open, text, confirmLabel, onConfirm, onCancel, l
   );
 }
 
+/** thin loading ring — no icon set */
+function Ring({ className, label }: { className?: string; label?: string }) {
+  return (
+    <span role={label ? "status" : undefined} aria-label={label}
+      className={clsx("inline-block animate-spin rounded-full border-[1.5px] border-current border-e-transparent opacity-70", className)} />
+  );
+}
+
 export function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={clsx("size-6 animate-spin", className)} aria-label={he.app.loading} />;
+  return <Ring className={clsx("size-6", className)} label={he.app.loading} />;
 }
 
 export function Skeleton({ className }: { className?: string }) {
@@ -202,7 +209,7 @@ export function Field({ label, hint, error, children, htmlFor, dark }: {
 export const inputClass =
   "min-h-14 w-full rounded-2xl bg-white px-4 text-lg ring-1 ring-neutral-300 outline-none focus:ring-2 focus:ring-brand disabled:bg-neutral-100 disabled:text-neutral-500";
 export const inputDarkClass =
-  "min-h-12 w-full rounded-2xl bg-white/10 px-4 text-base text-white ring-1 ring-white/15 outline-none placeholder:text-white/40 focus:ring-2 focus:ring-brand";
+  "min-h-12 w-full rounded-xl bg-ivory/[0.04] px-4 text-base text-ivory ring-1 ring-ivory/15 outline-none placeholder:text-stone/80 focus:ring-ivory/50";
 
 /** Shows numbers/codes LTR inside Hebrew text */
 export function Ltr({ children, className }: { children: React.ReactNode; className?: string }) {

@@ -41,15 +41,15 @@ export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initia
 
   if (soldOut) {
     return (
-      <div className={`${pos} border-t border-white/10 bg-ink-2/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur`}>
-        <div className="mb-3 rounded-2xl bg-white/10 py-3 text-center text-lg font-extrabold">{he.cut.soldBanner}</div>
+      <div className={`${pos} border-t border-ivory/10 bg-ink-2/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur`}>
+        <div className="mb-3 py-2 text-center font-display text-2xl font-bold text-ivory/80">{he.cut.soldBanner}</div>
         <Button size="lg" className="w-full" disabled>{he.cut.order}</Button>
       </div>
     );
   }
 
   return (
-    <div className={`${pos} border-t border-white/10 bg-ink-2/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-white backdrop-blur`}>
+    <div className={`${pos} border-t border-ivory/10 bg-ink-2/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ivory backdrop-blur`}>
       {offersWhole && offersSteaks && (
         <div className="mb-3 grid grid-cols-2 gap-2" role="radiogroup">
           <ModeButton label={he.cut.steaks} active={mode === "steaks"} disabled={!steaksOk} onClick={() => setMode("steaks")} />
@@ -57,25 +57,25 @@ export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initia
         </div>
       )}
       {offersWhole && !wholeOk && cut.sale_mode === "both" && (
-        <p className="-mt-1 mb-2 text-xs text-white/50">{he.cut.wholeBlocked}</p>
+        <p className="-mt-1 mb-2 text-xs text-stone">{he.cut.wholeBlocked}</p>
       )}
 
       {mode === "steaks" && cut.steak_weight_g && (
         <div className="mb-3 flex items-center justify-between gap-3">
           <Stepper dark value={qty} min={1} max={Math.max(1, cut.steaks_available)} onChange={setQty} label={he.cut.steaks} />
-          <p className="text-end text-sm text-white/70">
+          <p className="text-end text-sm text-stone">
             {he.cut.steaksSummary(qty, cut.steak_weight_g, formatWeight(cut.steak_weight_g * qty))}
           </p>
         </div>
       )}
       {mode === "whole" && (
-        <p className="mb-3 text-sm text-white/70">{he.cut.whole} · <Ltr>{formatWeight(cut.weight_g)}</Ltr></p>
+        <p className="mb-3 text-sm text-stone">{he.cut.whole} · <Ltr>{formatWeight(cut.weight_g)}</Ltr></p>
       )}
 
       <div className="flex items-center gap-4">
         <div className="flex-1">
-          <div className="text-3xl font-extrabold"><Ltr>₪{formatAgorot(total)}</Ltr></div>
-          <div className="text-xs text-white/55">{he.cut.priceNote}</div>
+          <div className="font-display text-3xl font-bold text-ivory"><Ltr>₪{formatAgorot(total)}</Ltr></div>
+          <div className="text-xs text-stone">{he.cut.priceNote}</div>
         </div>
         <Button
           size="lg" className="min-w-32"
@@ -95,7 +95,7 @@ function ModeButton({ label, active, disabled, onClick }: { label: string; activ
       type="button" role="radio" aria-checked={active} disabled={disabled} onClick={onClick}
       className={clsx(
         "min-h-11 rounded-xl font-bold transition-colors disabled:opacity-35",
-        active ? "bg-white text-neutral-900" : "bg-white/10 text-white ring-1 ring-white/15",
+        active ? "bg-ivory text-ink" : "text-ivory ring-1 ring-ivory/20",
       )}
     >
       {label}

@@ -3,7 +3,6 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Pencil, Store, Trash2, Undo2, EyeOff } from "lucide-react";
 import { clsx } from "clsx";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { StatusPill } from "@/components/butcher/CutList";
@@ -97,7 +96,7 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
   return (
     <main className="pb-10">
       <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-neutral-200 bg-neutral-50/95 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
-        <Link href="/butcher" className="grid size-11 place-items-center" aria-label={he.app.back}><ChevronRight className="size-6" /></Link>
+        <Link href="/butcher" className="flex min-h-11 items-center px-2 text-sm font-semibold text-neutral-600">{he.app.back}</Link>
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-extrabold">{title}</p>
           <Ltr className="text-sm text-neutral-500">{cut.code}</Ltr>
@@ -124,18 +123,18 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
       {cut.status !== "withdrawn" && (
         <section className="mx-4 grid grid-cols-2 gap-2">
           <Link href={`/butcher/cuts/${cut.id}/edit?step=1`} className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-white text-lg font-bold ring-1 ring-neutral-300">
-            <Pencil className="size-5" /> {he.cutManage.edit}
+            {he.cutManage.edit}
           </Link>
           <Button size="lg" variant="secondary" className="bg-white" disabled={cut.status !== "published"} onClick={() => setSaleOpen(true)}>
-            <Store className="size-5" /> {he.cutManage.storeSale}
+            {he.cutManage.storeSale}
           </Button>
           <Button size="lg" variant="danger" className="col-span-2" disabled={activeOrders > 0} onClick={() => setConfirm("withdraw")}>
-            <EyeOff className="size-5" /> {he.cutManage.withdraw}
+            {he.cutManage.withdraw}
           </Button>
           {activeOrders > 0 && <p className="col-span-2 text-sm text-neutral-500">{he.errors.HAS_ACTIVE_ORDERS}</p>}
           {cut.status === "published" && !anyOrders && cut.steaks_available === cut.steaks_total && (
             <Button variant="ghost" className="col-span-2 text-neutral-600" onClick={() => setConfirm("revert")}>
-              <Undo2 className="size-4" /> {he.cutManage.revertDraft}
+              {he.cutManage.revertDraft}
             </Button>
           )}
         </section>
@@ -165,7 +164,7 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
       </section>
 
       {cut.status === "draft" && (
-        <div className="m-4"><Button variant="danger" onClick={() => setConfirm("delete")}><Trash2 className="size-4" />{he.cutManage.deleteDraft}</Button></div>
+        <div className="m-4"><Button variant="danger" onClick={() => setConfirm("delete")}>{he.cutManage.deleteDraft}</Button></div>
       )}
 
       <StoreSaleSheet open={saleOpen} cut={cut} onClose={() => setSaleOpen(false)} onDone={(c) => { setCut(c); setSaleOpen(false); toast(he.cutManage.storeSaleDone, { tone: "success" }); }} />

@@ -1,11 +1,10 @@
 "use client";
-// Shop page: only this shop's cuts and stock. Real-photo cover, quick actions (navigate / call),
-// one scoped search, its reels, category chips and the grid — with a clear BACK TO MARKET.
+// Shop page: only this shop's cuts and stock. Name, a few quiet text actions (navigate / call / reels),
+// one scoped search, category filter and the cuts — with a clear way back to the market.
 import { use } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Clock, Navigation, Phone } from "lucide-react";
 import { CutCard } from "@/components/customer/CutCard";
-import { CategoryChips, SearchLink, SectionHeader } from "@/components/customer/market-ui";
+import { BackLink, CategoryChips, SearchLink, SectionHeader } from "@/components/customer/market-ui";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
@@ -28,53 +27,37 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
 
   return (
     <main className="min-h-dvh pb-28">
-      {/* header — no photo here: the cuts below are the photos */}
-      <div className="bg-gradient-to-b from-brand-dark/60 to-ink px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4">
+      <header className="px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
         <BackToMarket />
-        {!shop ? <Skeleton className="mt-4 h-8 w-2/3" /> : (
+        {!shop ? <Skeleton className="mt-4 h-9 w-2/3" /> : (
           <div className="mt-4">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[28px] font-extrabold leading-tight">{shop.name}</h1>
-              {shop.is_test && <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-bold text-amber-300">{he.market.testBadge}</span>}
-            </div>
-            <p className="text-sm text-white/70">{cuts ? he.market.shopCuts(available.length) : "…"}{shop.city && ` · ${shop.city}`}</p>
+            <p className="eyebrow">{[shop.city, shop.is_test ? he.market.testBadge : null].filter(Boolean).join("  ·  ") || he.market.shops}</p>
+            <h1 className="mt-2 font-display text-[36px] font-bold leading-[1.05] text-ivory">{shop.name}</h1>
+            <p className="mt-2 text-sm text-stone">{cuts ? he.market.shopCuts(available.length) : "…"}</p>
           </div>
         )}
-      </div>
+      </header>
 
       {shop && (
-        <div className="px-4">
-          {shop.description && <p className="mt-1 text-[15px] leading-relaxed text-white/75">{shop.description}</p>}
-          {/* quick actions */}
-          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
-            <a className="flex min-h-10 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.08] px-4 text-sm font-semibold ring-1 ring-white/10" target="_blank" rel="noreferrer"
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([shop.address, shop.city].filter(Boolean).join(", "))}`}>
-              <Navigation className="size-4" aria-hidden />{he.market.navigate}
-            </a>
-            <a href={`tel:${shop.phone.replace(/-/g, "")}`} className="flex min-h-10 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.08] px-4 text-sm font-semibold ring-1 ring-white/10">
-              <Phone className="size-4" aria-hidden />{he.market.call}
-            </a>
-            {shop.pickup_hours && (
-              <span className="flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm text-white/60">
-                <Clock className="size-4" aria-hidden />{shop.pickup_hours}
-              </span>
-            )}
+        <div className="px-5">
+          {shop.description && <p className="mt-2 font-display text-[17px] leading-relaxed text-ivory/80">{shop.description}</p>}
+          <div className="mt-4 border-y border-ivory/10 py-3 text-sm">
+            <p className="text-ivory/80">{shop.address}{shop.pickup_hours && `  ·  ${shop.pickup_hours}`}</p>
+            <div className="mt-1 flex flex-wrap gap-x-6">
+              <a className={action} target="_blank" rel="noreferrer"
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([shop.address, shop.city].filter(Boolean).join(", "))}`}>
+                {he.market.navigate}
+              </a>
+              <a href={`tel:${shop.phone.replace(/-/g, "")}`} className={action}>{he.market.call}</a>
+              <Link href={`/discover?${scope}`} className={action}>{he.market.watchShopLive}</Link>
+            </div>
           </div>
-          <p className="mt-2 text-xs text-white/45">{shop.address}</p>
         </div>
       )}
 
-      <div className="mt-4 px-4">
+      <div className="mt-5 px-4">
         <SearchLink href={`/search?${scope}`} placeholder={shop ? he.market.searchIn(shop.name) : he.market.searchPlaceholder} />
       </div>
-
-      <Link href={`/discover?${scope}`} className="mx-4 mt-3 flex min-h-14 items-center justify-between rounded-2xl bg-brand px-4 font-extrabold shadow-lg shadow-brand/20">
-        <span className="flex items-center gap-2.5">
-          <span className="flex items-center gap-1.5 rounded-md bg-black/25 px-1.5 py-0.5 text-[11px]" dir="ltr"><span className="animate-live size-1.5 rounded-full bg-white" />LIVE</span>
-          {he.market.watchShopLive}
-        </span>
-        <ChevronLeft className="size-5" aria-hidden />
-      </Link>
 
       {cuts && available.length > 0 && (
         <div className="mt-5"><CategoryChips cuts={available} hrefFor={(k) => `/search?${scope}&cat=${k}`} /></div>
@@ -86,7 +69,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
           : !cuts ? <div className="mt-2 px-4"><Skeleton className="aspect-[4/5]" /></div>
           : available.length === 0 ? <EmptyState text={he.market.shopEmpty} />
           : (
-            <ul className="mt-2 flex flex-col gap-4 px-4">
+            <ul className="mt-3 flex flex-col gap-12 px-4">
               {available.map((c, i) => <li key={c.id}><CutCard cut={c} breeds={breeds} now={now} eager={i === 0} /></li>)}
             </ul>
           )}
@@ -95,10 +78,8 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
   );
 }
 
+const action = "min-h-10 py-2.5 text-gold underline-offset-4 hover:underline";
+
 function BackToMarket() {
-  return (
-    <Link href="/" className="inline-flex min-h-10 items-center gap-1 rounded-full bg-white/10 px-3 text-xs font-extrabold tracking-wide">
-      <ChevronRight className="size-4" aria-hidden /><span dir="ltr">BACK TO MARKET</span>
-    </Link>
-  );
+  return <BackLink href="/" label={he.market.backToMarket} />;
 }

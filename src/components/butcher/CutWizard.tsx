@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, CloudOff, Loader2, Trash2, X } from "lucide-react";
 import { clsx } from "clsx";
 import { useButcher } from "./ButcherShell";
 import { MediaUploader } from "./MediaUploader";
@@ -152,8 +151,8 @@ export function CutWizard({ cutId }: { cutId: string }) {
     <main className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-neutral-50/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
         <div className="flex items-center justify-between gap-2">
-          <Link href={isDraft ? "/butcher" : `/butcher/cuts/${cutId}`} className="grid size-11 place-items-center rounded-xl" aria-label={he.app.back}>
-            <X className="size-6" />
+          <Link href={isDraft ? "/butcher" : `/butcher/cuts/${cutId}`} className="flex min-h-11 items-center px-1 text-sm font-semibold text-neutral-600">
+            {he.app.close}
           </Link>
           <h1 className="flex-1 text-lg font-extrabold">
             {isDraft ? he.wizard.newTitle : he.wizard.editTitle(cut.code)} {isDraft && <Ltr className="text-sm font-semibold text-neutral-500">{cut.code}</Ltr>}
@@ -176,8 +175,8 @@ export function CutWizard({ cutId }: { cutId: string }) {
       {!isDraft && cut.status !== "withdrawn" && (
         <div className="mx-4 mt-3 rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">
           {he.wizard.liveEditNote}
-          {activeOrders > 0 && <p className="mt-1 flex items-center gap-1"><AlertTriangle className="size-4" />{he.wizard.lockedActive}</p>}
-          {activeOrders === 0 && stockTouched && <p className="mt-1 flex items-center gap-1"><AlertTriangle className="size-4" />{he.wizard.lockedStock}</p>}
+          {activeOrders > 0 && <p className="mt-1">{he.wizard.lockedActive}</p>}
+          {activeOrders === 0 && stockTouched && <p className="mt-1">{he.wizard.lockedStock}</p>}
         </div>
       )}
 
@@ -206,11 +205,11 @@ export function CutWizard({ cutId }: { cutId: string }) {
         )}
         <div className="flex gap-2">
           <Button size="lg" variant="secondary" className="flex-1" disabled={step === 1} onClick={() => goStep(step - 1)}>
-            <ChevronRight className="size-5" /> {he.wizard.prev}
+            {he.wizard.prev}
           </Button>
           {step < 5 && (
             <Button size="lg" className="flex-1" onClick={() => goStep(step + 1)}>
-              {he.wizard.next} <ChevronLeft className="size-5" />
+              {he.wizard.next}
             </Button>
           )}
         </div>
@@ -224,12 +223,12 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
   if (state === "error") {
     return (
       <button type="button" onClick={onRetry} className="flex min-h-11 items-center gap-1 text-sm font-bold text-red-700">
-        <CloudOff className="size-4" /> {he.wizard.saveError}
+        {he.wizard.saveError}
       </button>
     );
   }
-  if (state === "saved") return <span className="flex items-center gap-1 text-sm font-semibold text-emerald-700" role="status"><Check className="size-4" />{he.wizard.saved}</span>;
-  return <span className="flex items-center gap-1 text-sm text-neutral-500" role="status"><Loader2 className="size-4 animate-spin" />{he.wizard.saving}</span>;
+  if (state === "saved") return <span className="text-sm font-semibold text-emerald-700" role="status">{he.wizard.saved}</span>;
+  return <span className="text-sm text-neutral-500" role="status">{he.wizard.saving}…</span>;
 }
 
 type StepProps = {
@@ -290,7 +289,7 @@ function StepWhat({ form, set, locked, breeds }: StepProps & { breeds: ReturnTyp
           {ORIGINS.map((o) => (
             <Chip key={o.key} selected={form.origin_country === o.key} disabled={locked("origin_country")}
               onClick={() => set("origin_country", o.key)} className="min-h-14 text-lg">
-              <span className="me-1.5">{o.flag}</span>{o.label}
+              {o.label}
             </Chip>
           ))}
         </div>
@@ -567,7 +566,7 @@ function StepPreview({ cut, media, photoCount, breeds, goStep, isDraft, save, on
               {he.wizard.saveDraft}
             </Button>
             <Button variant="ghost" className="mt-4 text-red-700" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="size-4" /> {he.cutManage.deleteDraft}
+              {he.cutManage.deleteDraft}
             </Button>
           </>
         )}
@@ -589,8 +588,8 @@ function PublishedScreen({ code }: { code: string }) {
   const router = useRouter();
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
-      <p className="text-6xl" aria-hidden>🎉</p>
-      <h1 className="text-3xl font-extrabold">{he.wizard.published}</h1>
+      <span className="h-px w-12 bg-neutral-900" aria-hidden />
+      <h1 className="font-display text-4xl font-bold">{he.wizard.published}</h1>
       <Ltr className="text-lg text-neutral-500">{code}</Ltr>
       <div className="flex w-full flex-col gap-3">
         <Button size="xl" onClick={() => router.push("/butcher/cuts/new")}>{he.wizard.anotherCut}</Button>

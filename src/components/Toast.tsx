@@ -1,6 +1,5 @@
 "use client";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
-import { X } from "lucide-react";
 import { he } from "@/lib/i18n/he";
 
 interface ToastItem {
@@ -39,8 +38,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             className={`animate-toast-in pointer-events-auto flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold shadow-lg ${
               t.tone === "error" ? "bg-red-700 text-white"
               : t.tone === "success" ? "bg-emerald-600 text-white"
-              : t.tone === "live" ? "bg-white text-neutral-900"
-              : "bg-neutral-900 text-white ring-1 ring-white/10"
+              : t.tone === "live" ? "bg-ivory text-ink"
+              : "bg-ink-2 text-ivory ring-1 ring-ivory/10"
             }`}
           >
             <span className="flex-1">{t.text}</span>
@@ -52,8 +51,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 {t.action.label}
               </button>
             )}
-            <button aria-label={he.app.close} className="grid size-11 place-items-center opacity-60" onClick={() => dismiss(t.id)}>
-              <X className="size-4" />
+            <button aria-label={he.app.close} className="min-h-11 px-1 text-sm opacity-60" onClick={() => dismiss(t.id)}>
+              {he.app.close}
             </button>
           </div>
         ))}
