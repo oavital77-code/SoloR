@@ -1,5 +1,5 @@
 "use client";
-// Text-only tab bar: three words, a hairline above the active one.
+// Text-only tab bar: three English words in spaced capitals, a hairline above the active one.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -20,7 +20,7 @@ export function BottomNav() {
         {items.map(({ href, label, active }) => (
           <li key={href}>
             <Link href={href} aria-current={active ? "page" : undefined}
-              className={clsx("relative flex h-full items-center justify-center text-[15px] tracking-wide transition-colors",
+              dir="ltr" className={clsx("relative flex h-full items-center justify-center text-xs uppercase tracking-[0.22em] transition-colors",
                 active ? "font-semibold text-ivory" : "text-stone")}>
               {label}
               {active && <span className="absolute top-0 h-px w-10 bg-gold" aria-hidden />}

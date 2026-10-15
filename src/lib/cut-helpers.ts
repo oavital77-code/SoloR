@@ -9,6 +9,7 @@ export const MEDIA_BUCKET = "cut-media";
 
 export function mediaUrl(path: string | null | undefined): string {
   if (!path) return "";
+  if (path.startsWith("/")) return path; // demo media shipped with the app (public/demo)
   return `${SUPABASE_URL}/storage/v1/object/public/${MEDIA_BUCKET}/${path}`;
 }
 

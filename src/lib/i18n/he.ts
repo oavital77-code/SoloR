@@ -66,15 +66,15 @@ export const he = {
   },
 
   nav: {
-    market: "מרקט",
-    live: "רילס",
-    myOrders: "ההזמנות שלי",
+    market: "Market",
+    live: "Live",
+    myOrders: "Orders",
     profile: "פרופיל",
     login: "כניסה",
   },
 
   reels: {
-    title: "רילס",
+    title: "Live",
     subtitle: "הקיצוב, מקרוב",
     empty: "עוד אין סרטוני קיצוב. כשקצב יצלם נתח בווידאו, הוא יופיע כאן.",
     watchCut: "צפה בקיצוב",
@@ -88,7 +88,7 @@ export const he = {
     allCuts: (n: number) => `לכל ${n} הנתחים`,
     allCategories: "הכל",
     liveNow: "באוויר עכשיו",
-    watchLive: "רילס",
+    watchLive: "Live",
     navigate: "ניווט",
     call: "התקשר",
     watchShopLive: "רילסים מהקצבייה",
@@ -282,7 +282,7 @@ export const he = {
     // step 1
     takePhoto: "צלם תמונה",
     takeVideo: "צלם וידאו קיצוב",
-    videoNudge: "נתחים עם וידאו קיצוב מופיעים ברילס",
+    videoNudge: "נתחים עם וידאו קיצוב מופיעים ב־Live",
     fromGallery: "בחר מהגלריה",
     galleryPhotos: "תמונות מהגלריה",
     galleryVideo: "וידאו מהגלריה",
