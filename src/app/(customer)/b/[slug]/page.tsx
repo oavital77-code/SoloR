@@ -4,7 +4,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock, Navigation, Phone } from "lucide-react";
-import { CutTile } from "@/components/customer/CutTile";
+import { CutCard } from "@/components/customer/CutCard";
 import { CategoryChips, SearchLink, SectionHeader } from "@/components/customer/market-ui";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
@@ -83,11 +83,11 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
       <section className="mt-5">
         <SectionHeader title={he.market.available} />
         {error && !cuts ? <ErrorState dark onRetry={reload} />
-          : !cuts ? <div className="mt-1 grid grid-cols-2 gap-3 px-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[3/4]" />)}</div>
+          : !cuts ? <div className="mt-2 px-4"><Skeleton className="aspect-[4/5]" /></div>
           : available.length === 0 ? <EmptyState text={he.market.shopEmpty} />
           : (
-            <ul className="mt-1 grid grid-cols-2 gap-x-3 gap-y-5 px-4">
-              {available.map((c) => <CutTile key={c.id} cut={c} breeds={breeds} now={now} />)}
+            <ul className="mt-2 flex flex-col gap-4 px-4">
+              {available.map((c, i) => <li key={c.id}><CutCard cut={c} breeds={breeds} now={now} eager={i === 0} /></li>)}
             </ul>
           )}
       </section>

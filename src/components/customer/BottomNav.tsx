@@ -11,7 +11,7 @@ export function BottomNav() {
   if (path.startsWith("/cut/")) return null;
   const items = [
     { href: "/", label: he.nav.market, Icon: Store,
-      active: path === "/" || path.startsWith("/b/") || path === "/search" || path === "/categories" },
+      active: path === "/" || path.startsWith("/b/") || path === "/search" || path === "/categories" || path === "/shops" },
     { href: "/discover", label: he.nav.live, Icon: Radio, active: path === "/discover", live: true },
     { href: "/orders", label: he.nav.myOrders, Icon: Package, active: path.startsWith("/orders") },
   ];

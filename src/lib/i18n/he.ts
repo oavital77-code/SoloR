@@ -184,6 +184,7 @@ export const he = {
     thicknessCm: (n: number) => `${n} ס״מ`,
     steakChip: (g: number) => `סטייק ~${g} גר׳`,
     share: "שיתוף",
+    videoBadge: "וידאו",
     linkCopied: "הקישור הועתק",
     steakPrice: "מחיר סטייק",
     total: "סה״כ",
