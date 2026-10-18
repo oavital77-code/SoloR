@@ -11,6 +11,17 @@ export function wholePrice(weightG: number, pricePerKgAgorot: number): number {
   return priceForWeight(weightG, pricePerKgAgorot);
 }
 
+/**
+ * The weight rule (spec §9.3), same as the SQL weight_refund: up to 5% either way changes nothing; supplied more
+ * than 5% under → the whole missing weight is refunded at the order's price per kg; over is never charged.
+ */
+export function weightOutcome(orderedG: number, deliveredG: number, pricePerKgAgorot: number):
+  { kind: "within" } | { kind: "under"; refund: number } | { kind: "over" } {
+  if (deliveredG * 100 < orderedG * 95) return { kind: "under", refund: priceForWeight(orderedG - deliveredG, pricePerKgAgorot) };
+  if (deliveredG * 100 > orderedG * 105) return { kind: "over" };
+  return { kind: "within" };
+}
+
 export function steakPrice(steakWeightG: number, pricePerKgAgorot: number): number {
   return priceForWeight(steakWeightG, pricePerKgAgorot);
 }

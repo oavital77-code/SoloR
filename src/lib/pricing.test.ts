@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  agorotToShekelsInput, formatAgorot, formatWeight, maxSteaks, plannedSteaks,
+  agorotToShekelsInput, formatAgorot, weightOutcome, formatWeight, maxSteaks, plannedSteaks,
   priceForWeight, shekelsToAgorot, steakPrice, steaksOrderPrice, wholePrice,
 } from "./pricing";
 
@@ -46,5 +46,19 @@ describe("pricing — rounding and helpers", () => {
     expect(formatWeight(2000)).toBe("2 ק״ג");
     expect(formatWeight(2450)).toBe("2.45 ק״ג");
     expect(formatWeight(900)).toBe("900 גר׳");
+  });
+});
+
+describe("weight rule (§9.3)", () => {
+  it("changes nothing within 5% either way", () => {
+    expect(weightOutcome(1000, 950, 20000)).toEqual({ kind: "within" });
+    expect(weightOutcome(1000, 1050, 20000)).toEqual({ kind: "within" });
+  });
+  it("refunds the whole missing weight when more than 5% under, like the server", () => {
+    expect(weightOutcome(1000, 949, 20000)).toEqual({ kind: "under", refund: 1020 });
+    expect(weightOutcome(900, 820, 22000)).toEqual({ kind: "under", refund: 1760 });
+  });
+  it("never charges for more", () => {
+    expect(weightOutcome(1000, 1200, 20000)).toEqual({ kind: "over" });
   });
 });

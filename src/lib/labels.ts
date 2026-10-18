@@ -1,5 +1,5 @@
 // enum → Hebrew labels
-import type { AgingMethod, CutStatus, CutType, OrderStatus, OriginCountry, SaleMode } from "./types";
+import type { AgingMethod, CutStatus, CutType, OrderStatus, OriginCountry, SaleMode, ReceiveMethod } from "./types";
 
 export const CUT_TYPES: { key: CutType; label: string }[] = [
   { key: "sinta", label: "סינטה" },
@@ -47,6 +47,15 @@ export const ORDER_STATUS_SHORT: Record<OrderStatus, string> = {
   completed: "נאספה",
   cancelled: "בוטלה",
 };
+
+/** Delivery has its own last two steps (spec §11): out for delivery → delivered, instead of ready → collected. */
+const DELIVERY_LABEL: Partial<Record<OrderStatus, string>> = { ready: "יצאה למשלוח", completed: "נמסרה" };
+const DELIVERY_SHORT: Partial<Record<OrderStatus, string>> = { ready: "יצאה למשלוח", completed: "נמסרה" };
+
+export const orderStatusLabel = (s: OrderStatus, method?: ReceiveMethod) =>
+  (method === "delivery" && DELIVERY_LABEL[s]) || ORDER_STATUS_LABEL[s];
+export const orderStatusShort = (s: OrderStatus, method?: ReceiveMethod) =>
+  (method === "delivery" && DELIVERY_SHORT[s]) || ORDER_STATUS_SHORT[s];
 
 export const CUT_STATUS_LABEL: Record<CutStatus, string> = {
   draft: "טיוטה",

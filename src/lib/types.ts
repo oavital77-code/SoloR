@@ -172,6 +172,8 @@ export interface Order {
   delivery_address: DeliveryAddress | null;
   delivery_window: string | null;
   delivery_fee_agorot: number;
+  /** the butcher's photo of the prepared order (shown once it is ready / on its way) */
+  ready_photo_path: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -193,6 +195,11 @@ export interface OrderItem {
   cancelled_by: UserRole | null;
   cancelled_at: string | null;
   restocked: boolean | null;
+  /** the weight actually supplied, recorded by the butcher */
+  delivered_weight_g: number | null;
+  /** weight rule (§9.3): refund for supplying more than 5% under; null within the tolerance or over */
+  refund_agorot: number | null;
+  refund_status: "pending" | "refunded" | null;
   created_at: string;
 }
 

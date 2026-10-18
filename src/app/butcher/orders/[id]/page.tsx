@@ -1,7 +1,10 @@
 "use client";
 // B5 — order screen for the butcher: every line to pick and pack, customer phone, timeline, one big next-step button.
 // A single line can be cancelled with a reason (and the meat returned to stock or not); so can the whole order.
-import { use, useCallback, useEffect, useState } from "react";
+// While packing, the butcher records each line's actual weight (the ±5% rule decides any refund) and can photograph
+// the prepared order — the customer sees the photo once it is ready (customer spec §11).
+// Delivery orders show where they go and when (delivery is off in the pilot).
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { BUTCHER_ORDER_SELECT, orderWhat, sortedItems, type ButcherItemRow, type ButcherOrderRow } from "@/components/butcher/OrderList";
@@ -14,7 +17,9 @@ import { coverOf, cutTitle, formatDateTime, mediaUrl } from "@/lib/cut-helpers";
 import { errorText } from "@/lib/errors";
 import { useBreeds, useRefetchOnFocus } from "@/lib/hooks";
 import { clsx } from "clsx";
-import { formatAgorot } from "@/lib/pricing";
+import { formatAgorot, formatWeight } from "@/lib/pricing";
+import { MEDIA_BUCKET } from "@/lib/cut-helpers";
+import { prepareImage, removeStorageObjects } from "@/lib/upload";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { OrderEvent, OrderStatus } from "@/lib/types";
 
@@ -22,7 +27,7 @@ const NEXT: Partial<Record<OrderStatus, OrderStatus>> = { new: "preparing", prep
 
 export default function ButcherOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { ordersVersion } = useButcher();
+  const { ordersVersion, butcher } = useButcher();
   const breeds = useBreeds();
   const toast = useToast();
   const [order, setOrder] = useState<ButcherOrderRow | null>(null);
@@ -68,7 +73,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
       <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-neutral-200 bg-neutral-50/95 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
         <Link href="/butcher?tab=orders" className="flex min-h-11 items-center px-2 text-sm font-semibold text-neutral-600">{he.app.back}</Link>
         <h1 className="flex-1 text-2xl font-extrabold"><Ltr>#{order.order_number}</Ltr></h1>
-        <OrderStatusBadge status={order.status} />
+        <OrderStatusBadge status={order.status} method={order.receive_method} />
       </header>
 
       <div className="flex flex-1 flex-col gap-4 p-4">
@@ -77,7 +82,8 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
           <ul className="flex flex-col divide-y divide-neutral-100">
             {items.map((i) => (
               <ItemRow key={i.id} item={i} title={cutTitle(i.cuts, breeds)}
-                onCancel={canCancel && i.status === "active" ? () => setCancel({ item: i }) : undefined} />
+                onCancel={canCancel && i.status === "active" ? () => setCancel({ item: i }) : undefined}
+                canWeigh={canCancel && i.status === "active"} onWeighed={load} />
             ))}
           </ul>
         </section>
@@ -96,6 +102,20 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
           )}
         </section>
 
+        {order.receive_method === "delivery" && order.delivery_address && (
+          <section className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
+            <p className="text-sm text-neutral-500">{he.butcherOrders.delivery}</p>
+            <p className="text-lg font-bold">{order.delivery_address.name} · <Ltr>{order.delivery_address.phone}</Ltr></p>
+            <p>{order.delivery_address.street}, {order.delivery_address.city}</p>
+            {order.delivery_address.notes && <p className="text-sm text-neutral-600">{order.delivery_address.notes}</p>}
+            <p className="mt-1 text-sm font-semibold">{order.delivery_window ?? he.butcherOrders.pendingCoordination}</p>
+          </section>
+        )}
+
+        {order.status !== "cancelled" && butcher && (
+          <ReadyPhoto orderId={order.id} butcherId={butcher.id} path={order.ready_photo_path} onDone={load} />
+        )}
+
         {order.profiles && (
           <section className="flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
             <div>
@@ -111,7 +131,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
 
         <section className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
           <h2 className="mb-3 font-extrabold">{he.orders.timeline}</h2>
-          <OrderTimeline status={order.status} events={events} />
+          <OrderTimeline status={order.status} events={events} method={order.receive_method} />
         </section>
       </div>
 
@@ -119,7 +139,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
         <footer className="sticky bottom-0 flex flex-col gap-2 border-t border-neutral-200 bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {next && (
             <Button size="xl" loading={busy} onClick={advance}>
-              {he.butcherOrders.actions[order.status as "new" | "preparing" | "ready"]}
+              {(order.receive_method === "delivery" ? he.butcherOrders.deliveryActions : he.butcherOrders.actions)[order.status as "new" | "preparing" | "ready"]}
             </Button>
           )}
           {canCancel && (
@@ -134,7 +154,9 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
   );
 }
 
-function ItemRow({ item: i, title, onCancel }: { item: ButcherItemRow; title: string; onCancel?: () => void }) {
+function ItemRow({ item: i, title, onCancel, canWeigh, onWeighed }: {
+  item: ButcherItemRow; title: string; onCancel?: () => void; canWeigh: boolean; onWeighed: () => void;
+}) {
   const cover = coverOf(i.cuts.cut_media);
   const cancelled = i.status === "cancelled";
   return (
@@ -151,6 +173,8 @@ function ItemRow({ item: i, title, onCancel }: { item: ButcherItemRow; title: st
             {he.butcherOrders.lineCancelled}{i.cancel_reason && ` · ${i.cancel_reason}`}
           </p>
         )}
+        {i.refund_agorot ? <p className="text-sm font-semibold text-amber-800">{he.butcherOrders.refundDue(`₪${formatAgorot(i.refund_agorot)}`)}</p> : null}
+        {canWeigh && <WeightInput item={i} onDone={onWeighed} />}
       </div>
       {onCancel && (
         <button type="button" onClick={onCancel} className="min-h-11 shrink-0 self-center px-1 text-sm font-semibold text-red-700">
@@ -209,5 +233,75 @@ function CancelSheet({ open, orderId, item, title, onClose, onDone }: {
         </Button>
       </div>
     </BottomSheet>
+  );
+}
+
+/** The weight actually supplied for one line (grams). The server applies the ±5% rule. */
+function WeightInput({ item: i, onDone }: { item: ButcherItemRow; onDone: () => void }) {
+  const toast = useToast();
+  const [value, setValue] = useState(i.delivered_weight_g ? String(i.delivered_weight_g) : "");
+  const [busy, setBusy] = useState(false);
+  const grams = Number(value);
+  const changed = value !== (i.delivered_weight_g ? String(i.delivered_weight_g) : "");
+  async function save() {
+    if (!grams || busy) return;
+    setBusy(true);
+    const { error } = await supabaseBrowser().rpc("record_item_weight", { p_item_id: i.id, p_weight_g: Math.round(grams) });
+    setBusy(false);
+    if (error) return toast(errorText(error), { tone: "error" });
+    toast(he.butcherOrders.weightSaved, { tone: "success" });
+    onDone();
+  }
+  return (
+    <div className="mt-1.5 flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <label className="sr-only" htmlFor={`w-${i.id}`}>{he.butcherOrders.weighed}</label>
+        <input id={`w-${i.id}`} inputMode="numeric" dir="ltr" placeholder={he.butcherOrders.weighed}
+          className="min-h-11 w-32 rounded-xl bg-neutral-50 px-3 text-base ring-1 ring-neutral-300 outline-none focus:ring-2 focus:ring-brand"
+          value={value} onChange={(e) => setValue(e.target.value.replace(/\D/g, "").slice(0, 5))} />
+        <Button size="md" variant="secondary" loading={busy} disabled={!grams || !changed} onClick={save}>{he.butcherOrders.saveWeight}</Button>
+      </div>
+      <p className="text-xs text-neutral-500">{he.butcherOrders.weighedHint(formatWeight(i.est_weight_g))}</p>
+    </div>
+  );
+}
+
+/** A photo of the prepared order, kept in the shop's folder; replacing it removes the old file. */
+function ReadyPhoto({ orderId, butcherId, path, onDone }: { orderId: string; butcherId: string; path: string | null; onDone: () => void }) {
+  const toast = useToast();
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { full } = await prepareImage(file);
+      const sb = supabaseBrowser();
+      const next = `${butcherId}/orders/${orderId}/${crypto.randomUUID()}.jpg`;
+      const up = await sb.storage.from(MEDIA_BUCKET).upload(next, full, { contentType: "image/jpeg" });
+      if (up.error) throw up.error;
+      const { error } = await sb.rpc("set_ready_photo", { p_order_id: orderId, p_path: next });
+      if (error) { await removeStorageObjects([next]); throw error; }
+      await removeStorageObjects([path]);
+      toast(he.butcherOrders.photoSaved, { tone: "success" });
+      onDone();
+    } catch (e) {
+      toast(errorText(e as { message?: string }), { tone: "error" });
+    } finally {
+      setBusy(false);
+      if (input.current) input.current.value = "";
+    }
+  }
+  return (
+    <section className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
+      <h2 className="font-extrabold">{he.butcherOrders.readyPhoto}</h2>
+      <p className="mb-3 text-sm text-neutral-500">{he.butcherOrders.readyPhotoHint}</p>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {path && <img src={mediaUrl(path)} alt={he.butcherOrders.readyPhoto} className="mb-3 aspect-[4/3] w-full rounded-xl object-cover" />}
+      <input ref={input} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
+      <Button variant="secondary" className="w-full" loading={busy} onClick={() => input.current?.click()}>
+        {path ? he.butcherOrders.replacePhoto : he.butcherOrders.takePhoto}
+      </Button>
+    </section>
   );
 }

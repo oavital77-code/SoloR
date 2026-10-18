@@ -103,7 +103,7 @@ function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: 
             <span className={clsx("text-lg", o.status === "new" ? "font-extrabold" : "font-bold")}>
               <Ltr>#{o.order_number}</Ltr>
             </span>
-            <OrderStatusBadge status={o.status} />
+            <OrderStatusBadge status={o.status} method={o.receive_method} />
           </div>
           <p className="text-sm text-neutral-500">{timeAgo(o.created_at, now)} · {he.butcherOrders.itemsCount(active.length || items.length)}</p>
           <p className="font-semibold">

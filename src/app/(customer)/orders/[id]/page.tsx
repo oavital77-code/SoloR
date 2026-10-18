@@ -1,5 +1,7 @@
 "use client";
-// C6 — one purchase: an order per shop, each with its own live timeline, lines and pickup details.
+// C6 — one purchase: an order per shop, each with its own live timeline, lines and how it is received (spec §11).
+// Delivery has its own last steps (out for delivery → delivered). Once ready, the butcher's photo of the order shows.
+// A supplied weight outside ±5% shows the actual weight and the refund; a line the shop cancelled shows its credit.
 // While a shop has not started preparing, the customer can cancel a single line or that shop's whole order.
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -14,8 +16,9 @@ import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, formatDateTime, mediaUrl, orderWhat } from "@/lib/cut-helpers";
 import { errorText } from "@/lib/errors";
 import { useBreeds, useRefetchOnFocus } from "@/lib/hooks";
-import { ORDER_STATUS_LABEL } from "@/lib/labels";
-import { formatAgorot } from "@/lib/pricing";
+import { orderStatusLabel } from "@/lib/labels";
+import { formatAgorot, formatWeight, weightOutcome } from "@/lib/pricing";
+import { isolateTimes } from "@/lib/hours";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { OrderEvent } from "@/lib/types";
 
@@ -105,18 +108,27 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
       <div className="flex flex-col items-center gap-1.5">
         {shop && <p className="eyebrow">{shop.name}</p>}
         {many && <p className="text-xs text-stone"><Ltr>{he.orders.shopOrder(o.order_number)}</Ltr></p>}
-        <OrderStatusBadge status={o.status} dark />
-        <p className="font-display text-xl text-ivory">{ORDER_STATUS_LABEL[o.status]}</p>
+        <OrderStatusBadge status={o.status} method={o.receive_method} dark />
+        <p className="font-display text-xl text-ivory">{orderStatusLabel(o.status, o.receive_method)}</p>
       </div>
 
       {o.status === "ready" && (
         <div className="animate-fade-in rounded-xl bg-ivory p-4 font-display text-xl font-bold text-ink" role="status">
-          {shop ? he.orders.readyAt(shop.name) : he.orders.readyBanner}
+          {o.receive_method === "delivery" ? he.orders.outForDelivery(shop?.name ?? "") : shop ? he.orders.readyAt(shop.name) : he.orders.readyBanner}
         </div>
       )}
 
+      {/* the prepared order, only once it is ready or on its way (spec §11) */}
+      {(o.status === "ready" || o.status === "completed") && o.ready_photo_path && (
+        <figure className="overflow-hidden rounded-2xl ring-1 ring-gold/20">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={mediaUrl(o.ready_photo_path)} alt={he.orders.readyPhoto} className="aspect-[4/3] w-full object-cover" />
+          <figcaption className="bg-ink-2 px-3 py-2 text-sm text-ivory/80">{he.orders.readyPhoto} · <span className="text-stone">{he.orders.readyPhotoBy}</span></figcaption>
+        </figure>
+      )}
+
       <div className="border-y border-ivory/10 py-5">
-        <OrderTimeline status={o.status} events={events} dark />
+        <OrderTimeline status={o.status} events={events} method={o.receive_method} dark />
         {o.status === "cancelled" && o.cancelled_by && (
           <p className="text-sm text-stone">
             {he.orders.cancelledBy(o.cancelled_by)}{o.cancel_reason && `  ·  ${he.orders.reason}: ${o.cancel_reason}`}
@@ -130,9 +142,7 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
             canCancel={open && i.status === "active"} onCancel={() => onCancelItem(i.id)} />
         ))}
       </ul>
-      {o.status !== "cancelled" && (
-        <p className="text-sm text-stone">{he.orders.total}: <Ltr className="font-semibold text-ivory">₪{formatAgorot(o.total_agorot)}</Ltr></p>
-      )}
+      <Totals order={o} />
 
       {o.customer_note && (
         <div>
@@ -141,11 +151,22 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
         </div>
       )}
 
-      {shop && (
+      {o.receive_method === "delivery" && o.delivery_address ? (
+        <div>
+          <p className="eyebrow mb-2">{he.orders.deliveryDetails}</p>
+          <p className="text-[15px] text-ivory/85">{o.delivery_address.name} · <Ltr>{o.delivery_address.phone}</Ltr></p>
+          <p className="text-[15px] text-ivory/80">{o.delivery_address.street}, {o.delivery_address.city}</p>
+          {o.delivery_address.notes && <p className="text-sm text-stone">{o.delivery_address.notes}</p>}
+          <p className="mt-1 text-sm text-stone">
+            {he.orders.window}: {o.delivery_window ? isolateTimes(o.delivery_window) : he.checkout.pendingCoordination}
+          </p>
+          {shop && <a href={`tel:${shop.phone.replace(/-/g, "")}`} className="mt-1 inline-block min-h-10 py-2.5 text-sm text-gold"><Ltr>{shop.phone}</Ltr></a>}
+        </div>
+      ) : shop && (
         <div>
           <p className="eyebrow mb-2">{he.orders.pickupDetails}</p>
           <p className="text-[15px] text-ivory/80">{shop.address}</p>
-          {shop.pickup_hours && <p className="text-sm text-stone">{shop.pickup_hours}</p>}
+          {shop.pickup_hours && <p className="text-sm text-stone">{isolateTimes(shop.pickup_hours)}</p>}
           <div className="mt-1 flex justify-center gap-6 text-sm">
             <a className="min-h-10 py-2.5 text-gold underline-offset-4 hover:underline" target="_blank" rel="noreferrer"
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.address)}`}>{he.market.navigate}</a>
@@ -183,11 +204,50 @@ function ItemLine({ item: i, title, canCancel, onCancel }: { item: ItemRow; titl
       {cancelled && i.cancelled_by && (
         <p className="text-xs text-[#e8a0a8]">{he.orders.itemCancelledBy(i.cancelled_by)}{i.cancel_reason && `  ·  ${i.cancel_reason}`}</p>
       )}
+      {cancelled && <p className="text-sm font-semibold text-gold">{he.orders.credit(`₪${formatAgorot(i.total_agorot)}`)}</p>}
+      {!cancelled && <Supplied item={i} />}
       {canCancel && (
         <button type="button" onClick={onCancel} className="min-h-10 text-xs text-ivory/60 underline-offset-4 hover:underline">
           {he.orders.cancelItem}
         </button>
       )}
     </li>
+  );
+}
+
+/** The supplied weight, only when it is outside ±5% (spec §11): the actual weight and the refund and its state. */
+function Supplied({ item: i }: { item: ItemRow }) {
+  if (!i.delivered_weight_g) return null;
+  const out = weightOutcome(i.est_weight_g, i.delivered_weight_g, i.price_per_kg_agorot);
+  if (out.kind === "within") return null;
+  const refund = i.refund_agorot ?? (out.kind === "under" ? out.refund : 0);
+  return (
+    <div className="flex flex-col items-center gap-0.5 text-sm">
+      <p className="text-ivory/80">{he.orders.supplied(formatWeight(i.delivered_weight_g), formatWeight(i.est_weight_g))}</p>
+      {out.kind === "under" ? (
+        <p className="font-semibold text-gold">
+          {he.orders.refund(`₪${formatAgorot(refund)}`)} · {he.orders.refundStatus[i.refund_status ?? "pending"]}
+        </p>
+      ) : <p className="text-stone">{he.orders.overWeight}</p>}
+    </div>
+  );
+}
+
+/** What this shop's part costs now: its live lines, delivery, and what is coming back (credits and refunds). */
+function Totals({ order: o }: { order: ShopOrderRow }) {
+  const credits = o.order_items.reduce((s, i) => s + (i.status === "cancelled" ? i.total_agorot : (i.refund_agorot ?? 0)), 0);
+  if (o.status === "cancelled" && !credits) return null;
+  return (
+    <dl className="mx-auto flex w-full max-w-xs flex-col gap-1 text-sm">
+      {o.status !== "cancelled" && (
+        <div className="flex justify-between"><dt className="text-stone">{he.orders.total}</dt><dd><Ltr className="font-semibold text-ivory">₪{formatAgorot(o.total_agorot)}</Ltr></dd></div>
+      )}
+      {o.delivery_fee_agorot > 0 && (
+        <div className="flex justify-between"><dt className="text-stone">{he.orders.deliveryFee}</dt><dd><Ltr className="text-ivory">₪{formatAgorot(o.delivery_fee_agorot)}</Ltr></dd></div>
+      )}
+      {credits > 0 && (
+        <div className="flex justify-between"><dt className="text-stone">{he.orders.credits}</dt><dd><Ltr className="font-semibold text-gold">₪{formatAgorot(credits)}</Ltr></dd></div>
+      )}
+    </dl>
   );
 }

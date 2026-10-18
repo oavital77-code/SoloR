@@ -77,7 +77,7 @@ function MyOrders() {
                       {k.orders.map((o) => (
                         <span key={o.id} className="flex items-center gap-1.5 text-xs text-stone">
                           {k.orders.length > 1 && o.butchers?.name}
-                          <OrderStatusBadge status={o.status} dark />
+                          <OrderStatusBadge status={o.status} method={o.receive_method} dark />
                         </span>
                       ))}
                     </div>

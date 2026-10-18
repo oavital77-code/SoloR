@@ -1,13 +1,13 @@
 // 4-step order timeline with real timestamps from order_events (never shows a step that didn't happen).
 // Numbered steps on a hairline — no icons.
 import { clsx } from "clsx";
-import { ORDER_STATUS_SHORT } from "@/lib/labels";
+import { orderStatusShort } from "@/lib/labels";
 import { formatDateTime } from "@/lib/cut-helpers";
-import type { OrderEvent, OrderStatus } from "@/lib/types";
+import type { OrderEvent, OrderStatus, ReceiveMethod } from "@/lib/types";
 
 const STEPS: OrderStatus[] = ["new", "preparing", "ready", "completed"];
 
-export function OrderTimeline({ status, events, dark }: { status: OrderStatus; events: OrderEvent[]; dark?: boolean }) {
+export function OrderTimeline({ status, events, dark, method }: { status: OrderStatus; events: OrderEvent[]; dark?: boolean; method?: ReceiveMethod }) {
   const at = (s: OrderStatus) => events.find((e) => e.to_status === s)?.created_at;
   const cancelledAt = at("cancelled");
   const reached = STEPS.filter((s) => at(s));
@@ -30,7 +30,7 @@ export function OrderTimeline({ status, events, dark }: { status: OrderStatus; e
         const line = clsx("w-px", done ? (dark ? "bg-gold/60" : "bg-ink/50") : dark ? "bg-ivory/10" : "bg-neutral-200");
         const text = (
           <div className={clsx(!done && "opacity-50")}>
-            <p className={clsx("font-semibold", current && "font-display text-lg font-bold")}>{ORDER_STATUS_SHORT[s]}</p>
+            <p className={clsx("font-semibold", current && "font-display text-lg font-bold")}>{orderStatusShort(s, method)}</p>
             {time && <p className={clsx("text-sm", dark ? "text-stone" : "text-neutral-500")}>{formatDateTime(time)}</p>}
           </div>
         );

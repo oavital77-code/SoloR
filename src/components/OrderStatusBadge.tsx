@@ -1,9 +1,9 @@
 import { clsx } from "clsx";
-import { ORDER_STATUS_SHORT } from "@/lib/labels";
-import type { OrderStatus } from "@/lib/types";
+import { orderStatusShort } from "@/lib/labels";
+import type { OrderStatus, ReceiveMethod } from "@/lib/types";
 
 // Customer (dark): a quiet outlined label. Butcher (light): solid colours, scanned at a glance at the counter.
-export function OrderStatusBadge({ status, dark }: { status: OrderStatus; dark?: boolean }) {
+export function OrderStatusBadge({ status, dark, method }: { status: OrderStatus; dark?: boolean; method?: ReceiveMethod }) {
   if (dark) {
     return (
       <span className={clsx(
@@ -13,7 +13,7 @@ export function OrderStatusBadge({ status, dark }: { status: OrderStatus; dark?:
           : status === "cancelled" ? "text-stone ring-stone/30 line-through"
           : "text-ivory/70 ring-ivory/20",
       )}>
-        {ORDER_STATUS_SHORT[status]}
+        {orderStatusShort(status, method)}
       </span>
     );
   }
@@ -28,7 +28,7 @@ export function OrderStatusBadge({ status, dark }: { status: OrderStatus; dark?:
         status === "cancelled" && "bg-neutral-100 text-neutral-500 line-through",
       )}
     >
-      {ORDER_STATUS_SHORT[status]}
+      {orderStatusShort(status, method)}
     </span>
   );
 }
