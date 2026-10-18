@@ -22,10 +22,8 @@ import { cart, useCart } from "@/lib/cart";
 import { canBuySteaks, canBuyWhole, cutTitle, timeAgo } from "@/lib/cut-helpers";
 import { agingMethodLabel, originLabel } from "@/lib/labels";
 import { shopPath } from "@/lib/market";
-import { formatAgorot, formatWeight, steakPrice, wholePrice } from "@/lib/pricing";
+import { formatWeight, money, steakPrice, wholePrice } from "@/lib/pricing";
 import type { Breed, Butcher, Cut, CutMedia, OrderMode } from "@/lib/types";
-
-const money = (a: number) => `₪${formatAgorot(a).replace(/\.00$/, "")}`;
 
 export function CutPost({ cut, media, breeds, shop, now, variant = "feed", source = "feed", gone, reserved, eager }: {
   cut: Cut; media: CutMedia[]; breeds: Breed[]; shop?: Pick<Butcher, "name" | "slug" | "logo_path"> | null; now: number;

@@ -135,6 +135,9 @@
 .sr-timer { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 32px; line-height: 36px; font-weight: 500; color: var(--gold); direction: ltr; unicode-bidi: isolate; }
 .sr-timer-ring { --p: .98; width: 112px; height: 112px; border-radius: 50%; display: grid; place-items: center; align-self: center;
   background: conic-gradient(var(--gold) calc(var(--p) * 360deg), var(--line) 0); }
+.sr-timer-ring--late { background: conic-gradient(var(--state-sold) calc(var(--p) * 360deg), var(--line) 0); }
+.sr-timer-ring--late .sr-timer { color: var(--state-sold); }
+.sr-timer-ring .sr-timer { font-size: 28px; }
 .sr-timer-ring > div { width: 100px; height: 100px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; }
 .sr-rowline { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 15px; }
 .sr-legal { font-size: 12px; line-height: 18px; color: var(--ink-muted); }

@@ -8,13 +8,13 @@ export type ItemRow = OrderItem & {
 };
 export type ShopOrderRow = Order & {
   order_items: ItemRow[];
-  butchers: Pick<Butcher, "name" | "address" | "pickup_hours" | "phone" | "slug"> | null;
+  butchers: Pick<Butcher, "name" | "address" | "pickup_hours" | "phone" | "slug" | "logo_path"> | null;
 };
 /** A purchase with its shop orders and their lines. */
 export type CheckoutRow = Checkout & { orders: ShopOrderRow[] };
 
 export const CHECKOUT_SELECT =
-  "*, orders(*, butchers(name, address, pickup_hours, phone, slug), order_items(*, cuts(code, cut_type, breed_key, breed_other, steak_weight_g, cut_media(*))))";
+  "*, orders(*, butchers(name, address, pickup_hours, phone, slug, logo_path), order_items(*, cuts(code, cut_type, breed_key, breed_other, steak_weight_g, cut_media(*))))";
 
 /** Shop orders in a stable order (by order number) and their lines (active first). */
 export function normalizeCheckout(k: CheckoutRow): CheckoutRow {

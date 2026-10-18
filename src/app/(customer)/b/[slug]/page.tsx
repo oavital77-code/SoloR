@@ -15,15 +15,13 @@ import { isReserved } from "@/lib/feed";
 import { EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
-import { formatAgorot, steakPrice, wholePrice } from "@/lib/pricing";
+import { money, steakPrice, wholePrice } from "@/lib/pricing";
 import { useBreeds, useButchers, useNow } from "@/lib/hooks";
 import { closesAt, isOpenNow, isolateTimes, weekRows } from "@/lib/hours";
 import { useScrollMemory } from "@/lib/scroll";
 import { track } from "@/lib/track";
 import { cameFrom } from "@/components/customer/Tracker";
 import type { Breed, Butcher, CutWithMedia } from "@/lib/types";
-
-const money = (a: number) => `₪${formatAgorot(a).replace(/\.00$/, "")}`;
 
 export default function ShopPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);

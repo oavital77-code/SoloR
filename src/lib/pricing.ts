@@ -50,6 +50,11 @@ export function formatAgorot(agorot: number): string {
   return (agorot / 100).toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/** A price as the design writes it: "₪132", with agorot only when there are any ("₪132.50"). */
+export function money(agorot: number): string {
+  return `₪${formatAgorot(agorot).replace(/\.00$/, "")}`;
+}
+
 /** "220" / "219.9" → 22000 / 21990; invalid → null */
 export function shekelsToAgorot(input: string): number | null {
   const s = input.trim().replace(",", ".");

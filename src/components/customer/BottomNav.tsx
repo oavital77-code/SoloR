@@ -23,7 +23,8 @@ export function BottomNav() {
     }
     setSearchHref(lastSearch());
   }, [path, params]);
-  if (path.startsWith("/cut/")) return null;
+  // the cut page has its own buying bar; the cart, checkout and orders end in their own bottom bar (design: Cart, Checkout)
+  if (path.startsWith("/cut/") || path === "/cart" || path === "/checkout" || path.startsWith("/orders")) return null;
   const items = [
     { href: "/", label: he.nav.home, Mark: IconHome, active: path === "/" || path.startsWith("/b/") || path === "/shops" },
     { href: searchHref, label: he.nav.search, Mark: IconSearch, active: path === "/search" },

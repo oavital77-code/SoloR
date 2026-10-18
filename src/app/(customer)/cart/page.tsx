@@ -1,18 +1,19 @@
 "use client";
-// The cart (customer spec §9): every chosen cut, grouped by shop, with live price and stock. Adding reserves
+// The cart (customer spec §9, design: Cart): every chosen cut, grouped by shop in a card, with live price and stock. Adding reserves
 // nothing; a line that was sold meanwhile (or is held by someone at checkout) is marked and blocks the way on.
 // Guests fill the cart freely; signing in is asked for only on the way to the checkout.
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import { BackLink } from "@/components/customer/market-ui";
+import { ScreenHead } from "@/components/customer/market-ui";
+import { ShopMark } from "@/components/ShopMark";
 import { useCartRows, type Row } from "@/components/customer/useCartRows";
-import { Button, EmptyState, ErrorState, Ltr, Skeleton, Stepper } from "@/components/ui";
+import { EmptyState, ErrorState, Ltr, Skeleton, Stepper } from "@/components/ui";
 import { cart } from "@/lib/cart";
 import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { he } from "@/lib/i18n/he";
 import { useBreeds, useSession } from "@/lib/hooks";
-import { formatAgorot, formatWeight } from "@/lib/pricing";
+import { formatWeight, money } from "@/lib/pricing";
 import { track } from "@/lib/track";
 import { useEffect, useRef } from "react";
 
@@ -33,82 +34,89 @@ export default function CartPage() {
     router.push(user ? "/checkout" : `/login?next=${encodeURIComponent("/checkout")}`);
   }
 
+  const back = () => (window.history.length > 1 ? router.back() : router.push("/"));
+
   return (
-    <main className="min-h-dvh px-4 pb-28">
-      <header className="pt-3 pb-4">
-        <BackLink onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} label={he.app.back} />
-        <h1 className="mt-1 font-display text-3xl font-bold text-ivory">{he.cart.title}</h1>
-        {lines.length > 0 && (
-          <p className="mt-1 text-sm text-stone">
-            {he.cart.items(lines.length)} {groups.length > 0 && he.cart.shopCount(groups.length)}
-          </p>
-        )}
-      </header>
+    <main className="flex min-h-dvh flex-col px-4 text-start">
+      <ScreenHead title={he.cart.yours} back={back} backLabel={he.app.back} />
 
       {lines.length === 0 ? (
         <EmptyState text={he.cart.empty}>
-          <Link href="/"><Button variant="dark">{he.cart.toMarket}</Button></Link>
+          <Link href="/" className="sr-btn">{he.cart.toMarket}</Link>
         </EmptyState>
       ) : error && !cuts ? <ErrorState dark onRetry={load} />
-        : !cuts ? <div className="flex flex-col gap-3">{[0, 1].map((i) => <Skeleton key={i} className="h-28" />)}</div>
+        : !cuts ? <div className="flex flex-col gap-3 pt-4">{[0, 1].map((i) => <Skeleton key={i} className="h-28 rounded-3xl" />)}</div>
         : (
-          <div className="flex flex-col gap-8">
-            {groups.map(({ shop, butcherId, rows: shopRows }) => (
-              <section key={butcherId} className="border-t border-ivory/10 pt-5">
-                <p className="eyebrow">{shop?.name}</p>
-                {shop && <p className="mt-1 text-xs text-stone">{he.checkout.pickup(shop.name, shop.address, shop.pickup_hours)}</p>}
-                <ul className="mt-3 flex flex-col divide-y divide-ivory/10">
-                  {shopRows.map((r) => <CartRow key={r.line.cutId} row={r} title={r.cut ? cutTitle(r.cut, breeds) : r.line.code} />)}
-                </ul>
-              </section>
-            ))}
+          <>
+            <div className="flex flex-1 flex-col gap-5 pt-4 pb-6">
+              {groups.map(({ shop, butcherId, rows: shopRows }) => (
+                <section key={butcherId} className="sr-card !gap-0 !border-line-gold">
+                  <div className="flex items-center gap-2.5 pb-1">
+                    {shop && <ShopMark shop={shop} size="sm" />}
+                    <span className="font-display text-lg font-semibold">{shop?.name}</span>
+                  </div>
+                  <ul className="flex flex-col">
+                    {shopRows.map((r, i) => (
+                      <CartRow key={r.line.cutId} row={r} last={i === shopRows.length - 1} title={r.cut ? cutTitle(r.cut, breeds) : r.line.code} />
+                    ))}
+                  </ul>
+                </section>
+              ))}
+              {groups.length > 1 && <p className="sr-legal m-0">{he.cart.splitNote}</p>}
+              <Link href="/" className="sr-link self-start">{he.cart.continueShopping}</Link>
+            </div>
 
-            <section className="border-t border-ivory/10 pt-5">
-              {groups.length > 1 && <p className="mb-4 text-sm leading-relaxed text-stone">{he.cart.splitNote}</p>}
-              <p className="text-sm text-stone">{he.cart.subtotal}</p>
-              <p className="font-display text-3xl font-bold text-ivory"><Ltr>₪{formatAgorot(total)}</Ltr></p>
-              {blocked && <p className="mt-3 text-sm text-[#e8a0a8]" role="alert">{he.cart.fixFirst}</p>}
-              {!user && <p className="mt-3 text-sm text-stone">{he.cart.loginToPay}</p>}
-              <Button size="lg" className="mt-4 w-full" disabled={blocked} onClick={proceed}>{he.cart.proceed}</Button>
-              <Link href="/" className="mt-2 inline-block min-h-11 py-3 text-sm text-ivory/70 underline-offset-4 hover:underline">
-                {he.cart.continueShopping}
-              </Link>
-            </section>
-          </div>
+            <div className="sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 rounded-t-[28px] border-t border-line-gold bg-ink-2 px-4 pt-4 pb-[max(1.75rem,env(safe-area-inset-bottom))]">
+              <div className="sr-rowline !text-[17px]">
+                <span className="font-semibold">{he.cart.subtotal}</span>
+                <Ltr className="text-xl font-bold">{money(total)}</Ltr>
+              </div>
+              {blocked && <p className="m-0 text-[13px] font-semibold text-sold" role="alert">{he.cart.fixFirst}</p>}
+              {!user && <p className="m-0 text-[13px] text-stone">{he.cart.loginToPay}</p>}
+              <button type="button" className="sr-btn sr-btn--block" disabled={blocked} onClick={proceed}>{he.cart.proceed}</button>
+            </div>
+          </>
         )}
     </main>
   );
 }
 
-function CartRow({ row: { line, cut, price, problem }, title }: { row: Row; title: string }) {
+/** One line (design: Cart): photo, cut, what was chosen and the code, the price and "הסר". A sold line greys out. */
+function CartRow({ row: { line, cut, price, problem }, title, last }: { row: Row; title: string; last: boolean }) {
   const cover = cut ? coverOf(cut.cut_media) : undefined;
   const maxQty = Math.max(1, cut?.steaks_available ?? 1);
   return (
-    <li className="flex flex-col items-center gap-2 py-4">
-      <Link href={`/cut/${line.code}`} className="flex flex-col items-center gap-2">
-        <div className={clsx("size-20 overflow-hidden rounded-md bg-ink-3", problem && "opacity-50 grayscale")}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${line.code}`} className="h-full w-full object-cover" />}
-        </div>
-        <p className="font-display text-lg font-bold text-ivory">{title}</p>
+    <li className={clsx("sr-cartrow", problem && "sr-cartrow--sold", last && "!border-b-0")}>
+      <Link href={`/cut/${line.code}`} className="block size-16 overflow-hidden rounded-lg bg-ink-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${line.code}`} />}
       </Link>
-      <p className="text-xs text-stone"><Ltr>{line.code}</Ltr></p>
-      {line.mode === "steaks" && cut?.steak_weight_g ? (
-        <div className="flex flex-col items-center gap-1">
-          <Stepper dark value={Math.min(line.qty ?? 1, maxQty)} min={1} max={maxQty} label={he.cut.steaks}
-            onChange={(v) => cart.setQty(line.cutId, v)} />
-          <p className="text-sm text-stone">{he.cut.steaksSummary(line.qty ?? 1, cut.steak_weight_g, formatWeight(cut.steak_weight_g * (line.qty ?? 1)))}</p>
-        </div>
-      ) : (
-        <p className="text-sm text-stone">{he.cut.whole}{cut?.weight_g ? <> · <Ltr>{formatWeight(cut.weight_g)}</Ltr></> : null}</p>
-      )}
-      <p className={clsx("font-display text-xl font-bold", problem ? "text-stone line-through" : "text-ivory")}>
-        <Ltr>₪{formatAgorot(price)}</Ltr>
-      </p>
-      {problem && <p className="text-sm text-[#e8a0a8]" role="alert">{problem}</p>}
-      <button type="button" onClick={() => cart.remove(line.cutId)} className="min-h-10 text-sm text-ivory/60 underline-offset-4 hover:underline">
-        {he.cart.remove}
-      </button>
+      <div className="flex min-w-0 flex-col gap-1">
+        <Link href={`/cut/${line.code}`} className={clsx("sr-cartrow__title", problem && "text-stone line-through")}>{title}</Link>
+        {problem ? (
+          <span className="sr-cartrow__warn" role="alert">{problem} · <span className="code !text-inherit">{line.code}</span></span>
+        ) : (
+          <span className="sr-cartrow__sub">
+            {line.mode === "steaks" && cut?.steak_weight_g
+              ? he.cut.steaksSummary(line.qty ?? 1, cut.steak_weight_g, formatWeight(cut.steak_weight_g * (line.qty ?? 1)))
+              : <>{he.cut.whole}{cut?.weight_g ? <> · <Ltr>{formatWeight(cut.weight_g)}</Ltr></> : null}</>}
+            {" · "}<span className="code">{line.code}</span>
+          </span>
+        )}
+        {!problem && line.mode === "steaks" && cut?.steak_weight_g && maxQty > 1 ? (
+          <div className="pt-1">
+            <Stepper dark value={Math.min(line.qty ?? 1, maxQty)} min={1} max={maxQty} label={he.cut.steaks}
+              onChange={(v) => cart.setQty(line.cutId, v)} />
+          </div>
+        ) : null}
+      </div>
+      <div className="flex flex-col items-end">
+        {!problem && <Ltr className="font-semibold">{money(price)}</Ltr>}
+        <button type="button" onClick={() => cart.remove(line.cutId)}
+          className={problem ? "sr-btn sr-btn--quiet !min-h-10 !px-3.5 !text-sm" : "min-h-11 text-[13px] font-medium text-stone"}>
+          {he.cart.remove}
+        </button>
+      </div>
     </li>
   );
 }

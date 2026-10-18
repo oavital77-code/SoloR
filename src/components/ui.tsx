@@ -199,11 +199,11 @@ export function Field({ label, hint, error, children, htmlFor, dark }: {
   label: string; hint?: string; error?: string | null; children: React.ReactNode; htmlFor?: string; dark?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-[15px] font-bold">{label}</label>
+    <div className={clsx("flex flex-col", dark ? "gap-1.5 text-start" : "gap-2")}>
+      <label htmlFor={htmlFor} className={dark ? "text-[13px] text-stone" : "text-[15px] font-bold"}>{label}</label>
       {children}
-      {error ? <p className={clsx("text-sm font-semibold", dark ? "text-red-300" : "text-red-700")} role="alert">{error}</p>
-        : hint ? <p className={clsx("text-sm", dark ? "text-white/50" : "text-neutral-500")}>{hint}</p> : null}
+      {error ? <p className={clsx("m-0 text-sm font-semibold", dark ? "text-sold" : "text-red-700")} role="alert">{error}</p>
+        : hint ? <p className={clsx("m-0 text-sm", dark ? "text-stone" : "text-neutral-500")}>{hint}</p> : null}
     </div>
   );
 }

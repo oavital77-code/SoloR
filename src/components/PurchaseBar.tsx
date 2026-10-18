@@ -9,10 +9,8 @@ import { IconClock, IconClose, IconPlus } from "./icons";
 import { BottomSheet, Ltr, Stepper } from "./ui";
 import { he } from "@/lib/i18n/he";
 import { canBuySteaks, canBuyWhole } from "@/lib/cut-helpers";
-import { formatAgorot, formatWeight, steakPrice, steaksOrderPrice, wholePrice } from "@/lib/pricing";
+import { formatWeight, money, steakPrice, steaksOrderPrice, wholePrice } from "@/lib/pricing";
 import type { Cut, OrderMode } from "@/lib/types";
-
-const money = (a: number) => `₪${formatAgorot(a).replace(/\.00$/, "")}`;
 
 type OnOrder = (mode: OrderMode, qty: number | null, total: number) => void;
 

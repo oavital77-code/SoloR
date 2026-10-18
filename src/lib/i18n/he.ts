@@ -308,6 +308,7 @@ export const he = {
 
   cart: {
     title: "הסל שלי",
+    yours: "הסל שלך",
     add: "הוסף לסל",
     update: "עדכן בסל",
     added: "נוסף לסל",
@@ -391,10 +392,17 @@ export const he = {
     busted: "BUSTED! מישהו תפס את זה לפניך",
     empty: "הסל ריק — אין מה לשלם.",
     fixDetails: "חסרים פרטים — השלימו את המסומן למעלה",
+    noDelivery: "משלוח לא זמין",
+    holdNote: "הנתחים יישמרו לך 10 דקות",
+    heldTitle: "הנתחים שמורים לך",
+    heldSub: "אף אחד אחר לא יכול לקנות אותם בזמן הזה",
+    payConfirm: "אישור ותשלום",
   },
   confirmation: {
     title: "ההזמנה התקבלה",
     number: (n: number) => `הזמנה #${n}`,
+    numberLabel: "מספר הזמנה",
+    pickupCounter: "איסוף מהדלפק",
     demo: "אב טיפוס — לא בוצע חיוב",
     pickupAt: (shop: string) => `איסוף מ${shop}`,
     deliveryFrom: (shop: string) => `משלוח מ${shop}`,
@@ -407,6 +415,7 @@ export const he = {
 
   orders: {
     title: "ההזמנות שלי",
+    yours: "ההזמנה שלך",
     empty: "אין הזמנות פתוחות.",
     emptyHistory: "עוד אין הזמנות שהסתיימו.",
     toFeed: "לפיד הלייב",

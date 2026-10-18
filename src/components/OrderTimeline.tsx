@@ -1,5 +1,6 @@
 // 4-step order timeline with real timestamps from order_events (never shows a step that didn't happen).
-// Numbered steps on a hairline — no icons.
+// The butcher's (light): numbered steps on a hairline. The customer's (dark, design: Tracking): dots on a rail —
+// gold when done, a ringed dot now, muted ahead — with whatever belongs to the current step under it.
 import { clsx } from "clsx";
 import { orderStatusShort } from "@/lib/labels";
 import { formatDateTime } from "@/lib/cut-helpers";
@@ -7,11 +8,38 @@ import type { OrderEvent, OrderStatus, ReceiveMethod } from "@/lib/types";
 
 const STEPS: OrderStatus[] = ["new", "preparing", "ready", "completed"];
 
-export function OrderTimeline({ status, events, dark, method }: { status: OrderStatus; events: OrderEvent[]; dark?: boolean; method?: ReceiveMethod }) {
+export function OrderTimeline({ status, events, dark, method, now }: {
+  status: OrderStatus; events: OrderEvent[]; dark?: boolean; method?: ReceiveMethod; now?: React.ReactNode;
+}) {
   const at = (s: OrderStatus) => events.find((e) => e.to_status === s)?.created_at;
   const cancelledAt = at("cancelled");
   const reached = STEPS.filter((s) => at(s));
   const steps: OrderStatus[] = status === "cancelled" ? [...reached, "cancelled"] : STEPS;
+
+  if (dark) {
+    return (
+      <ol className="sr-timeline m-0 list-none p-0">
+        {steps.map((s, i) => {
+          const time = s === "cancelled" ? cancelledAt : at(s);
+          const current = s === status && s !== "completed" && s !== "cancelled";
+          const state = current ? "now" : time ? "done" : "todo";
+          const last = i === steps.length - 1;
+          return (
+            <li key={s} className={`sr-step sr-step--${state}`}>
+              <div className="sr-step__rail"><span className="sr-step__dot" />{!last && <span className="sr-step__line" />}</div>
+              <div className={clsx("flex flex-col gap-2.5", !last && "pb-3")}>
+                <div>
+                  <div className="sr-step__label">{orderStatusShort(s, method)}</div>
+                  {time && <div className="sr-step__time">{formatDateTime(time)}</div>}
+                </div>
+                {current && now}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    );
+  }
 
   return (
     <ol className="flex flex-col">

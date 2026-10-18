@@ -39,3 +39,12 @@ export const IconPlay = ({ className }: IconProps) => (
 export const IconAging = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" className={base(className)} {...line} aria-hidden><path d="M7 4h10M7 20h10M8 4c0 4 8 4.5 8 8s-8 4-8 8M16 4c0 4-8 4.5-8 8" /></svg>
 );
+export const IconStore = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={base(className)} {...line} aria-hidden><path d="M4 9.5 5.5 5h13L20 9.5" /><path d="M4 9.5h16v1a2.7 2.7 0 0 1-5.3 0 2.7 2.7 0 0 1-5.4 0A2.7 2.7 0 0 1 4 10.5z" /><path d="M5.5 13.5V20h13v-6.5M10 20v-4h4v4" /></svg>
+);
+export const IconTruck = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={base(className)} {...line} aria-hidden><path d="M3 6.5h11v10H3zM14 10h3.5l3 3.5v3H14" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></svg>
+);
+export const IconCamera = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={base(className)} {...line} aria-hidden><path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z" /><circle cx="12" cy="13.2" r="3.4" /></svg>
+);
