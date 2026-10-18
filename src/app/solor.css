@@ -177,3 +177,24 @@
 .sr-weightfield span { color: var(--ink-muted); font-size: 15px; font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) { .sr-stamp--landing .sr-stamp__ink { animation: none; } .sr-media > img { transition: none; } }
+
+/* ---- screen pieces (design: SoloR מסכים) ---- */
+.sr-screen-title { font-family: var(--font-frank); font-weight: 700; font-size: 28px; line-height: 34px; margin: 0; }
+.sr-backbtn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); background: var(--scrim); border: 0; flex: none; }
+.sr-steps4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.sr-steps4 > div { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--ink-muted); }
+.sr-steps4 > div::before { content: ""; height: 3px; border-radius: 2px; background: var(--line); }
+.sr-steps4 > div.on { color: var(--ink); font-weight: 600; }
+.sr-steps4 > div.on::before { background: var(--gold); }
+.sr-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; border-radius: 999px; background: var(--surface-raised); }
+.sr-seg > button { height: 40px; border-radius: 999px; border: 0; background: transparent; color: var(--ink-muted); font: 600 14px var(--font-plex); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.sr-seg > button.on, .sr-seg > button[aria-checked="true"] { background: var(--ink); color: var(--ground); }
+.sr-seg > button:disabled { opacity: .35; }
+.sr-fchip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 500 14px var(--font-plex); display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.sr-fchip[aria-pressed="true"], .sr-fchip.on { border-color: var(--gold); background: var(--gold-soft); color: var(--gold); font-weight: 600; }
+.sr-fchip:disabled { opacity: .4; }
+.sr-card { background: var(--surface); border-radius: 24px; border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.sr-searchfield { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border-radius: 999px; background: var(--surface-raised); color: var(--ink-muted); }
+.sr-searchfield input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 500 16px var(--font-plex); outline: none; }
+.sr-searchfield input::placeholder { color: var(--ink-muted); }
+.sr-searchfield:focus-within { box-shadow: inset 0 0 0 1px var(--gold); }

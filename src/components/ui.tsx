@@ -41,9 +41,9 @@ export function Chip({
       aria-pressed={selected}
       {...rest}
       className={clsx(
-        "min-h-11 rounded-2xl px-4 text-[15px] font-semibold transition-colors duration-150 disabled:opacity-40",
-        dark
-          ? selected ? "bg-ivory text-ink" : "bg-transparent text-ivory/85 ring-1 ring-ivory/15"
+        dark ? "sr-fchip transition-colors duration-150"
+          : "min-h-11 rounded-2xl px-4 text-[15px] font-semibold transition-colors duration-150 disabled:opacity-40",
+        dark ? null
           : selected ? "bg-brand text-white ring-2 ring-brand" : "bg-white text-neutral-900 ring-1 ring-neutral-300",
         className,
       )}

@@ -1,5 +1,5 @@
 "use client";
-// Search (customer spec §8). Before searching: the field, the shops (by logo) and a compact filter panel.
+// Search (customer spec §8, design: Search). Before searching: the title, the field, the filters as chips and the shops.
 // Once there is a word or a filter: the field and the active filters stay on top as removable chips, and the
 // shops give way to a two-column grid of what can be bought now, best match first. Everything lives in the URL,
 // so the search tab comes back exactly as it was left.
@@ -11,7 +11,8 @@ import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { useHeldCuts } from "@/components/customer/useHeldCuts";
 import { ShopMark } from "@/components/ShopMark";
-import { Button, Chip, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
+import { Chip, ErrorState, Skeleton } from "@/components/ui";
+import { IconClose, IconSearch } from "@/components/icons";
 import { he } from "@/lib/i18n/he";
 import { isReserved, rankFeed } from "@/lib/feed";
 import {
@@ -88,71 +89,82 @@ function SearchView() {
   }, [searchKey, cuts === null]);
   const chips = activeChips(filter, breeds);
 
-  return (
-    <main className="min-h-dvh px-4 pb-24">
-      <header className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 -mx-4 bg-ink/95 px-4 pt-3 pb-3 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <input
-            type="search" enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") go(filter, query); }}
-            placeholder={he.market.searchPlaceholder} aria-label={he.market.search}
-            className={inputDarkClass + " min-h-12 flex-1"}
-          />
-          <button type="button" onClick={() => setSheet(true)} className="min-h-11 shrink-0 text-sm text-ivory/80">
-            {he.search.filters}{chips.length > 0 && <span className="ms-1 text-gold">({chips.length})</span>}
-          </button>
-        </div>
-        {searching && (
-          <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
-            {chips.map((c) => (
-              <Chip dark key={c.key} selected onClick={() => setFilter(c.next)} className="shrink-0" aria-label={he.search.remove(c.label)}>
-                {c.label} <span aria-hidden className="ms-1 opacity-70">×</span>
-              </Chip>
-            ))}
-            <button type="button" onClick={() => { setQuery(""); go(EMPTY_FILTER, ""); }}
-              className="min-h-10 shrink-0 px-2 text-sm text-ivory/60 underline-offset-4 hover:underline">
-              {he.search.clearAll}
-            </button>
-          </div>
-        )}
-      </header>
+  const field = (
+    <label className="sr-searchfield">
+      <IconSearch />
+      <input
+        type="search" enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") go(filter, query); }}
+        placeholder={he.search.placeholder} aria-label={he.market.search}
+      />
+    </label>
+  );
 
-      {error && !cuts ? <ErrorState dark onRetry={reload} />
-        : !searching ? (
-          <>
-            <Shops butchers={butchers} />
-            <QuickFilters filter={filter} onChange={setFilter} cuts={available} types={categoryCounts(available).filter((t) => t.count > 0).map((t) => t.key)}
-              onMore={() => setSheet(true)} />
-          </>
-        )
-        : !cuts ? <div className="mt-2 grid grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[4/5]" />)}</div>
-        : results.length === 0 ? (
-          <div className="py-14 text-center">
-            <p className="font-display text-xl font-bold text-ivory">{he.search.noResults}</p>
-            {chips.length > 0 && (
+  return (
+    <main className="min-h-dvh px-4 pb-24 text-start">
+      {!searching ? (
+        <div className="flex flex-col gap-5 pt-4">
+          <h1 className="sr-screen-title">{he.market.search}</h1>
+          {field}
+          {error && !cuts ? <ErrorState dark onRetry={reload} /> : (
+            <QuickFilters filter={filter} onChange={setFilter} cuts={available}
+              types={categoryCounts(available).filter((t) => t.count > 0).map((t) => t.key)}
+              shops={<Shops butchers={butchers} />} onMore={() => setSheet(true)} />
+          )}
+        </div>
+      ) : (
+        <>
+          <header className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 -mx-4 bg-ink/95 px-4 pt-3 pb-3 backdrop-blur">
+            <div className="flex items-center gap-2.5">
+              <div className="flex-1">{field}</div>
+              <button type="button" onClick={() => setSheet(true)} className="sr-fchip" aria-pressed={chips.length > 0}>
+                {he.search.filters}{chips.length > 0 && <span className="ltr">{chips.length}</span>}
+              </button>
+            </div>
+            <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
+              {chips.map((c) => (
+                <Chip dark key={c.key} selected onClick={() => setFilter(c.next)} aria-label={he.search.remove(c.label)}>
+                  {c.label} <IconClose className="!size-4" />
+                </Chip>
+              ))}
+              <button type="button" onClick={() => { setQuery(""); go(EMPTY_FILTER, ""); }}
+                className="min-h-11 shrink-0 px-2 text-sm text-stone underline-offset-4 hover:underline">
+                {he.search.clearAll}
+              </button>
+            </div>
+          </header>
+
+          {error && !cuts ? <ErrorState dark onRetry={reload} />
+            : !cuts ? <div className="mt-2 grid grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[4/5]" />)}</div>
+            : results.length === 0 ? (
+              <div className="py-14 text-center">
+                <p className="font-display text-xl font-bold text-ivory">{he.search.noResults}</p>
+                {chips.length > 0 && (
+                  <>
+                    <p className="mt-2 text-sm text-stone">{he.search.removeHint}</p>
+                    <div className="mt-3 flex flex-wrap justify-center gap-2">
+                      {chips.map((c) => (
+                        <Chip dark key={c.key} onClick={() => setFilter(c.next)} aria-label={he.search.remove(c.label)}>
+                          {c.label} <IconClose className="!size-4" />
+                        </Chip>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
               <>
-                <p className="mt-2 text-sm text-stone">{he.search.removeHint}</p>
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  {chips.map((c) => (
-                    <Chip dark key={c.key} onClick={() => setFilter(c.next)} aria-label={he.search.remove(c.label)}>
-                      {c.label} <span aria-hidden className="ms-1 opacity-70">×</span>
-                    </Chip>
+                <p className="mb-4 text-[13px] tracking-wide text-stone">{he.search.results(results.length)}</p>
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-7">
+                  {results.map((c, i) => (
+                    <CutTile key={c.id} cut={c} breeds={breeds} shop={shopOf(c.butcher_id)}
+                      onOpen={() => track("search_result_click", { cut_id: c.id, position: i + 1 })} />
                   ))}
-                </div>
+                </ul>
               </>
             )}
-          </div>
-        ) : (
-          <>
-            <p className="mb-4 text-[13px] tracking-wide text-stone">{he.search.results(results.length)}</p>
-            <ul className="grid grid-cols-2 gap-x-3 gap-y-7">
-              {results.map((c, i) => (
-                <CutTile key={c.id} cut={c} breeds={breeds} shop={shopOf(c.butcher_id)}
-                  onOpen={() => track("search_result_click", { cut_id: c.id, position: i + 1 })} />
-              ))}
-            </ul>
-          </>
-        )}
+        </>
+      )}
 
       <FilterSheet open={sheet} onClose={() => setSheet(false)} value={filter} onApply={setFilter}
         cuts={available.filter((c) => searchScore(c, urlQuery, breeds, shopOf(c.butcher_id)) > 0)} breeds={breeds} />
@@ -160,19 +172,19 @@ function SearchView() {
   );
 }
 
-/** The shops, by logo. TODO(spec 18.4–18.5): only the shops serving the customer's area, once areas exist. */
+/** The shops, by mark (design: Search). TODO(spec 18.4–18.5): only the shops serving the customer's area, once areas exist. */
 function Shops({ butchers }: { butchers: Butcher[] }) {
   const active = butchers.filter((b) => b.status !== "inactive");
   if (!active.length) return null;
   return (
-    <section className="mt-4">
-      <h2 className="eyebrow mb-3">{he.search.shops}</h2>
-      <ul className="no-scrollbar -mx-4 flex justify-center gap-5 overflow-x-auto px-4">
+    <section className="flex flex-col gap-2.5">
+      <span className="sr-eyebrow">{he.search.shops}</span>
+      <ul className="no-scrollbar -mx-4 flex gap-5 overflow-x-auto px-4">
         {active.map((b) => (
           <li key={b.id}>
-            <Link href={shopPath(b)} className="flex w-20 flex-col items-center gap-2">
-              <ShopMark shop={b} size="xl" />
-              <span className="line-clamp-2 text-center text-xs leading-tight text-ivory/80">{b.name}</span>
+            <Link href={shopPath(b)} className="flex w-[72px] flex-col items-center gap-1.5">
+              <ShopMark shop={b} className="!size-14 !text-[24px]" />
+              <span className="line-clamp-2 text-center text-[13px] font-medium leading-tight">{b.name}</span>
             </Link>
           </li>
         ))}
@@ -182,51 +194,51 @@ function Shops({ butchers }: { butchers: Butcher[] }) {
 }
 
 /**
- * The compact panel of the empty search: cut types, aging ranges and whole / steaks as chips — several can be
- * chosen together (any of the chosen types, any of the chosen ranges) — then "show N cuts"; the rest in the sheet.
+ * The empty search (design: Search): cut types, aging and whole / steaks as chips under their eyebrows — several
+ * can be chosen together (any of the chosen types, any of the chosen ranges) — the shops, and, once something is
+ * chosen, a bar above the tabs with "נקה הכל" and "הצג N נתחים". The rest of the filters are in the sheet.
  */
-function QuickFilters({ filter, onChange, types, cuts, onMore }: {
-  filter: FeedFilter; onChange: (f: FeedFilter) => void; types: string[]; cuts: Cut[]; onMore: () => void;
+function QuickFilters({ filter, onChange, types, cuts, shops, onMore }: {
+  filter: FeedFilter; onChange: (f: FeedFilter) => void; types: string[]; cuts: Cut[]; shops: React.ReactNode; onMore: () => void;
 }) {
   const [draft, setDraft] = useState<FeedFilter>(filter);
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
   const count = cuts.filter((c) => matchesFilter(c, draft)).length;
   const chosen = activeFilterCount(draft) > 0;
-  const row = "flex flex-wrap justify-center gap-2";
-  return (
-    <section className="mt-8 flex flex-col gap-4 border-t border-ivory/10 pt-6">
-      <h2 className="eyebrow">{he.search.filters}</h2>
-      <p className="-mt-2 text-xs text-stone">{he.search.multiHint}</p>
-      {types.length > 0 && (
-        <div className={row}>
-          {CUT_TYPES.filter((t) => types.includes(t.key)).map((t) => (
-            <Chip dark key={t.key} className="shrink-0" selected={draft.cutTypes.includes(t.key)}
-              onClick={() => setDraft({ ...draft, cutTypes: toggle(draft.cutTypes, t.key) })}>{t.label}</Chip>
-          ))}
-        </div>
-      )}
-      <div className={row}>
-        {AGING_PRESETS.map((a) => (
-          <Chip dark key={a.key} className="shrink-0" selected={draft.aging.includes(a.key)}
-            onClick={() => setDraft({ ...draft, aging: toggle(draft.aging, a.key) })}>
-            {he.filter.agingPreset[a.key]}
-          </Chip>
-        ))}
-      </div>
-      <div className={row}>
-        <Chip dark className="shrink-0" selected={draft.canWhole} onClick={() => setDraft({ ...draft, canWhole: !draft.canWhole })}>{he.filter.whole}</Chip>
-        <Chip dark className="shrink-0" selected={draft.canSteaks} onClick={() => setDraft({ ...draft, canSteaks: !draft.canSteaks })}>{he.filter.steaks}</Chip>
-        <button type="button" onClick={onMore} className="min-h-10 shrink-0 px-2 text-sm text-gold underline-offset-4 hover:underline">
-          {he.filter.more}
-        </button>
-      </div>
-      {chosen && (
-        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 flex animate-fade-in gap-2 pt-2">
-          <Button size="lg" className="flex-[2] rounded-full" disabled={count === 0} onClick={() => onChange(draft)}>{he.filter.show(count)}</Button>
-          <Button size="lg" variant="dark" className="flex-1 rounded-full bg-ink" onClick={() => setDraft(EMPTY_FILTER)}>{he.filter.clearAll}</Button>
-        </div>
-      )}
+  const section = (title: string, body: React.ReactNode) => (
+    <section className="flex flex-col gap-2.5">
+      <span className="sr-eyebrow">{title}</span>
+      <div className="sr-chips">{body}</div>
     </section>
+  );
+  return (
+    <>
+      {types.length > 0 && section(he.filter.cutType, CUT_TYPES.filter((t) => types.includes(t.key)).map((t) => (
+        <Chip dark key={t.key} selected={draft.cutTypes.includes(t.key)}
+          onClick={() => setDraft({ ...draft, cutTypes: toggle(draft.cutTypes, t.key) })}>{t.label}</Chip>
+      )))}
+      {section(he.filter.aging, AGING_PRESETS.map((a) => (
+        <Chip dark key={a.key} selected={draft.aging.includes(a.key)}
+          onClick={() => setDraft({ ...draft, aging: toggle(draft.aging, a.key) })}>
+          {he.filter.agingPreset[a.key]}
+        </Chip>
+      )))}
+      {section(he.search.howToBuy, <>
+        <Chip dark selected={draft.canWhole} onClick={() => setDraft({ ...draft, canWhole: !draft.canWhole })}>{he.filter.whole}</Chip>
+        <Chip dark selected={draft.canSteaks} onClick={() => setDraft({ ...draft, canSteaks: !draft.canSteaks })}>{he.filter.steaks}</Chip>
+      </>)}
+      <p className="-mt-2 m-0 text-xs text-stone">{he.search.multiHint} · <button type="button" onClick={onMore} className="sr-link !text-xs">{he.filter.more}</button></p>
+      {shops}
+      {chosen && (
+        <>
+          <div className="h-16" />
+          <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-[480px] animate-fade-in items-center gap-2.5 border-t border-line bg-ink px-4 py-3">
+            <button type="button" className="sr-btn sr-btn--ghost" onClick={() => setDraft(EMPTY_FILTER)}>{he.filter.clearAll}</button>
+            <button type="button" className="sr-btn flex-1" disabled={count === 0} onClick={() => onChange(draft)}>{he.filter.show(count)}</button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 

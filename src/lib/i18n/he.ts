@@ -173,6 +173,8 @@ export const he = {
     filters: "סינון",
     clearAll: "נקה הכל",
     multiHint: "אפשר לבחור כמה ביחד",
+    placeholder: "נתח, גזע או קצבייה",
+    howToBuy: "איך לקנות",
     remove: (label: string) => `הסר ${label}`,
     noResults: "לא נמצאו נתחים",
     removeHint: "אפשר להסיר אחד מהמסננים:",
