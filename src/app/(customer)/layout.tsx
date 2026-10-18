@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/customer/AppHeader";
 import { BottomNav } from "@/components/customer/BottomNav";
 import { CartBar } from "@/components/customer/CartBar";
 import { CartSync } from "@/components/customer/CartSync";
+import { Tracker } from "@/components/customer/Tracker";
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         {children}
         <CartBar />
         <CartSync />
+        <Tracker />
         <Suspense><BottomNav /></Suspense>
       </div>
     </div>

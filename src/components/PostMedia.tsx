@@ -10,6 +10,7 @@ import { PhotoViewer } from "./PhotoViewer";
 import { he } from "@/lib/i18n/he";
 import { mediaUrl, photosOf, videoOf } from "@/lib/cut-helpers";
 import type { CutMedia } from "@/lib/types";
+import { track as logEvent } from "@/lib/track";
 
 export function PostMedia({ media, title, code, href, eager, children }: {
   media: CutMedia[]; title: string; code: string;
@@ -42,7 +43,25 @@ export function PostMedia({ media, title, code, href, eager, children }: {
     return () => io.disconnect();
   }, []);
 
+  // measurement (§15): which slide was swiped to, and how long the video played
+  const cutId = media[0]?.cut_id;
+  const lastSlide = useRef(0);
+  useEffect(() => {
+    if (!cutId || active === lastSlide.current) return;
+    lastSlide.current = active;
+    logEvent("media_swipe", { cut_id: cutId, index: active });
+  }, [active, cutId]);
+
   const playing = active === videoIndex && onScreen;
+  const playedAt = useRef<number | null>(null);
+  useEffect(() => {
+    if (!cutId) return;
+    if (playing) { playedAt.current = Date.now(); return; }
+    if (playedAt.current !== null) {
+      logEvent("video_play", { cut_id: cutId, index: videoIndex, watched_ms: Date.now() - playedAt.current });
+      playedAt.current = null;
+    }
+  }, [playing, cutId, videoIndex]);
   useEffect(() => {
     const v = videoEl.current;
     if (!v) return;

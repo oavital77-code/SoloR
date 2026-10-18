@@ -16,6 +16,7 @@ import { israelClock } from "@/lib/hours";
 import { useBreeds, useButchers, useNow, useSession } from "@/lib/hooks";
 import { shopPath } from "@/lib/market";
 import { useScrollMemory } from "@/lib/scroll";
+import { track } from "@/lib/track";
 import type { Butcher } from "@/lib/types";
 
 const PAGE = 8;
@@ -56,7 +57,7 @@ export default function FeedPage() {
   const held = useHeldCuts(items.slice(0, limit).filter((i) => !i.gone).map((i) => i.cut.id));
 
   const refresh = () => { showNew(); reload(); };
-  const takeNew = () => { showNew(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const takeNew = () => { track("new_posts_pill_click", { count: pending }); showNew(); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const pull = usePullToRefresh(refresh);
   const shopOf = (id: string) => butchers.find((b) => b.id === id);
 

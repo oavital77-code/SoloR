@@ -3,8 +3,14 @@
 // Each continuous stretch is recorded when it ends; while in view the post is listed in `inView`.
 import { useEffect, useRef, useState } from "react";
 import { inView, recordView } from "@/lib/impressions";
+import { track } from "@/lib/track";
 
-export function usePostView<T extends HTMLElement>(cutId: string) {
+/** a stretch shorter than this is scrolling past, not a view (not sent as an impression) */
+const MIN_IMPRESSION_MS = 500;
+
+export function usePostView<T extends HTMLElement>(cutId: string, meta: { butcherId: string; source: string }) {
+  const metaRef = useRef(meta);
+  metaRef.current = meta;
   const ref = useRef<T>(null);
   const [visible, setVisible] = useState(false);
 
@@ -21,7 +27,11 @@ export function usePostView<T extends HTMLElement>(cutId: string) {
     };
     const stop = () => {
       if (since === null) return;
-      recordView(cutId, Date.now() - since);
+      const ms = Date.now() - since;
+      recordView(cutId, ms);
+      if (ms >= MIN_IMPRESSION_MS) {
+        track("post_impression", { cut_id: cutId, butcher_id: metaRef.current.butcherId, dwell_ms: ms, source: metaRef.current.source });
+      }
       since = null;
       inView.delete(cutId);
       setVisible(false);

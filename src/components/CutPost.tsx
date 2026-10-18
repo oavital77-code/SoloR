@@ -12,6 +12,7 @@ import { PostMedia } from "./PostMedia";
 import { ShopMark } from "./ShopMark";
 import { usePostView } from "./usePostView";
 import { markSoldNotice } from "@/lib/impressions";
+import { track } from "@/lib/track";
 import { PurchaseBar } from "./PurchaseBar";
 import { BottomSheet, Button, Ltr } from "./ui";
 import { useToast } from "./Toast";
@@ -25,9 +26,11 @@ import type { Breed, Butcher, Cut, CutMedia, OrderMode } from "@/lib/types";
 
 const money = (a: number) => `₪${formatAgorot(a).replace(/\.00$/, "")}`;
 
-export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone, reserved, eager }: {
+export function CutPost({ cut, media, breeds, shop, now, variant = "feed", source = "feed", gone, reserved, eager }: {
   cut: Cut; media: CutMedia[]; breeds: Breed[]; shop?: Pick<Butcher, "name" | "slug" | "logo_path"> | null; now: number;
   variant?: "feed" | "full";
+  /** where the post is shown, for measurement (§15): feed / butcher / post */
+  source?: "feed" | "butcher" | "post";
   /** sold while on screen: stays in place with the "אזל" stamp instead of vanishing (spec §4.3) */
   gone?: boolean;
   /** held by another customer at checkout right now: "שוריין", can't be added, may come back (spec §13) */
@@ -41,7 +44,7 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
   const steaksOk = canBuySteaks(cut);
   const soldOut = gone || cut.status === "sold_out" || (cut.status === "published" && !wholeOk && !steaksOk);
   const [open, setOpen] = useState(false);
-  const { ref, visible } = usePostView<HTMLElement>(cut.id);
+  const { ref, visible } = usePostView<HTMLElement>(cut.id, { butcherId: cut.butcher_id, source: full ? "post" : source });
   // the one-time sold-out notice counts as given once the stamped post was actually in view
   useEffect(() => { if (gone && visible) markSoldNotice(cut.id); }, [gone, visible, cut.id]);
   const steaksSale = cut.sale_mode === "steaks" || cut.sale_mode === "both";
@@ -187,6 +190,7 @@ function AddButton({ cut, disabled, onChoose }: { cut: Cut; disabled: boolean; o
     if (!cut.weight_g || !cut.price_per_kg_agorot) return;
     cart.put({ cutId: cut.id, code: cut.code, butcherId: cut.butcher_id, mode: "whole", qty: null,
       estAgorot: wholePrice(cut.weight_g, cut.price_per_kg_agorot) });
+    track("add_to_cart", { cut_id: cut.id, mode: "whole", source: "feed", price: wholePrice(cut.weight_g, cut.price_per_kg_agorot) });
     toast(he.cart.added, { tone: "success" });
   };
   return (
@@ -202,6 +206,7 @@ function AddSheet({ cut, onDone }: { cut: Cut; onDone: () => void }) {
   const line = useCart().find((l) => l.cutId === cut.id);
   const onOrder = (mode: OrderMode, qty: number | null, total: number) => {
     cart.put({ cutId: cut.id, code: cut.code, butcherId: cut.butcher_id, mode, qty, estAgorot: total });
+    track("add_to_cart", { cut_id: cut.id, mode, qty, source: "feed", price: total });
     toast(line ? he.cart.updated : he.cart.added, { tone: "success" });
     onDone();
   };

@@ -25,5 +25,8 @@ export async function POST(request: NextRequest) {
   if (error) return fail();
 
   const to = as === "butcher" ? "/butcher" : safeNext(String(form.get("next") ?? ""));
-  return NextResponse.redirect(`${origin}${to}`, { status: 303 });
+  const res = NextResponse.redirect(`${origin}${to}`, { status: 303 });
+  // read once by the app to log "auth_complete" (§15)
+  res.cookies.set("solor_auth", "demo", { maxAge: 120, path: "/", sameSite: "lax" });
+  return res;
 }

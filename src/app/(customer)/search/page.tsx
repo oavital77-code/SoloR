@@ -21,7 +21,12 @@ import { useBreeds, useButchers } from "@/lib/hooks";
 import { CUT_TYPES, ORIGINS, cutTypeLabel } from "@/lib/labels";
 import { categoryCounts, isAvailable, searchScore, shopPath } from "@/lib/market";
 import { useScrollMemory } from "@/lib/scroll";
+import { track } from "@/lib/track";
 import type { Breed, Butcher } from "@/lib/types";
+
+let lastLogged: string | null = null;
+/** the active filters as short keys, for measurement */
+const chipsKey = (f: FeedFilter) => Object.entries(f).filter(([, v]) => v !== null && v !== undefined && !(Array.isArray(v) && !v.length) && v !== false && v !== "").map(([k]) => k);
 
 export default function SearchPage() {
   return <Suspense><SearchView /></Suspense>;
@@ -72,6 +77,15 @@ function SearchView() {
   }, [available, filter, urlQuery, breeds, butchers]);
 
   useScrollMemory(`search?${params.toString()}`, cuts !== null);
+
+  // measurement (§15): each distinct search once, with what it found
+  const searchKey = params.toString();
+  useEffect(() => {
+    if (!searching || cuts === null || searchKey === lastLogged) return;
+    lastLogged = searchKey;
+    track("search_submit", { query: urlQuery.trim(), filters: chipsKey(filter), results_count: results.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchKey, cuts === null]);
   const chips = activeChips(filter, breeds);
 
   return (
@@ -132,7 +146,10 @@ function SearchView() {
           <>
             <p className="mb-4 text-[13px] tracking-wide text-stone">{he.search.results(results.length)}</p>
             <ul className="grid grid-cols-2 gap-x-3 gap-y-7">
-              {results.map((c) => <CutTile key={c.id} cut={c} breeds={breeds} shop={shopOf(c.butcher_id)} />)}
+              {results.map((c, i) => (
+                <CutTile key={c.id} cut={c} breeds={breeds} shop={shopOf(c.butcher_id)}
+                  onOpen={() => track("search_result_click", { cut_id: c.id, position: i + 1 })} />
+              ))}
             </ul>
           </>
         )}

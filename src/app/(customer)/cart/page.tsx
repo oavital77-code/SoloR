@@ -13,12 +13,21 @@ import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { he } from "@/lib/i18n/he";
 import { useBreeds, useSession } from "@/lib/hooks";
 import { formatAgorot, formatWeight } from "@/lib/pricing";
+import { track } from "@/lib/track";
+import { useEffect, useRef } from "react";
 
 export default function CartPage() {
   const breeds = useBreeds();
   const { user } = useSession();
   const router = useRouter();
   const { lines, cuts, error, load, groups, total, blocked } = useCartRows();
+  const loaded = cuts !== null;
+  const logged = useRef(false);
+  useEffect(() => {
+    if (!loaded || logged.current) return;
+    logged.current = true;
+    track("cart_view", { items_count: lines.length, total });
+  }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function proceed() {
     router.push(user ? "/checkout" : `/login?next=${encodeURIComponent("/checkout")}`);

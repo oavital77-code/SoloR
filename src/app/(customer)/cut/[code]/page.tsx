@@ -8,6 +8,7 @@ import { PurchaseBar } from "@/components/PurchaseBar";
 import { ErrorState, Spinner } from "@/components/ui";
 import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
+import { track } from "@/lib/track";
 import { cart, useCart } from "@/lib/cart";
 import { cutTitle } from "@/lib/cut-helpers";
 import { useBreeds, useButchers, useRefetchOnFocus } from "@/lib/hooks";
@@ -32,6 +33,7 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
   const addToCart = useCallback((mode: OrderMode, qty: number | null, total: number) => {
     if (!cut) return;
     cart.put({ cutId: cut.id, code: cut.code, butcherId: cut.butcher_id, mode, qty, estAgorot: total });
+    track("add_to_cart", { cut_id: cut.id, mode, qty, source: "post", price: total });
     toast(inCart ? he.cart.updated : he.cart.added, {
       tone: "success", duration: 5000, action: { label: he.cart.toCart, onClick: () => router.push("/cart") },
     });

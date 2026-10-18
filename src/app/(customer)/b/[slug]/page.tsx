@@ -2,7 +2,7 @@
 // Shop page (customer spec §7): the shop's own head — cover, logo, name, what it is about, where and when (with
 // "open now"), how orders are received, suppliers and sources, phone — showing only what the shop filled in;
 // then only this shop's posts, live, with the same post component and rules as the feed.
-import { use } from "react";
+import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CutPost } from "@/components/CutPost";
 import { useCatalog } from "@/components/customer/useCatalog";
@@ -15,6 +15,8 @@ import { mediaUrl } from "@/lib/cut-helpers";
 import { useBreeds, useButchers, useNow } from "@/lib/hooks";
 import { formatWeek, isOpenNow } from "@/lib/hours";
 import { useScrollMemory } from "@/lib/scroll";
+import { track } from "@/lib/track";
+import { cameFrom } from "@/components/customer/Tracker";
 import type { Butcher } from "@/lib/types";
 
 export default function ShopPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -27,6 +29,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
   const { cuts, error, reload } = useCatalog(shop?.id ?? null, !!shop);
   const { items, pending, showNew, ready } = useLiveFeed(cuts);
   useScrollMemory(`shop:${slug}`, ready);
+  useEffect(() => { if (shop) track("butcher_page_view", { butcher_id: shop.id, source: cameFrom() }); }, [shop?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const held = useHeldCuts(items.filter((i) => !i.gone).map((i) => i.cut.id));
 
   const back = () => (window.history.length > 1 ? router.back() : router.push("/"));
@@ -59,7 +62,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
               )}
               <ul className="flex flex-col gap-5 px-3">
                 {items.map(({ cut, gone }, i) => (
-                  <li key={cut.id}><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone}
+                  <li key={cut.id}><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} source="butcher"
                     reserved={!gone && isReserved(cut, held.get(cut.id))} eager={i === 0} /></li>
                 ))}
               </ul>

@@ -22,6 +22,7 @@ import { formatAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Breed, Butcher, Checkout, Hold, ReceiveMethod } from "@/lib/types";
 import { normalizePhone } from "@/lib/validation";
+import { track } from "@/lib/track";
 
 interface ReceiveDraft {
   method: ReceiveMethod | null;
@@ -52,6 +53,13 @@ export default function CheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const busyRef = useRef(false);
+  const started = cuts !== null;
+  const startLogged = useRef(false);
+  useEffect(() => {
+    if (!started || startLogged.current || !lines.length) return;
+    startLogged.current = true;
+    track("checkout_start", { items_count: lines.length, total: itemsTotal });
+  }, [started]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (profile) { setName((n) => n || profile.full_name); setPhone((p) => p || profile.phone); }
@@ -111,6 +119,7 @@ export default function CheckoutPage() {
     if (error) {
       const problems = cartProblemsOf(error);
       if (problems.length) {
+        problems.forEach((p) => track("reservation_failed", { cut_id: p.cut_id, reason: p.reason }));
         setServerProblems(problems);
         load();
         toast(he.errors.CART_UNAVAILABLE, { tone: "error" });
@@ -133,6 +142,7 @@ export default function CheckoutPage() {
     busyRef.current = false;
     setBusy(false);
     if (error) {
+      track("payment_failed", { hold_id: hold.id, total: hold.total_agorot, reason: errorCode(error) });
       const code = errorCode(error);
       const problems = cartProblemsOf(error);
       if (problems.length || code === "PRICE_CHANGED" || code === "HOLD_RELEASED") {
@@ -145,6 +155,7 @@ export default function CheckoutPage() {
       return;
     }
     const k = data as Checkout;
+    track("payment_success", { order_id: k.id, total: k.total_agorot, items_count: lines.length });
     setDone(true);
     holdRef.current = null;
     cart.clear();
