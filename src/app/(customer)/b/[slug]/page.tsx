@@ -3,9 +3,10 @@
 // one scoped search, category filter and the cuts — with a clear way back to the market.
 import { use } from "react";
 import Link from "next/link";
-import { CutCard } from "@/components/customer/CutCard";
+import { CutPost } from "@/components/CutPost";
 import { BackLink, CategoryChips, SearchLink, SectionHeader } from "@/components/customer/market-ui";
 import { useCatalog } from "@/components/customer/useCatalog";
+import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { useBreeds, useButchers, useNow } from "@/lib/hooks";
@@ -19,6 +20,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
   const shop = butchers.find((b) => b.slug === slug) ?? null;
   const { cuts, error, reload } = useCatalog(shop?.id ?? null, !!shop);
   const available = (cuts ?? []).filter(isAvailable);
+  const { items, pending, showNew } = useLiveFeed(cuts);
   const scope = `b=${encodeURIComponent(slug)}`;
 
   if (butchers.length > 0 && !shop) {
@@ -66,11 +68,22 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
         <SectionHeader title={he.market.available} />
         {error && !cuts ? <ErrorState dark onRetry={reload} />
           : !cuts ? <div className="mt-2 px-4"><Skeleton className="aspect-[4/5]" /></div>
-          : available.length === 0 ? <EmptyState text={he.market.shopEmpty} />
+          : items.length === 0 && pending === 0 ? <EmptyState text={he.market.shopEmpty} />
           : (
-            <ul className="mt-3 flex flex-col gap-12 px-4">
-              {available.map((c, i) => <li key={c.id}><CutCard cut={c} breeds={breeds} now={now} eager={i === 0} /></li>)}
-            </ul>
+            <>
+              {pending > 0 && (
+                <div className="mt-3 text-center">
+                  <button type="button" onClick={showNew} className="rounded-full bg-ivory px-4 py-2 text-sm font-semibold text-ink">
+                    {he.feed.newPosts(pending)}
+                  </button>
+                </div>
+              )}
+              <ul className="mt-4 flex flex-col gap-14 px-4">
+                {items.map(({ cut, gone }, i) => (
+                  <li key={cut.id}><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} eager={i === 0} /></li>
+                ))}
+              </ul>
+            </>
           )}
       </section>
     </main>
