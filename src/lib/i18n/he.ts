@@ -45,6 +45,12 @@ export const he = {
     useCode: "כניסה עם קוד במייל",
     passwordLabel: "סיסמה",
     invalidPassword: "אימייל או סיסמה שגויים",
+    // demo sign-in (until further notice): the first screen is only these two choices
+    asCustomer: "לקוח",
+    asButcher: "קצב",
+    pickShop: "איזו קצבייה?",
+    back: "חזרה",
+    demoFailed: "הכניסה לא הצליחה. נסו שוב",
   },
 
   onboarding: {
