@@ -210,3 +210,20 @@
 .sr-cbtn:disabled { opacity: .5; }
 .sr-cbtn--quiet { background: var(--surface-raised); color: var(--ink); }
 .sr-cbtn--ready { background: var(--status-ready); color: #fff; }
+/* the counter's form pieces (design: CounterNew) */
+.sr-cchip { min-height: 48px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font: 600 16px var(--font-varela); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.sr-cchip[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.sr-cchip:disabled { opacity: .45; }
+.sr-cinput { min-height: 52px; width: 100%; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 0 14px; font: 600 18px var(--font-varela); outline: none; }
+.sr-cinput:focus { border-color: var(--ink); }
+.sr-cinput:disabled { background: var(--surface-raised); color: var(--ink-muted); }
+textarea.sr-cinput { padding: 12px 14px; font-weight: 500; font-size: 16px; line-height: 22px; min-height: 88px; resize: none; }
+.sr-clabel { font-size: 14px; font-weight: 600; color: var(--ink-muted); }
+.sr-mscale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; direction: ltr; }
+.sr-mscale > button { height: 44px; border-radius: 8px; border: 0; background: var(--surface-raised); font: 700 15px var(--font-varela); color: var(--ink-muted); }
+.sr-mscale > button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+.sr-shotframe { position: relative; aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: #1c1815; }
+.sr-shotframe > img, .sr-shotframe > video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sr-shotframe__guide { position: absolute; inset: 12px; border: 2px dashed rgba(255,255,255,.55); border-radius: 10px; pointer-events: none; }
+.sr-shotframe__tip { position: absolute; top: 20px; inset-inline-start: 20px; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.sr-shotframe__actions { position: absolute; bottom: 14px; left: 14px; right: 14px; display: flex; gap: 8px; }

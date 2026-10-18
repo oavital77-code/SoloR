@@ -1,15 +1,18 @@
 "use client";
-// B3 — 5-step cut wizard. Drafts autosave (debounce 800ms); live cuts save on explicit confirm (SPEC §2.4).
+// B3 — the cut form (design: CounterNew): one page — the photo in its framing guide, what the cut is, aging,
+// weight and price, the marbling scale and a word from the butcher — then a preview that publishes. Drafts
+// autosave (debounce 800ms); live cuts save on explicit confirm (SPEC §2.4). ?step=5 is the preview; ?step=1–4
+// opens the form at that section (the "missing" links jump there).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { clsx } from "clsx";
 import { useButcher } from "./ButcherShell";
 import { MediaUploader } from "./MediaUploader";
 import { CutDetail } from "../CutDetail";
 import { PurchaseBar } from "../PurchaseBar";
 import { useToast } from "../Toast";
-import { Button, Chip, ConfirmDialog, ErrorState, Field, Ltr, Spinner, Stepper, inputClass } from "../ui";
+import { Chip, ConfirmDialog, ErrorState, Ltr, Spinner, Stepper, inputClass } from "../ui";
+import { IconCheck } from "../icons";
 import { he } from "@/lib/i18n/he";
 import { AGING_METHODS, CUT_TYPES, ORIGINS, SALE_MODES } from "@/lib/labels";
 import { asLive, FIELD_STEP, missingFields, photosOf } from "@/lib/cut-helpers";
@@ -46,6 +49,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
   const toast = useToast();
   const breeds = useBreeds();
   const step = Math.min(5, Math.max(1, Number(params.get("step")) || 1));
+  const preview = step === 5;
 
   const [cut, setCut] = useState<Cut | null>(null);
   const [media, setMedia] = useState<CutMedia[]>([]);
@@ -138,7 +142,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
     return false;
   }, [cut, activeOrders, stockTouched]);
 
-  const goStep = (n: number) => router.replace(`/butcher/cuts/${cutId}/edit?step=${n}`, { scroll: true });
+  const goStep = (n: number) => router.replace(`/butcher/cuts/${cutId}/edit?step=${n}`, { scroll: n === 5 });
 
   if (loadError) return <ErrorState onRetry={() => { setLoadError(false); load(); }} />;
   if (!cut || !form) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
@@ -150,72 +154,93 @@ export function CutWizard({ cutId }: { cutId: string }) {
 
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-30 border-b border-line bg-ink/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
-        <div className="flex items-center justify-between gap-2">
-          <Link href={isDraft ? "/butcher" : `/butcher/cuts/${cutId}`} className="flex min-h-11 items-center px-1 text-sm font-semibold text-stone">
-            {he.app.close}
-          </Link>
-          <h1 className="flex-1 text-lg font-extrabold">
-            {isDraft ? he.wizard.newTitle : he.wizard.editTitle(cut.code)} {isDraft && <Ltr className="text-sm font-semibold text-stone">{cut.code}</Ltr>}
-          </h1>
-          {isDraft ? <SaveIndicator state={saveState} onRetry={save} />
-            : dirty ? <span className="text-sm font-semibold text-amber-700">{he.wizard.unsavedChanges}</span> : null}
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-ink/95 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
+        <div className="flex min-w-0 items-baseline gap-2">
+          <h1 className="m-0 font-display text-[26px] font-bold">{preview ? he.wizard.previewTitle : isDraft ? he.wizard.newTitle : he.wizard.editTitle(cut.code)}</h1>
+          {isDraft && <span className="code">{cut.code}</span>}
         </div>
-        <ol className="mt-3 grid grid-cols-5 gap-1.5" aria-label={he.a11y.steps}>
-          {he.wizard.steps.map((label, i) => (
-            <li key={label}>
-              <button type="button" onClick={() => goStep(i + 1)} className="flex w-full flex-col items-center gap-1" aria-current={step === i + 1 ? "step" : undefined}>
-                <span className={clsx("h-1.5 w-full rounded-full", i + 1 <= step ? "bg-brand" : "bg-neutral-300")} />
-                <span className={clsx("text-xs", step === i + 1 ? "font-extrabold text-ivory" : "text-stone")}>{label}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
+        <div className="flex items-center gap-3">
+          {isDraft ? <SaveIndicator state={saveState} onRetry={save} />
+            : dirty ? <span className="text-sm font-semibold text-gold">{he.wizard.unsavedChanges}</span> : null}
+          {preview
+            ? <button type="button" onClick={() => goStep(1)} className="flex min-h-11 items-center font-semibold text-stone">{he.wizard.backToForm}</button>
+            : <Link href={isDraft ? "/butcher" : `/butcher/cuts/${cutId}`} className="flex min-h-11 items-center font-semibold text-stone">{he.app.cancel}</Link>}
+        </div>
       </header>
 
-      {!isDraft && cut.status !== "withdrawn" && (
-        <div className="mx-4 mt-3 rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">
+      {!isDraft && cut.status !== "withdrawn" && !preview && (
+        <div className="mx-4 mt-2 rounded-2xl bg-gold-soft p-3 text-sm font-semibold">
           {he.wizard.liveEditNote}
-          {activeOrders > 0 && <p className="mt-1">{he.wizard.lockedActive}</p>}
-          {activeOrders === 0 && stockTouched && <p className="mt-1">{he.wizard.lockedStock}</p>}
+          {activeOrders > 0 && <p className="m-0 mt-1">{he.wizard.lockedActive}</p>}
+          {activeOrders === 0 && stockTouched && <p className="m-0 mt-1">{he.wizard.lockedStock}</p>}
         </div>
       )}
 
-      <div className="flex-1 px-4 py-5">
-        {step === 1 && (
-          <MediaUploader cutId={cutId} butcherId={butcher.id} media={media} onChange={loadMedia} disabled={cut.status === "withdrawn"} />
-        )}
-        {step === 2 && <StepWhat form={form} set={set} locked={locked} breeds={breeds} />}
-        {step === 3 && <StepAging form={form} set={set} locked={locked} />}
-        {step === 4 && <StepWeight form={form} set={set} locked={locked} />}
-        {step === 5 && (
+      {preview ? (
+        <div className="flex-1">
           <StepPreview
             cut={merged} media={media} photoCount={photoCount} breeds={breeds} goStep={goStep}
             isDraft={isDraft} save={save} onPublished={() => setPublished(true)}
           />
-        )}
-      </div>
-
-      <footer className="sticky bottom-0 z-20 flex flex-col gap-2 border-t border-line bg-ink-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        {!isDraft && dirty && (
-          <Button size="lg" loading={saveState === "saving"} onClick={async () => {
-            if (await save()) { toast(he.wizard.changesSaved, { tone: "success" }); load(); }
-          }}>
-            {he.wizard.saveChanges}
-          </Button>
-        )}
-        <div className="flex gap-2">
-          <Button size="lg" variant="secondary" className="flex-1" disabled={step === 1} onClick={() => goStep(step - 1)}>
-            {he.wizard.prev}
-          </Button>
-          {step < 5 && (
-            <Button size="lg" className="flex-1" onClick={() => goStep(step + 1)}>
-              {he.wizard.next}
-            </Button>
-          )}
         </div>
-      </footer>
+      ) : (
+        <>
+          <div className="flex flex-1 flex-col gap-5 px-4 pt-2 pb-8">
+            <FormSection id={1} focus={step}>
+              <MediaUploader cutId={cutId} butcherId={butcher.id} media={media} onChange={loadMedia} disabled={cut.status === "withdrawn"} />
+            </FormSection>
+            <FormSection id={2} focus={step}><StepWhat form={form} set={set} locked={locked} breeds={breeds} /></FormSection>
+            <FormSection id={3} focus={step}><StepAging form={form} set={set} locked={locked} /></FormSection>
+            <FormSection id={4} focus={step}><StepWeight form={form} set={set} locked={locked} /></FormSection>
+            <StepWord form={form} set={set} />
+          </div>
+
+          <footer className="sticky bottom-0 z-20 flex flex-col gap-2.5 border-t border-line bg-ink-2 px-4 pt-3.5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            {isDraft ? (
+              <div className="grid grid-cols-[1fr_2fr] gap-2.5">
+                <button type="button" className="sr-cbtn sr-cbtn--quiet !text-[17px]"
+                  onClick={async () => { await save(); safeStorage.set("solor.butcher.cutFilter", "draft"); router.push("/butcher"); }}>
+                  {he.wizard.draft}
+                </button>
+                <button type="button" className="sr-cbtn sr-cbtn--new" onClick={async () => { await save(); goStep(5); }}>
+                  {he.wizard.toFeed}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-[1fr_2fr] gap-2.5">
+                <button type="button" className="sr-cbtn sr-cbtn--quiet !text-[17px]" onClick={() => goStep(5)}>{he.wizard.steps[4]}</button>
+                <button type="button" className="sr-cbtn" disabled={!dirty || saveState === "saving"} onClick={async () => {
+                  if (await save()) { toast(he.wizard.changesSaved, { tone: "success" }); load(); }
+                }}>
+                  {saveState === "saving" && <Spinner />}{he.wizard.saveChanges}
+                </button>
+              </div>
+            )}
+          </footer>
+        </>
+      )}
     </main>
+  );
+}
+
+/** One part of the form; opened with ?step=n, the page scrolls to it (the preview's "missing" links land here). */
+function FormSection({ id, focus, children }: { id: number; focus: number; children: React.ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (focus === id && id > 1) ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [focus, id]);
+  return <section ref={ref} id={`part-${id}`} className="scroll-mt-20">{children}</section>;
+}
+
+/** A labelled group of the form (design: CounterNew `.cf`): a small muted label over its control. */
+function Cf({ label, htmlFor, children, error, hint }: { label: string; htmlFor?: string; children: React.ReactNode; error?: string | null; hint?: string }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      {htmlFor ? <label htmlFor={htmlFor} className="sr-clabel">{label}</label> : <span className="sr-clabel">{label}</span>}
+      {children}
+      {error ? <p className="m-0 text-sm font-semibold text-sold" role="alert">{error}</p>
+        : hint ? <p className="m-0 text-xs text-stone">{hint}</p> : null}
+    </div>
   );
 }
 
@@ -242,33 +267,30 @@ function StepWhat({ form, set, locked, breeds }: StepProps & { breeds: ReturnTyp
   const visibleBreeds = breeds.filter((b) => b.applies_to.length === 0 || (form.cut_type && b.applies_to.includes(form.cut_type)));
   const otherSelected = form.breed_key == null && form.breed_other != null;
   return (
-    <div className="flex flex-col gap-7">
-      <section>
-        <h2 className="mb-3 text-xl font-extrabold">{he.wizard.cutType}</h2>
-        <div className="grid grid-cols-2 gap-2">
+    <div className="flex flex-col gap-4">
+      <Cf label={he.wizard.cutType}>
+        <div className="flex flex-wrap gap-2">
           {CUT_TYPES.map((c) => (
-            <Chip key={c.key} selected={form.cut_type === c.key} disabled={locked("cut_type")}
-              onClick={() => set("cut_type", c.key)} className="min-h-14 text-lg">
+            <Chip key={c.key} selected={form.cut_type === c.key} disabled={locked("cut_type")} onClick={() => set("cut_type", c.key)}>
               {c.label}
             </Chip>
           ))}
         </div>
-      </section>
+      </Cf>
 
-      <section>
-        <h2 className="mb-3 text-xl font-extrabold">{he.wizard.breed}</h2>
+      <Cf label={he.wizard.breedShort}>
         {!form.cut_type ? (
-          <p className="text-stone">{he.wizard.pickCutFirst}</p>
+          <p className="m-0 text-stone">{he.wizard.pickCutFirst}</p>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <div className="flex flex-wrap gap-2">
               {visibleBreeds.map((b) => (
-                <Chip key={b.key} selected={form.breed_key === b.key} disabled={locked("breed_key")} className="min-h-14 text-lg"
+                <Chip key={b.key} selected={form.breed_key === b.key} disabled={locked("breed_key")}
                   onClick={() => { set("breed_key", b.key); set("breed_other", null); }}>
                   {b.label_he}
                 </Chip>
               ))}
-              <Chip selected={otherSelected} disabled={locked("breed_key")} className="min-h-14 text-lg"
+              <Chip selected={otherSelected} disabled={locked("breed_key")}
                 onClick={() => { set("breed_key", null); set("breed_other", form.breed_other ?? ""); }}>
                 {he.wizard.breedOther}
               </Chip>
@@ -282,19 +304,17 @@ function StepWhat({ form, set, locked, breeds }: StepProps & { breeds: ReturnTyp
             )}
           </div>
         )}
-      </section>
+      </Cf>
 
-      <section>
-        <h2 className="mb-3 text-xl font-extrabold">{he.wizard.origin}</h2>
-        <div className="grid grid-cols-2 gap-2">
+      <Cf label={he.wizard.originShort}>
+        <div className="flex flex-wrap gap-2">
           {ORIGINS.map((o) => (
-            <Chip key={o.key} selected={form.origin_country === o.key} disabled={locked("origin_country")}
-              onClick={() => set("origin_country", o.key)} className="min-h-14 text-lg">
+            <Chip key={o.key} selected={form.origin_country === o.key} disabled={locked("origin_country")} onClick={() => set("origin_country", o.key)}>
               {o.label}
             </Chip>
           ))}
         </div>
-      </section>
+      </Cf>
     </div>
   );
 }
@@ -310,62 +330,58 @@ function StepAging({ form, set, locked }: StepProps) {
     if (n >= 1 && n <= 365) { setDaysError(null); set("aging_days", n); } else setDaysError("1–365");
   };
   return (
-    <div className="flex flex-col gap-7">
-      <section>
-        <h2 className="mb-3 text-xl font-extrabold">{he.wizard.isAged}</h2>
-        <div className="grid grid-cols-2 gap-2">
-          <Chip selected={form.is_aged === true} disabled={locked("is_aged")} className="min-h-14 text-lg" onClick={() => set("is_aged", true)}>{he.app.yes}</Chip>
-          <Chip selected={form.is_aged === false} disabled={locked("is_aged")} className="min-h-14 text-lg"
+    <div className="flex flex-col gap-4">
+      <Cf label={he.wizard.agingShort}>
+        <div className="grid grid-cols-2 gap-1.5">
+          <Chip selected={form.is_aged === false} disabled={locked("is_aged")}
             onClick={() => { set("is_aged", false); set("aging_days", null); set("aging_method", null); setDaysText(""); }}>
-            {he.app.no}
+            {he.wizard.notAged}
           </Chip>
+          <Chip selected={form.is_aged === true} disabled={locked("is_aged")} onClick={() => set("is_aged", true)}>{he.wizard.aged}</Chip>
         </div>
-      </section>
+      </Cf>
 
       {form.is_aged && (
-        <>
-          <Field label={he.wizard.agingDays} htmlFor="days" error={daysError}>
-            <div className="flex flex-wrap gap-2">
-              {[14, 21, 28, 45].map((d) => (
-                <Chip key={d} selected={form.aging_days === d} disabled={locked("aging_days")} onClick={() => onDays(String(d))} className="min-w-16 text-lg">
-                  <Ltr>{d}</Ltr>
-                </Chip>
-              ))}
-            </div>
-            <input id="days" inputMode="numeric" className={inputClass} disabled={locked("aging_days")}
-              value={daysText} onChange={(e) => onDays(e.target.value)} />
-          </Field>
-          <section>
-            <h2 className="mb-3 font-bold">{he.wizard.agingMethod}</h2>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
+          <Cf label={he.wizard.agingDaysShort} htmlFor="days" error={daysError}>
+            <input id="days" inputMode="numeric" dir="ltr" className={inputClass + " text-end"} disabled={locked("aging_days")}
+              value={daysText} onChange={(e) => onDays(e.target.value)} placeholder="28" />
+          </Cf>
+          <Cf label={he.wizard.agingMethodShort}>
+            <div className="grid grid-cols-2 gap-1.5">
               {AGING_METHODS.map((m) => (
-                <Chip key={m.key} selected={form.aging_method === m.key} disabled={locked("aging_method")} className="min-h-14 text-lg"
+                <Chip key={m.key} selected={form.aging_method === m.key} disabled={locked("aging_method")} className="!px-2"
                   onClick={() => set("aging_method", form.aging_method === m.key ? null : m.key)}>
                   {m.label}
                 </Chip>
               ))}
             </div>
-          </section>
-        </>
+          </Cf>
+        </div>
       )}
 
-      <section>
-        <h2 className="mb-3 text-xl font-extrabold">{he.wizard.marbling}</h2>
-        <div className="grid grid-cols-5 gap-2">
+    </div>
+  );
+}
+
+/** The butcher's own read of the cut: marbling on a 1–10 scale and a few words of their own. */
+function StepWord({ form, set }: Pick<StepProps, "form" | "set">) {
+  return (
+    <div className="flex flex-col gap-4">
+      <Cf label={he.wizard.marblingShort} hint={form.butcher_marbling == null ? he.wizard.marblingNone : undefined}>
+        <div className="sr-mscale" role="group" aria-label={he.wizard.marbling}>
           {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-            <Chip key={n} selected={form.butcher_marbling === n} onClick={() => set("butcher_marbling", n)} className="min-h-12 px-0 text-lg">
-              <Ltr>{n}</Ltr>
-            </Chip>
+            <button key={n} type="button" aria-pressed={form.butcher_marbling === n}
+              onClick={() => set("butcher_marbling", form.butcher_marbling === n ? null : n)}>{n}</button>
           ))}
         </div>
-        <Chip selected={form.butcher_marbling == null} onClick={() => set("butcher_marbling", null)} className="mt-2 w-full">{he.app.none}</Chip>
-      </section>
+      </Cf>
 
-      <Field label={he.wizard.description} htmlFor="desc" hint={`${form.description?.length ?? 0}/500`}>
-        <textarea id="desc" rows={4} maxLength={500} placeholder={he.wizard.descriptionPlaceholder}
-          className={inputClass + " py-3"} value={form.description ?? ""}
+      <Cf label={he.wizard.wordFromButcher} htmlFor="desc" hint={`${form.description?.length ?? 0}/500`}>
+        <textarea id="desc" rows={3} maxLength={500} placeholder={he.wizard.descriptionPlaceholder}
+          className={inputClass} value={form.description ?? ""}
           onChange={(e) => set("description", e.target.value || null)} />
-      </Field>
+      </Cf>
     </div>
   );
 }
@@ -415,34 +431,34 @@ function StepWeight({ form, set, locked }: StepProps) {
   );
 
   return (
-    <div className="flex flex-col gap-7 pb-24">
-      <Field label={he.wizard.weight} htmlFor="weight" error={weightError}>
-        <input id="weight" inputMode="numeric" dir="ltr" className={inputClass + " text-end text-2xl font-bold"} disabled={locked("weight_g")}
-          value={weightText} onChange={(e) => onWeight(e.target.value)} placeholder="2400" />
-      </Field>
-      <Field label={he.wizard.price} htmlFor="price" error={priceError}>
-        <input id="price" inputMode="decimal" dir="ltr" className={inputClass + " text-end text-2xl font-bold"} disabled={locked("price_per_kg_agorot")}
-          value={priceText} onChange={(e) => onPrice(e.target.value)} placeholder="220" />
-      </Field>
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-2.5">
+        <Cf label={he.wizard.weight} htmlFor="weight" error={weightError}>
+          <input id="weight" inputMode="numeric" dir="ltr" className={inputClass + " text-end"} disabled={locked("weight_g")}
+            value={weightText} onChange={(e) => onWeight(e.target.value)} placeholder="2400" />
+        </Cf>
+        <Cf label={he.wizard.price} htmlFor="price" error={priceError}>
+          <input id="price" inputMode="decimal" dir="ltr" className={inputClass + " text-end"} disabled={locked("price_per_kg_agorot")}
+            value={priceText} onChange={(e) => onPrice(e.target.value)} placeholder="220" />
+        </Cf>
+      </div>
 
-      <section>
-        <h2 className="mb-3 text-xl font-extrabold">{he.wizard.saleMode}</h2>
-        <div className="grid grid-cols-3 gap-2">
+      <Cf label={he.wizard.saleMode}>
+        <div className="grid grid-cols-3 gap-1.5">
           {SALE_MODES.map((m) => (
-            <Chip key={m.key} selected={form.sale_mode === m.key} disabled={locked("sale_mode")}
-              onClick={() => onSaleMode(m.key)} className="min-h-16 px-2 text-lg">
+            <Chip key={m.key} selected={form.sale_mode === m.key} disabled={locked("sale_mode")} onClick={() => onSaleMode(m.key)} className="!px-2">
               {m.label}
             </Chip>
           ))}
         </div>
-      </section>
+      </Cf>
 
       {hasSteaks && (
         <>
-          <section className="rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
+          <section className="rounded-2xl bg-ink-2 p-4 shadow-[var(--shadow-card)]">
             <div className="flex items-baseline justify-between">
               <h2 className="text-lg font-extrabold">{he.wizard.steakWeight}</h2>
-              <span className="text-4xl font-extrabold text-brand"><Ltr>{steakW}</Ltr> <span className="text-base text-stone">{he.wizard.grams}</span></span>
+              <span className="text-4xl font-bold"><Ltr>{steakW}</Ltr> <span className="text-base text-stone">{he.wizard.grams}</span></span>
             </div>
             <input
               type="range" className="big-range mt-2" dir="ltr" min={150} max={1000} step={10} value={steakW}
@@ -456,7 +472,7 @@ function StepWeight({ form, set, locked }: StepProps) {
             <div className="flex justify-between text-xs text-stone" dir="ltr"><span>150</span><span>1000</span></div>
           </section>
 
-          <section className="rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
+          <section className="rounded-2xl bg-ink-2 p-4 shadow-[var(--shadow-card)]">
             <div className="flex items-baseline justify-between">
               <h2 className="font-bold">{he.wizard.thickness}</h2>
               <span className="text-2xl font-extrabold">
@@ -474,7 +490,7 @@ function StepWeight({ form, set, locked }: StepProps) {
             )}
           </section>
 
-          <section className="flex items-center justify-between rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
+          <section className="flex items-center justify-between rounded-2xl bg-ink-2 p-4 shadow-[var(--shadow-card)]">
             <div>
               <h2 className="font-bold">{he.wizard.steaksCount}</h2>
               <p className="text-sm text-stone">{mx > 0 ? he.wizard.steaksMax(mx) : form.weight_g ? he.wizard.noSteaksFit : ""}</p>
@@ -488,9 +504,7 @@ function StepWeight({ form, set, locked }: StepProps) {
       )}
 
       {summary && (
-        <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-[480px] px-3">
-          <div className="rounded-2xl bg-neutral-900 px-4 py-3 text-center font-bold text-white shadow-lg" aria-live="polite">{summary}</div>
-        </div>
+        <div className="rounded-2xl bg-ivory px-4 py-3 text-center font-bold text-ink" aria-live="polite">{summary}</div>
       )}
     </div>
   );
@@ -536,21 +550,21 @@ function StepPreview({ cut, media, photoCount, breeds, goStep, isDraft, save, on
   }
 
   return (
-    <div className="-mx-4 -my-5 flex flex-col">
-      <div className="bg-amber-400 px-4 py-2 text-center font-extrabold text-amber-950">{he.cut.previewBar}</div>
-      <div className="pointer-events-auto">
+    <div className="flex flex-col">
+      <div className="bg-gold-soft px-4 py-2 text-center font-bold">{he.cut.previewBar}</div>
+      <div data-theme="customer" className="pointer-events-auto bg-ink text-ivory">
         <CutDetail cut={live} media={media} breeds={breeds} butcher={butcher} />
         <PurchaseBar cut={live} preview inline />
       </div>
 
       <div className="flex flex-col gap-3 bg-ink px-4 py-5">
         {missing.length > 0 && (
-          <div className="rounded-2xl bg-red-50 p-4 ring-1 ring-red-200" role="alert">
-            <p className="mb-2 font-extrabold text-red-800">{he.wizard.missingTitle}</p>
+          <div className="rounded-2xl bg-ink-2 p-4 shadow-[var(--shadow-card)]" role="alert">
+            <p className="m-0 mb-2 font-bold text-sold">{he.wizard.missingTitle}</p>
             <ul className="flex flex-col gap-1">
               {missing.map((f) => (
                 <li key={f}>
-                  <button type="button" onClick={() => goStep(FIELD_STEP[f] ?? 1)} className="min-h-11 font-semibold text-red-700 underline underline-offset-4">
+                  <button type="button" onClick={() => goStep(FIELD_STEP[f] ?? 1)} className="min-h-11 font-semibold text-sold underline underline-offset-4">
                     {he.missingFields[f] ?? f}
                   </button>
                 </li>
@@ -560,15 +574,16 @@ function StepPreview({ cut, media, photoCount, breeds, goStep, isDraft, save, on
         )}
         {isDraft && (
           <>
-            <Button size="xl" disabled={missing.length > 0 || photosOf(media).length === 0} onClick={() => setConfirm(true)}>
-              {he.wizard.publish}
-            </Button>
-            <Button size="lg" variant="secondary" onClick={async () => { await save(); safeStorage.set("solor.butcher.cutFilter", "draft"); router.push("/butcher"); }}>
+            <button type="button" className="sr-cbtn sr-cbtn--new" disabled={missing.length > 0 || photosOf(media).length === 0} onClick={() => setConfirm(true)}>
+              {he.wizard.toFeed}
+            </button>
+            <button type="button" className="sr-cbtn sr-cbtn--quiet !text-[17px]"
+              onClick={async () => { await save(); safeStorage.set("solor.butcher.cutFilter", "draft"); router.push("/butcher"); }}>
               {he.wizard.saveDraft}
-            </Button>
-            <Button variant="ghost" className="mt-4 text-red-700" onClick={() => setConfirmDelete(true)}>
+            </button>
+            <button type="button" className="mt-2 min-h-11 font-semibold text-sold" onClick={() => setConfirmDelete(true)}>
               {he.cutManage.deleteDraft}
-            </Button>
+            </button>
           </>
         )}
       </div>
@@ -589,12 +604,14 @@ function PublishedScreen({ code }: { code: string }) {
   const router = useRouter();
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
-      <span className="h-px w-12 bg-neutral-900" aria-hidden />
+      <span aria-hidden className="grid size-[88px] place-items-center rounded-full text-success shadow-[inset_0_0_0_2px_var(--state-success)]">
+        <IconCheck className="!size-11" />
+      </span>
       <h1 className="font-display text-4xl font-bold">{he.wizard.published}</h1>
-      <Ltr className="text-lg text-stone">{code}</Ltr>
+      <span className="code !text-lg">{code}</span>
       <div className="flex w-full flex-col gap-3">
-        <Button size="xl" onClick={() => router.push("/butcher/cuts/new")}>{he.wizard.anotherCut}</Button>
-        <Button size="lg" variant="secondary" onClick={() => router.push("/butcher")}>{he.wizard.toMyCuts}</Button>
+        <button type="button" className="sr-cbtn sr-cbtn--new" onClick={() => router.push("/butcher/cuts/new")}>{he.wizard.anotherCut}</button>
+        <button type="button" className="sr-cbtn sr-cbtn--quiet" onClick={() => router.push("/butcher")}>{he.wizard.toMyCuts}</button>
       </div>
     </main>
   );

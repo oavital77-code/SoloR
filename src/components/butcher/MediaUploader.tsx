@@ -5,6 +5,7 @@
 import { useRef, useState } from "react";
 import { clsx } from "clsx";
 import { Button, Ltr } from "../ui";
+import { IconBack, IconCamera, IconClose } from "../icons";
 import { useToast } from "../Toast";
 import { he } from "@/lib/i18n/he";
 import { mediaUrl, photosOf, sortedMedia, videoOf } from "@/lib/cut-helpers";
@@ -26,17 +27,6 @@ interface Pending {
 }
 
 const FRESH_MS = 15 * 60 * 1000;
-
-function StepHeading({ n, title, hint }: { n: number; title: string; hint: string }) {
-  return (
-    <div>
-      <h2 className="flex items-baseline gap-2 text-lg font-extrabold">
-        <span className="text-stone">{n}.</span>{title}
-      </h2>
-      <p className="mt-0.5 text-sm text-stone">{hint}</p>
-    </div>
-  );
-}
 
 export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
   cutId: string; butcherId: string; media: CutMedia[]; onChange: () => Promise<void> | void; disabled?: boolean;
@@ -180,19 +170,69 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
 
   const retry = (p: Pending) => (p.kind === "photo" ? uploadPhoto(p) : uploadVideo(p));
 
+  const cover = ordered.find((m) => m.id === coverId) ?? ordered[0];
+  const morePhotos = disabled || photos.length + pendingPhotos >= MEDIA_LIMITS.maxPhotos;
+
+  // design: CounterNew — the finished cut in a 4:3 frame with the framing guide and the one tip, the two
+  // camera buttons on it; under it the other photos (tap to make one the cover) and the butchering video
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-sm text-stone">{he.wizard.cameraOnly}</p>
+    <div className="flex flex-col gap-3">
       <input ref={camPhoto} hidden type="file" accept="image/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "photo"); e.target.value = ""; }} />
       <input ref={camVideo} hidden type="file" accept="video/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "video"); e.target.value = ""; }} />
 
-      {/* 1 — the butchering */}
-      <section className="flex flex-col gap-3">
-        <StepHeading n={1} title={he.wizard.videoTitle} hint={he.wizard.videoHint} />
-        {!video && !pendingVideo && (
-          <Button size="xl" onClick={() => camVideo.current?.click()} disabled={disabled}>{he.wizard.takeVideo}</Button>
+      <div className="sr-shotframe">
+        {cover && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={mediaUrl(cover.storage_path)} alt={he.wizard.photosTitle} />
         )}
-        {video && (
+        <div className="sr-shotframe__guide" aria-hidden />
+        <span className="sr-shotframe__tip">{he.wizard.shotTip}</span>
+        {!cover && <p className="absolute inset-x-6 top-1/2 m-0 -translate-y-1/2 text-center text-sm leading-5 text-white/75">{he.wizard.photosHint}</p>}
+        <div className="sr-shotframe__actions">
+          <button type="button" className="sr-cchip flex-1" disabled={morePhotos} onClick={() => camPhoto.current?.click()}>
+            <IconCamera />{cover ? he.wizard.addPhoto : he.wizard.takePhoto}
+          </button>
+          <button type="button" className="sr-cchip flex-1" disabled={disabled || !!video || pendingVideo} onClick={() => camVideo.current?.click()}>
+            {he.wizard.addVideo}
+          </button>
+        </div>
+      </div>
+      <p className="m-0 text-xs text-stone">{he.wizard.cameraOnly}</p>
+
+      {(ordered.length > 1 || pendingPhotos > 0) && (
+        <>
+          <p className="m-0 text-sm text-stone">{he.wizard.coverHint}</p>
+          <ul className="m-0 grid list-none grid-cols-4 gap-2 p-0">
+            {ordered.map((m, i) => (
+              <li key={m.id} className={clsx("relative aspect-square overflow-hidden rounded-xl bg-ink-3", m.id === cover?.id && "ring-2 ring-ivory")}>
+                <button type="button" className="h-full w-full" onClick={() => setCover(m)} aria-label={he.wizard.cover}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={mediaUrl(m.thumb_path ?? m.storage_path)} alt="" className="h-full w-full object-cover" />
+                </button>
+                <button type="button" onClick={() => remove(m)} disabled={disabled} aria-label={he.wizard.remove}
+                  className="absolute top-1 end-1 grid size-8 place-items-center rounded-full bg-black/60 text-white">
+                  <IconClose className="!size-4" />
+                </button>
+                <div className="absolute inset-x-1 bottom-1 flex justify-between">
+                  <button type="button" onClick={() => move(m, -1)} disabled={i === 0 || disabled} aria-label={he.wizard.moveEarlier}
+                    className="grid size-8 place-items-center rounded-full bg-black/60 text-white disabled:opacity-0">
+                    <IconBack className="!size-4" />
+                  </button>
+                  <button type="button" onClick={() => move(m, 1)} disabled={i === ordered.length - 1 || disabled} aria-label={he.wizard.moveLater}
+                    className="grid size-8 place-items-center rounded-full bg-black/60 text-white disabled:opacity-0">
+                    <IconBack className="!size-4 rotate-180" />
+                  </button>
+                </div>
+              </li>
+            ))}
+            {pending.filter((p) => p.kind === "photo").map((p) => <PendingTile key={p.key} p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />)}
+          </ul>
+        </>
+      )}
+
+      {video && (
+        <div className="flex flex-col gap-1.5">
+          <span className="sr-clabel">{he.wizard.videoTitle}</span>
           <div className="relative overflow-hidden rounded-2xl bg-black">
             <video src={mediaUrl(video.storage_path)} poster={mediaUrl(video.poster_path)} controls playsInline preload="metadata" className="max-h-72 w-full" />
             <button type="button" onClick={() => remove(video)} disabled={disabled}
@@ -200,54 +240,14 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
               {he.wizard.remove}
             </button>
           </div>
-        )}
-        {pending.filter((p) => p.kind === "video").map((p) => (
-          <div key={p.key} className="rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
-            <ProgressLine p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />
-          </div>
-        ))}
-      </section>
-
-      {/* 2 — the finished cut */}
-      <section className="flex flex-col gap-3 border-t border-line pt-5">
-        <StepHeading n={2} title={he.wizard.photosTitle} hint={he.wizard.photosHint} />
-        <Button size={video ? "xl" : "lg"} variant={video ? "primary" : "secondary"} onClick={() => camPhoto.current?.click()}
-          disabled={disabled || photos.length + pendingPhotos >= MEDIA_LIMITS.maxPhotos}>
-          {he.wizard.takePhoto}
-        </Button>
-        {(ordered.length > 0 || pending.length > 0) && <p className="text-sm text-stone">{he.wizard.coverHint}</p>}
-
-      <ul className="grid grid-cols-3 gap-2">
-        {ordered.map((m, i) => (
-          <li key={m.id} className="relative aspect-square overflow-hidden rounded-2xl bg-ink-3">
-            <button type="button" className="h-full w-full" onClick={() => setCover(m)} aria-label={he.wizard.cover}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={mediaUrl(m.thumb_path ?? m.storage_path)} alt="" className="h-full w-full object-cover" />
-            </button>
-            {m.id === coverId && (
-              <span className="absolute top-1.5 start-1.5 rounded-full bg-ink-2 px-2 py-0.5 text-xs font-bold text-ivory">
-                {he.wizard.cover}
-              </span>
-            )}
-            <button type="button" onClick={() => remove(m)} disabled={disabled}
-              className="absolute top-1 end-1 min-h-9 rounded-full bg-black/60 px-2.5 text-xs font-bold text-white">
-              {he.wizard.remove}
-            </button>
-            <div className="absolute inset-x-1 bottom-1 flex justify-between">
-              <button type="button" onClick={() => move(m, -1)} disabled={i === 0 || disabled} aria-label={he.wizard.moveEarlier}
-                className="min-h-9 rounded-full bg-black/60 px-2 text-[11px] font-bold text-white disabled:opacity-0">
-                {he.wizard.moveEarlier}
-              </button>
-              <button type="button" onClick={() => move(m, 1)} disabled={i === ordered.length - 1 || disabled} aria-label={he.wizard.moveLater}
-                className="min-h-9 rounded-full bg-black/60 px-2 text-[11px] font-bold text-white disabled:opacity-0">
-                {he.wizard.moveLater}
-              </button>
-            </div>
-          </li>
-        ))}
-        {pending.filter((p) => p.kind === "photo").map((p) => <PendingTile key={p.key} p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />)}
-        </ul>
-      </section>
+        </div>
+      )}
+      {!video && !pendingVideo && <p className="m-0 text-xs text-stone">{he.wizard.videoHint}</p>}
+      {pending.filter((p) => p.kind === "video").map((p) => (
+        <div key={p.key} className="rounded-2xl bg-ink-2 p-4 shadow-[var(--shadow-card)]">
+          <ProgressLine p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -260,7 +260,7 @@ function PendingTile({ p, onRetry, onCancel }: { p: Pending; onRetry: () => void
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2 text-center">
         {p.status === "error" ? (
           <>
-            <span className="text-xs font-bold text-red-700">{p.error}</span>
+            <span className="text-xs font-bold text-sold">{p.error}</span>
             <button type="button" onClick={onRetry} className="flex min-h-9 items-center gap-1 rounded-full bg-ink-2 px-3 text-sm font-bold shadow">
               {he.app.retry}
             </button>
@@ -286,13 +286,13 @@ function ProgressLine({ p, onRetry, onCancel }: { p: Pending; onRetry: () => voi
     <div className="flex items-center gap-3">
       <div className="flex-1">
         <div className="mb-1 flex justify-between text-sm font-semibold">
-          <span className={clsx(p.status === "error" && "text-red-700")}>
+          <span className={clsx(p.status === "error" && "text-sold")}>
             {p.status === "error" ? p.error : p.status === "processing" ? he.wizard.processing : he.wizard.uploading}
           </span>
           {p.status === "uploading" && <Ltr>{p.progress}%</Ltr>}
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-ink-3">
-          <div className={clsx("h-full transition-[width]", p.status === "error" ? "bg-red-500" : "bg-brand")} style={{ width: `${p.status === "error" ? 100 : p.progress}%` }} />
+          <div className={clsx("h-full transition-[width]", p.status === "error" ? "bg-sold" : "bg-brand")} style={{ width: `${p.status === "error" ? 100 : p.progress}%` }} />
         </div>
       </div>
       {p.status === "error" ? (

@@ -42,9 +42,7 @@ export function Chip({
       {...rest}
       className={clsx(
         dark ? "sr-fchip transition-colors duration-150"
-          : "min-h-11 rounded-2xl px-4 text-[15px] font-semibold transition-colors duration-150 disabled:opacity-40",
-        dark ? null
-          : selected ? "bg-brand text-white ring-2 ring-brand" : "bg-white text-neutral-900 ring-1 ring-neutral-300",
+          : "sr-cchip transition-colors duration-150",
         className,
       )}
     >
@@ -200,7 +198,7 @@ export function Field({ label, hint, error, children, htmlFor, dark }: {
 }) {
   return (
     <div className={clsx("flex flex-col", dark ? "gap-1.5 text-start" : "gap-2")}>
-      <label htmlFor={htmlFor} className={dark ? "text-[13px] text-stone" : "text-[15px] font-bold"}>{label}</label>
+      <label htmlFor={htmlFor} className={dark ? "text-[13px] text-stone" : "sr-clabel"}>{label}</label>
       {children}
       {error ? <p className={clsx("m-0 text-sm font-semibold", dark ? "text-sold" : "text-red-700")} role="alert">{error}</p>
         : hint ? <p className={clsx("m-0 text-sm", dark ? "text-stone" : "text-neutral-500")}>{hint}</p> : null}
@@ -208,8 +206,8 @@ export function Field({ label, hint, error, children, htmlFor, dark }: {
   );
 }
 
-export const inputClass =
-  "min-h-14 w-full rounded-2xl bg-white px-4 text-lg ring-1 ring-neutral-300 outline-none focus:ring-2 focus:ring-brand disabled:bg-neutral-100 disabled:text-neutral-500";
+/** The counter's input (design: CounterNew): 52px, white on the cream ground, a hairline that turns ink on focus. */
+export const inputClass = "sr-cinput";
 export const inputDarkClass =
   "min-h-12 w-full rounded-2xl border border-line bg-ink-3 px-3.5 text-base text-ivory outline-none placeholder:text-stone/80 focus:border-gold";
 
