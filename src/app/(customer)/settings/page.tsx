@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-dvh px-5 pb-24">
-      <header className="pt-[max(0.5rem,env(safe-area-inset-top))] pb-6">
+      <header className="pt-2 pb-6">
         <BackLink href="/" label={he.app.back} />
         <h1 className="mt-1 font-display text-3xl font-bold text-ivory">{he.profile.title}</h1>
       </header>

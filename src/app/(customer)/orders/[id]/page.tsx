@@ -65,7 +65,7 @@ export default function PurchasePage({ params }: { params: Promise<{ id: string 
 
   return (
     <main className="min-h-dvh pb-28">
-      <header className="sticky top-0 z-20 bg-ink/90 px-5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
+      <header className="bg-ink/90 px-5 pt-2 pb-3 backdrop-blur">
         <BackLink href="/orders" label={he.app.back} />
         <h1 className="mt-1 font-display text-3xl font-bold text-ivory"><Ltr>{he.orders.purchase(k.checkout_number)}</Ltr></h1>
         <p className="text-xs text-stone">{formatDateTime(k.created_at)}</p>

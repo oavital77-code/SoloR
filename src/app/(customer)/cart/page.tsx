@@ -113,7 +113,7 @@ export default function CartPage() {
 
   return (
     <main className="min-h-dvh px-4 pb-28">
-      <header className="pt-[max(0.75rem,env(safe-area-inset-top))] pb-4">
+      <header className="pt-3 pb-4">
         <BackLink onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} label={he.app.back} />
         <h1 className="mt-1 font-display text-3xl font-bold text-ivory">{he.cart.title}</h1>
         {lines.length > 0 && (

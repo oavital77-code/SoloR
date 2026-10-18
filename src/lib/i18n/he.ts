@@ -65,18 +65,23 @@ export const he = {
   },
 
   profile: {
-    title: "הפרופיל שלי",
+    title: "הגדרות",
     email: "אימייל",
     saved: "נשמר",
     logout: "התנתק",
   },
 
   nav: {
-    market: "Market",
-    live: "Live",
-    myOrders: "Orders",
+    home: "בית",
+    search: "חיפוש",
+    cart: (n: number) => (n ? `סל, ${n} פריטים` : "סל"),
+    account: "חשבון",
+    myOrders: "ההזמנות שלי",
+    history: "היסטוריה",
+    settings: "הגדרות",
     profile: "פרופיל",
-    login: "כניסה",
+    login: "התחבר",
+    close: "סגור",
   },
 
   reels: {
@@ -117,7 +122,7 @@ export const he = {
     allShops: "כל הקצביות",
     liveCount: (n: number) => (n === 0 ? "אין נתחים באוויר כרגע" : n === 1 ? "נתח אחד באוויר" : `${n} נתחים באוויר`),
     testBadge: "בדיקה",
-    backToMarket: "חזרה למרקט",
+    backToMarket: "חזרה לפיד",
     backToShop: "חזרה לקצבייה",
     enterShop: "לקצבייה",
     shopNotFound: "הקצבייה לא נמצאה",
@@ -128,7 +133,7 @@ export const he = {
     noResults: "לא נמצאו נתחים זמינים",
     noResultsHint: "נסו מילה אחרת או נקו את הסינון",
     categoryEmpty: "אין כרגע",
-    inMarket: "בכל המרקט",
+    inMarket: "בכל הקצביות",
     inShop: (shop: string) => `ב${shop}`,
     pickupAt: (name: string) => `איסוף מ${name}`,
   },
@@ -220,8 +225,8 @@ export const he = {
     updated: "העגלה עודכנה",
     toCart: "לעגלה",
     bar: (n: number) => (n === 1 ? "פריט אחד בעגלה" : `${n} פריטים בעגלה`),
-    empty: "העגלה ריקה. בחרו נתח במרקט והוסיפו אותו לעגלה.",
-    toMarket: "חזרה למרקט",
+    empty: "העגלה ריקה. בחרו נתח בפיד והוסיפו אותו לעגלה.",
+    toMarket: "לפיד",
     remove: "הסר",
     removed: "הוסר מהעגלה",
     continueShopping: "להמשיך לבחור",
@@ -255,7 +260,8 @@ export const he = {
 
   orders: {
     title: "ההזמנות שלי",
-    empty: "עוד אין הזמנות.",
+    empty: "אין הזמנות פתוחות.",
+    emptyHistory: "עוד אין הזמנות שהסתיימו.",
     toFeed: "לפיד הלייב",
     whatOrdered: (mode: "whole" | "steaks", qty: number | null, steakW: number | null, weight: string) =>
       mode === "whole" ? `נתח שלם ${weight}` : `${qty} סטייקים × ${steakW ?? ""} גר׳`,

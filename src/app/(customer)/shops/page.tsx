@@ -18,7 +18,7 @@ export default function ShopsPage() {
 
   return (
     <main className="min-h-dvh px-5 pb-28">
-      <header className="pt-[max(0.75rem,env(safe-area-inset-top))] pb-5">
+      <header className="pt-3 pb-5">
         <BackLink href="/" label={he.market.backToMarket} />
         <h1 className="mt-2 font-display text-3xl font-bold text-ivory">{he.market.shops}</h1>
       </header>

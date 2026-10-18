@@ -8,7 +8,7 @@ import { he } from "@/lib/i18n/he";
 import { useCart } from "@/lib/cart";
 import { formatAgorot } from "@/lib/pricing";
 
-const HIDDEN = ["/cart", "/discover", "/profile"];
+const HIDDEN = ["/cart", "/settings"];
 
 export function CartBar() {
   const path = usePathname();

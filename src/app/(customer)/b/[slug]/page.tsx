@@ -27,7 +27,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
 
   return (
     <main className="min-h-dvh pb-28">
-      <header className="px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
+      <header className="px-5 pt-3 pb-2">
         <BackToMarket />
         {!shop ? <Skeleton className="mt-4 h-9 w-2/3" /> : (
           <div className="mt-4">
@@ -49,8 +49,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
                 {he.market.navigate}
               </a>
               <a href={`tel:${shop.phone.replace(/-/g, "")}`} className={action}>{he.market.call}</a>
-              <Link href={`/discover?${scope}`} className={action}>{he.market.watchShopLive}</Link>
-            </div>
+                          </div>
           </div>
         </div>
       )}

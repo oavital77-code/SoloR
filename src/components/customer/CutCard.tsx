@@ -95,11 +95,6 @@ export function CutCard({ cut, breeds, shop, now, eager }: {
           ) : <span className="text-ivory/50">{stock}</span>}
           <span className="flex items-center gap-4">
             {shop && stock && <span className="text-stone">{stock}</span>}
-            {hasVideo && (
-              <Link href={`/discover?c=${encodeURIComponent(cut.code)}`} className="min-h-9 py-2 font-medium text-gold underline-offset-4 hover:underline">
-                {he.reels.watchCut}
-              </Link>
-            )}
           </span>
         </div>
       </div>

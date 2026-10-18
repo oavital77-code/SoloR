@@ -1,7 +1,9 @@
 "use client";
-// C6 — my orders: one row per purchase, with each shop's status live.
-import { useCallback, useEffect, useState } from "react";
+// C6 — my orders: one row per purchase, with each shop's status live. Spec §12 splits it in two:
+// "ההזמנות שלי" (still open) and "היסטוריה" (?view=history: every shop's part collected or cancelled).
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow } from "@/components/customer/useMyOrders";
 import { Button, EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
@@ -11,7 +13,14 @@ import { useBreeds, useRefetchOnFocus } from "@/lib/hooks";
 import { formatAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
+const finished = (k: CheckoutRow) => k.orders.every((o) => o.status === "completed" || o.status === "cancelled");
+
 export default function MyOrdersPage() {
+  return <Suspense><MyOrders /></Suspense>;
+}
+
+function MyOrders() {
+  const history = useSearchParams().get("view") === "history";
   const breeds = useBreeds();
   const [rows, setRows] = useState<CheckoutRow[] | null>(null);
   const [error, setError] = useState(false);
@@ -21,8 +30,8 @@ export default function MyOrdersPage() {
       .order("created_at", { ascending: false }).limit(50);
     if (error) return setError(true);
     setError(false);
-    setRows(((data ?? []) as CheckoutRow[]).map(normalizeCheckout));
-  }, []);
+    setRows(((data ?? []) as CheckoutRow[]).map(normalizeCheckout).filter((k) => finished(k) === history));
+  }, [history]);
 
   useEffect(() => { load(); }, [load]);
   useRefetchOnFocus(load);
@@ -30,14 +39,16 @@ export default function MyOrdersPage() {
 
   return (
     <main className="min-h-dvh pb-24">
-      <header className="sticky top-0 z-20 flex flex-col items-center bg-ink/90 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
-        <h1 className="font-display text-3xl font-bold text-ivory">{he.orders.title}</h1>
-        <Link href="/profile" className="min-h-10 py-2.5 text-sm text-ivory/75">{he.nav.profile}</Link>
+      <header className="flex flex-col items-center bg-ink/90 px-4 pt-4 pb-3 backdrop-blur">
+        <h1 className="font-display text-3xl font-bold text-ivory">{history ? he.nav.history : he.orders.title}</h1>
+        <Link href={history ? "/orders" : "/orders?view=history"} className="min-h-10 py-2.5 text-sm text-ivory/70 underline-offset-4 hover:underline">
+          {history ? he.orders.title : he.nav.history}
+        </Link>
       </header>
       {error && !rows ? <ErrorState dark onRetry={load} />
         : !rows ? <div className="flex flex-col gap-3 px-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-24" />)}</div>
         : rows.length === 0 ? (
-          <EmptyState text={he.orders.empty}><Link href="/"><Button variant="dark">{he.cart.toMarket}</Button></Link></EmptyState>
+          <EmptyState text={history ? he.orders.emptyHistory : he.orders.empty}><Link href="/"><Button variant="dark">{he.cart.toMarket}</Button></Link></EmptyState>
         ) : (
           <ul className="mx-4 divide-y divide-ivory/10 border-y border-ivory/10">
             {rows.map((k) => {

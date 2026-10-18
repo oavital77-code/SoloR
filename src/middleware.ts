@@ -6,7 +6,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { demoLoginEnabled } from "@/lib/demo-login";
 
-const GUEST_EXACT = ["/", "/discover", "/search", "/categories", "/shops", "/login", "/cart"];
+const GUEST_EXACT = ["/", "/search", "/shops", "/login", "/cart"];
 const GUEST_PREFIXES = ["/b/", "/cut/", "/auth/"];
 
 function isGuestPath(path: string) {
