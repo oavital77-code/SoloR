@@ -1,6 +1,6 @@
 "use client";
-// Feed media in the founders' reference layout (a social-feed post, 18.10.2026): edge to edge, the final photo
-// large on top and a row of up to three smaller tiles under it — the other photos and the work video (with a play
+// Feed media in the founders' reference layout (a social-feed post, 18.10.2026): the final photo on top (4:3, so
+// one post does not fill the screen) and a short row of up to three smaller tiles under it — the other photos and the work video (with a play
 // mark); "+N" on the last tile when there is more. Every tile opens the full post, where the video plays.
 import Link from "next/link";
 import { clsx } from "clsx";
@@ -18,18 +18,18 @@ export function PostCollage({ media, title, code, href, eager, children }: {
   const tiles = rest.slice(0, 3);
   const extra = rest.length - tiles.length;
 
-  if (!main) return <div className="relative aspect-square w-full bg-ink-3">{children}</div>;
+  if (!main) return <div className="relative aspect-[4/3] w-full bg-ink-3">{children}</div>;
 
   return (
     <div className="relative">
-      <Link href={href} className="relative block aspect-square w-full bg-ink-3" aria-label={he.cut.mediaAlt(title, code, 1)}>
+      <Link href={href} className="relative block aspect-[4/3] w-full bg-ink-3" aria-label={he.cut.mediaAlt(title, code, 1)}>
         <Img m={main} alt={he.cut.mediaAlt(title, code, 1)} eager={eager} />
         {children}
       </Link>
       {tiles.length > 0 && (
         <div className={clsx("mt-0.5 grid gap-0.5", tiles.length === 1 ? "grid-cols-1" : tiles.length === 2 ? "grid-cols-2" : "grid-cols-3")}>
           {tiles.map((m, i) => (
-            <Link key={m.id} href={href} className={clsx("relative block bg-ink-3", tiles.length === 1 ? "aspect-[16/9]" : tiles.length === 2 ? "aspect-[4/3]" : "aspect-square")}
+            <Link key={m.id} href={href} className="relative block h-[84px] bg-ink-3"
               aria-label={m.type === "video" ? he.post.video : he.cut.mediaAlt(title, code, i + 2)}>
               {m.type === "video" ? (
                 <>

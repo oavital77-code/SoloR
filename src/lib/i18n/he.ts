@@ -155,6 +155,8 @@ export const he = {
     chooseTitle: "איך להוסיף לסל?",
     video: "וידאו העבודה",
     soundOn: "הפעל קול",
+    fromButcher: "מילה מהקצב",
+    marblingLabel: "שיוש לפי הקצב",
   },
 
   search: {
@@ -182,6 +184,8 @@ export const he = {
 
   feed: {
     newPosts: (n: number) => (n === 1 ? "נתח חדש ↑" : `${n} נתחים חדשים ↑`),
+    greeting: (hour: number) => (hour >= 5 && hour < 12 ? "בוקר טוב" : hour >= 12 && hour < 17 ? "צהריים טובים" : hour >= 17 && hour < 22 ? "ערב טוב" : "לילה טוב"),
+    greetingSub: "הנתחים שהקצבים הכינו היום, ממש עכשיו",
     emptyToday: "עוד לא עלו נתחים היום",
     end: "ראית הכול",
     endHint: "נתחים חדשים עולים במהלך היום",

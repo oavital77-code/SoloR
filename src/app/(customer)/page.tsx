@@ -9,7 +9,8 @@ import { useCatalog } from "@/components/customer/useCatalog";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
-import { useBreeds, useButchers, useNow } from "@/lib/hooks";
+import { israelClock } from "@/lib/hours";
+import { useBreeds, useButchers, useNow, useSession } from "@/lib/hooks";
 import { shopPath } from "@/lib/market";
 import { useScrollMemory } from "@/lib/scroll";
 import type { Butcher } from "@/lib/types";
@@ -23,6 +24,9 @@ export default function FeedPage() {
   const butchers = useButchers();
   const now = useNow(60000);
   const { cuts, error, reload } = useCatalog();
+  const { user, profile } = useSession();
+  // the shared demo account's name is not a person's: greet without it
+  const firstName = user?.email?.endsWith("@solor.example") ? null : profile?.full_name.trim().split(/\s+/)[0];
   const live = useLiveFeed(cuts);
   const { pending, showNew, ready } = live;
   // only shops that are active (spec §4.1); before the shop list loads, everything shows
@@ -69,15 +73,22 @@ export default function FeedPage() {
         </button>
       )}
 
+      <header className="px-5 pt-2 pb-5 text-start">
+        <p className="font-display text-[24px] font-bold leading-tight text-ivory">
+          {he.feed.greeting(Math.floor(israelClock(new Date(now)).minutes / 60))}{firstName ? `, ${firstName}` : ""}
+        </p>
+        <p className="mt-0.5 text-sm text-stone">{he.feed.greetingSub}</p>
+      </header>
+
       {!ready ? (
-        <div className="flex flex-col gap-4 px-4">{[0, 1].map((i) => <Skeleton key={i} className="aspect-square" />)}</div>
+        <div className="flex flex-col gap-5 px-3">{[0, 1].map((i) => <Skeleton key={i} className="h-[440px] rounded-[28px]" />)}</div>
       ) : items.length === 0 ? (
         <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
       ) : (
         <>
-          <ul className="flex flex-col divide-y-[10px] divide-black">
+          <ul className="flex flex-col gap-5 px-3">
             {items.slice(0, limit).map(({ cut, gone }, i) => (
-              <li key={cut.id} className="pt-4 first:pt-1">
+              <li key={cut.id}>
                 <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone} eager={i === 0} />
               </li>
             ))}
@@ -93,7 +104,8 @@ export default function FeedPage() {
 /** End of the feed (and the empty feed): say so, and offer the shops' pages (spec §2.2, §4.4). */
 function FeedEnd({ title, hint, butchers }: { title: string; hint?: string; butchers: Butcher[] }) {
   return (
-    <section className="mt-6 border-t-[10px] border-black px-4 pt-8 text-center">
+    <section className="mt-10 px-4 text-center">
+      <div aria-hidden className="mx-auto mb-7 h-px w-28 bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
       <p className="font-display text-xl font-bold text-ivory">{title}</p>
       {hint && <p className="mt-1 text-sm text-stone">{hint}</p>}
       {butchers.length > 0 && (

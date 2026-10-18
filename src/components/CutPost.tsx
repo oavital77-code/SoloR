@@ -38,17 +38,23 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
   const soldOut = gone || cut.status === "sold_out" || (cut.status === "published" && !wholeOk && !steaksOk);
   const [open, setOpen] = useState(false);
 
+  const method = agingMethodLabel(cut.aging_method);
+  const aged = cut.is_aged && cut.aging_days ? `${he.feed.agedDays(cut.aging_days)}${method ? ` · ${method}` : ""}` : null;
   const facts = [
-    cut.is_aged && cut.aging_days ? he.cut.aged(cut.aging_days, agingMethodLabel(cut.aging_method)) : null,
     cut.origin_country ? originLabel(cut.origin_country) : null,
     cut.weight_g ? formatWeight(cut.weight_g) : null,
   ].filter(Boolean) as string[];
 
   return (
-    <article className="text-start">
+    // in the feed each post is a warm card of its own; the full post stays edge to edge
+    <article className={clsx("text-start", !full && "overflow-hidden rounded-[28px] bg-gradient-to-b from-ink-2 to-[#130f0c] pt-4 shadow-[0_18px_40px_-22px_rgb(0_0_0/0.9)] ring-1 ring-gold/15")}>
       {/* 1 · header */}
       <header className="flex items-center gap-3 px-4 pb-3">
-        {shop && <Link href={shopPath(shop)} aria-label={shop.name}><ShopMark shop={shop} className="size-10 text-base" /></Link>}
+        {shop && (
+          <Link href={shopPath(shop)} aria-label={shop.name} className="shrink-0 rounded-full bg-gradient-to-br from-gold via-[#e7cfa3] to-brand p-[2px]">
+            <ShopMark shop={shop} className="size-10 text-base ring-2 ring-ink-2" />
+          </Link>
+        )}
         <div className="min-w-0 flex-1">
           {shop && <Link href={shopPath(shop)} className="block truncate text-[15px] font-bold text-ivory">{shop.name}</Link>}
           <p className="text-xs text-stone">
@@ -62,9 +68,14 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
       <div className="px-4 pb-3">
         {full ? <h1 className="font-display text-[28px] font-bold leading-tight text-ivory">{title}</h1>
           : <h2 className="font-display text-[19px] font-bold leading-snug text-ivory"><Link href={href}>{title}</Link></h2>}
-        {facts.length > 0 && <p className="mt-0.5 text-[14px] text-stone">{facts.join("  ·  ")}</p>}
+        {(aged || facts.length > 0) && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {aged && <span className="rounded-full bg-gold/15 px-2.5 py-1 text-[12.5px] font-semibold text-gold ring-1 ring-gold/30">{aged}</span>}
+            {facts.map((f) => <span key={f} className="rounded-full bg-ivory/[0.06] px-2.5 py-1 text-[12.5px] text-ivory/80">{f}</span>)}
+          </div>
+        )}
         {cut.description && <Note text={cut.description} full={full} />}
-        {cut.butcher_marbling ? <p className="mt-1.5 text-xs text-stone">{he.post.marbling(cut.butcher_marbling)}</p> : null}
+        {cut.butcher_marbling ? <Marbling n={cut.butcher_marbling} /> : null}
         {!full && (
           <Link href={href} className="mt-1.5 inline-block min-h-9 py-1.5 text-[15px] font-semibold text-gold underline-offset-4 hover:underline">
             {he.post.certificate}
@@ -76,12 +87,16 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
       {full ? (
         <PostMedia media={media} title={title} code={cut.code} eager={eager}>{soldOut && <SoldStamp />}</PostMedia>
       ) : (
-        <PostCollage media={media} title={title} code={cut.code} href={href} eager={eager}>{soldOut && <SoldStamp />}</PostCollage>
+        <div className="px-3">
+          <div className="overflow-hidden rounded-2xl">
+            <PostCollage media={media} title={title} code={cut.code} href={href} eager={eager}>{soldOut && <SoldStamp />}</PostCollage>
+          </div>
+        </div>
       )}
 
       {/* 4 · order strip (the full post has the sticky purchase bar instead) */}
       {!full && (
-        <div className="flex items-center justify-between gap-3 bg-ink-2 px-4 py-3">
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-ivory/[0.06] bg-black/20 px-4 py-3">
           <div className="min-w-0">
             <Price cut={cut} />
             <p className="truncate text-xs text-stone">
@@ -101,17 +116,34 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
   );
 }
 
+/** The butcher's own words, set apart like a note handed over the counter. */
 function Note({ text, full }: { text: string; full: boolean }) {
   const [more, setMore] = useState(false);
   const long = text.length > 140 || text.split("\n").length > 3;
   return (
-    <div className="mt-1.5">
-      <p className={clsx("whitespace-pre-line text-[15px] leading-relaxed text-ivory/90", !full && !more && "line-clamp-3")}>{text}</p>
+    <div className="mt-3 rounded-2xl border-s-2 border-gold/60 bg-ivory/[0.035] px-3.5 py-2.5">
+      <p className="text-[11px] font-semibold tracking-wide text-gold">{he.post.fromButcher}</p>
+      <p className={clsx("mt-0.5 whitespace-pre-line text-[15px] leading-relaxed text-ivory/90", !full && !more && "line-clamp-3")}>{text}</p>
       {!full && long && (
         <button type="button" onClick={() => setMore((m) => !m)} className="min-h-8 text-sm font-semibold text-stone">
           {more ? he.post.less : he.post.more}
         </button>
       )}
+    </div>
+  );
+}
+
+/** "הערכת הקצב" as ten small marks — the butcher's own estimate, labelled as such (spec §5.2). */
+function Marbling({ n }: { n: number }) {
+  return (
+    <div className="mt-2.5 flex items-center gap-2" role="img" aria-label={he.post.marbling(n)}>
+      <span className="text-xs text-stone">{he.post.marblingLabel}</span>
+      <span className="flex gap-[3px]" aria-hidden>
+        {Array.from({ length: 10 }, (_, i) => (
+          <span key={i} className={clsx("h-2.5 w-1.5 rounded-full", i < n ? "bg-gradient-to-t from-brand to-[#e7a4a0]" : "bg-ivory/10")} />
+        ))}
+      </span>
+      <Ltr className="text-xs font-semibold text-ivory/80">{n}/10</Ltr>
     </div>
   );
 }
@@ -143,7 +175,8 @@ function AddButton({ cut, disabled, onChoose }: { cut: Cut; disabled: boolean; o
     toast(he.cart.added, { tone: "success" });
   };
   return (
-    <Button size="md" variant={inCart ? "dark" : "primary"} disabled={disabled || (direct && inCart)} onClick={add} className="shrink-0">
+    <Button size="md" variant={inCart ? "dark" : "primary"} disabled={disabled || (direct && inCart)} onClick={add}
+      className="shrink-0 rounded-full px-5 shadow-[0_6px_18px_-6px_rgb(163_18_42/0.7)]">
       {inCart ? he.post.inCart : he.post.addToCart}
     </Button>
   );

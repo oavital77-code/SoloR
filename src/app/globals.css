@@ -6,9 +6,9 @@
   --color-brand: #a3122a;       /* deep burgundy — primary actions only */
   --color-brand-dark: #7d0d20;
   --color-live: #e0233f;
-  --color-ink: #0b0b0b;
-  --color-ink-2: #161514;
-  --color-ink-3: #22201e;
+  --color-ink: #0e0c0a;         /* warm near-black */
+  --color-ink-2: #1a1613;
+  --color-ink-3: #27211c;
   --color-ivory: #f3efe8;       /* primary text on dark */
   --color-stone: #9b958c;       /* secondary text */
   --color-gold: #c6ab7c;        /* hairline accents, small labels */
@@ -25,7 +25,8 @@ html {
 }
 
 body {
-  background: #0b0b0b;
+  /* a low ember glow from the top keeps the dark from feeling cold */
+  background: #0e0c0a radial-gradient(120% 60% at 50% -10%, rgb(163 18 42 / 0.13), transparent 60%) fixed;
   -webkit-tap-highlight-color: transparent;
 }
 

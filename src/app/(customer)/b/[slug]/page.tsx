@@ -54,9 +54,9 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
                   </button>
                 </div>
               )}
-              <ul className="flex flex-col divide-y-[10px] divide-black border-t-[10px] border-black">
+              <ul className="flex flex-col gap-5 px-3">
                 {items.map(({ cut, gone }, i) => (
-                  <li key={cut.id} className="pt-4"><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} eager={i === 0} /></li>
+                  <li key={cut.id}><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} eager={i === 0} /></li>
                 ))}
               </ul>
             </>
@@ -88,14 +88,16 @@ function ShopHead({ shop, now, backLink }: { shop: Butcher; now: number; backLin
       <div className="px-5 pt-2">
         {backLink}
         <div className={shop.cover_path ? "-mt-12" : "mt-2"}>
+          <div className="mx-auto w-fit rounded-full bg-gradient-to-br from-gold via-[#e7cfa3] to-brand p-[2.5px]">
           {shop.logo_path ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={mediaUrl(shop.logo_path)} alt="" className="mx-auto size-20 rounded-full object-cover ring-2 ring-ink" />
+            <img src={mediaUrl(shop.logo_path)} alt="" className="block size-20 rounded-full object-cover ring-2 ring-ink" />
           ) : (
-            <span aria-hidden className="mx-auto grid size-20 place-items-center rounded-full bg-ink-3 font-display text-3xl font-bold text-gold ring-1 ring-ivory/15">
+            <span aria-hidden className="grid size-20 place-items-center rounded-full bg-ink-3 font-display text-3xl font-bold text-gold ring-2 ring-ink">
               {shop.name.trim().charAt(0)}
             </span>
           )}
+          </div>
         </div>
         <h1 className="mt-3 font-display text-[34px] font-bold leading-[1.05] text-ivory">{shop.name}</h1>
         {shop.specialty && <p className="eyebrow mt-2">{shop.specialty}</p>}
