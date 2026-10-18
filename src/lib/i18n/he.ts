@@ -21,6 +21,7 @@ export const he = {
   },
 
   auth: {
+    demoNote: "אב טיפוס · בחירה זמנית לפיילוט",
     title: "כניסה ל־SoloR",
     emailLabel: "אימייל",
     emailPlaceholder: "name@example.com",
@@ -601,6 +602,7 @@ export const he = {
   },
 
   butcherOrders: {
+    pickupShort: "איסוף",
     active: "פעילות",
     history: "היסטוריה",
     empty: "אין הזמנות פעילות",

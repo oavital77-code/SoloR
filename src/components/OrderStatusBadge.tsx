@@ -2,7 +2,7 @@ import { clsx } from "clsx";
 import { orderStatusShort } from "@/lib/labels";
 import type { OrderStatus, ReceiveMethod } from "@/lib/types";
 
-// Customer (dark): a quiet outlined label. Butcher (light): solid colours, scanned at a glance at the counter.
+// Customer (dark): a quiet outlined label. Butcher (light): the counter's status chips, scanned at a glance.
 export function OrderStatusBadge({ status, dark, method }: { status: OrderStatus; dark?: boolean; method?: ReceiveMethod }) {
   if (dark) {
     return (
@@ -17,18 +17,7 @@ export function OrderStatusBadge({ status, dark, method }: { status: OrderStatus
       </span>
     );
   }
-  return (
-    <span
-      className={clsx(
-        "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold",
-        status === "new" && "bg-brand text-white",
-        status === "preparing" && "bg-amber-400 text-amber-950",
-        status === "ready" && "bg-emerald-500 text-white",
-        status === "completed" && "bg-neutral-200 text-neutral-700",
-        status === "cancelled" && "bg-neutral-100 text-neutral-500 line-through",
-      )}
-    >
-      {orderStatusShort(status, method)}
-    </span>
-  );
+  // the counter (design: Counter): bordeaux fill for new, amber and green outlines for preparing and ready
+  const tone = { new: "new", preparing: "prep", ready: "ready", completed: "done", cancelled: "cancelled" }[status];
+  return <span className={`sr-status sr-status--${tone} shrink-0`}>{orderStatusShort(status, method)}</span>;
 }

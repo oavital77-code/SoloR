@@ -138,7 +138,7 @@ export function ButcherShell({ children }: { children: React.ReactNode }) {
   }, [newOrders]);
 
   if (!profile || !butcher) {
-    return <div className="grid min-h-dvh place-items-center bg-neutral-50 text-neutral-500"><Spinner /></div>;
+    return <div className="grid min-h-dvh place-items-center bg-ink text-stone"><Spinner /></div>;
   }
 
   return (

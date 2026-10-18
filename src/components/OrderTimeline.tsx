@@ -50,16 +50,16 @@ export function OrderTimeline({ status, events, dark, method, now }: {
         const last = i === steps.length - 1;
         const dot = clsx(
           "grid size-8 place-items-center rounded-full font-display text-sm font-bold",
-          s === "cancelled" ? (dark ? "text-stone ring-1 ring-stone/50" : "text-neutral-500 ring-1 ring-neutral-400")
+          s === "cancelled" ? (dark ? "text-stone ring-1 ring-stone/50" : "text-stone ring-1 ring-neutral-400")
             : current ? (dark ? "bg-ivory text-ink" : "bg-ink text-white")
             : done ? (dark ? "text-gold ring-1 ring-gold/70" : "text-ink ring-1 ring-ink/60")
-            : dark ? "text-ivory/35 ring-1 ring-ivory/15" : "text-neutral-400 ring-1 ring-neutral-300",
+            : dark ? "text-ivory/35 ring-1 ring-ivory/15" : "text-stone ring-1 ring-line",
         );
-        const line = clsx("w-px", done ? (dark ? "bg-gold/60" : "bg-ink/50") : dark ? "bg-ivory/10" : "bg-neutral-200");
+        const line = clsx("w-px", done ? (dark ? "bg-gold/60" : "bg-ink/50") : dark ? "bg-ivory/10" : "bg-ink-3");
         const text = (
           <div className={clsx(!done && "opacity-50")}>
             <p className={clsx("font-semibold", current && "font-display text-lg font-bold")}>{orderStatusShort(s, method)}</p>
-            {time && <p className={clsx("text-sm", dark ? "text-stone" : "text-neutral-500")}>{formatDateTime(time)}</p>}
+            {time && <p className={clsx("text-sm", dark ? "text-stone" : "text-stone")}>{formatDateTime(time)}</p>}
           </div>
         );
         // customer (dark): centred column — number, label, time, then a short hairline to the next step

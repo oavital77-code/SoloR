@@ -201,3 +201,12 @@
 .sr-searchfield input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 500 16px var(--font-plex); outline: none; }
 .sr-searchfield input::placeholder { color: var(--ink-muted); }
 .sr-searchfield:focus-within { box-shadow: inset 0 0 0 1px var(--gold); }
+.sr-ctabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px; background: var(--surface-raised); }
+.sr-ctabs > button, .sr-ctabs > a { min-height: 52px; border-radius: 12px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; gap: 8px; font: 700 17px var(--font-plex); color: var(--ink-muted); }
+.sr-ctabs > [aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-card); }
+.sr-cbadge { min-width: 24px; height: 24px; border-radius: 12px; background: var(--status-new); color: var(--on-bordeaux); font-size: 13px; display: inline-grid; place-items: center; padding: 0 6px; direction: ltr; }
+.sr-status--done { color: var(--ink-muted); box-shadow: inset 0 0 0 1px var(--line); }
+.sr-status--cancelled { color: var(--ink-muted); text-decoration: line-through; box-shadow: inset 0 0 0 1px var(--line); }
+.sr-cbtn:disabled { opacity: .5; }
+.sr-cbtn--quiet { background: var(--surface-raised); color: var(--ink); }
+.sr-cbtn--ready { background: var(--status-ready); color: #fff; }

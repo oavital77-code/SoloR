@@ -9,7 +9,7 @@ import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, mediaUrl, orderWhat, timeAgo } from "@/lib/cut-helpers";
 export { orderWhat };
 import { useBreeds, useNow, useRefetchOnFocus } from "@/lib/hooks";
-import { formatAgorot } from "@/lib/pricing";
+import { money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Cut, CutMedia, Order, OrderItem, OrderStatus } from "@/lib/types";
 
@@ -68,7 +68,7 @@ export function OrderList() {
         : !rows ? <div className="flex flex-col gap-3 px-4">{[0, 1].map((i) => <Skeleton key={i} className="h-28" />)}</div>
         : rows.length === 0 ? <EmptyState text={tab === "active" ? he.butcherOrders.empty : he.butcherOrders.emptyHistory} />
         : (
-          <ul className="flex flex-col gap-3 px-4 pb-8">
+          <ul className="flex flex-col gap-4 px-4 pb-8">
             {rows.map((o) => <OrderCard key={o.id} order={o} breeds={breeds} now={now} />)}
           </ul>
         )}
@@ -77,42 +77,43 @@ export function OrderList() {
 }
 
 
+/** One order at the counter (design: Counter): a white card whose edge is the status colour, the status chip and
+ * the number, who and how it is received, what was bought and its codes. New orders glow bordeaux. */
 function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: ReturnType<typeof useBreeds>; now: number }) {
   const items = sortedItems(o);
   const active = items.filter((i) => i.status === "active");
-  const first = (active[0] ?? items[0])?.cuts;
-  const title = first ? cutTitle(first, breeds) : "";
+  const shown = active.length ? active : items;
+  const first = shown[0]?.cuts;
   const cover = first ? coverOf(first.cut_media) : undefined;
+  const edge = o.status === "preparing" ? "sr-ocard--prep" : o.status === "ready" ? "sr-ocard--ready"
+    : o.status === "new" ? "" : "!border-s-line";
   return (
     <li>
-      <Link
-        href={`/butcher/orders/${o.id}`}
-        className={clsx(
-          "flex gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 active:bg-neutral-50",
-          o.status === "new" ? "ring-2 ring-brand" : "ring-neutral-200",
-        )}
-      >
-        <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-neutral-200">
+      <Link href={`/butcher/orders/${o.id}`}
+        className={clsx("sr-ocard active:opacity-90", edge, o.status === "new" && "shadow-[0_0_0_3px_rgb(163_18_42/0.18),var(--shadow-card)]")}>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <OrderStatusBadge status={o.status} method={o.receive_method} />
+            <span className="text-sm text-stone">{timeAgo(o.created_at, now)}</span>
+          </span>
+          <span className="code !text-[15px] !text-ivory">#{o.order_number}</span>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <span className="text-xl font-bold leading-7">
+              {o.profiles?.full_name ?? "—"} · {o.receive_method === "delivery" ? he.checkout.deliveryLabel : he.butcherOrders.pickupShort}
+            </span>
+            {shown.map((i) => (
+              <span key={i.id} className={clsx("text-[17px]", i.status === "cancelled" && "text-stone line-through")}>
+                {cutTitle(i.cuts, breeds).split(" · ")[0]} · {orderWhat(i)} <span className="code !text-sm">{i.cuts.code}</span>
+              </span>
+            ))}
+            <Ltr className="text-sm font-semibold text-stone">{money(o.total_agorot)}</Ltr>
+          </div>
           {cover && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${first?.code}`} className="h-full w-full object-cover" loading="lazy" />
+            <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className="size-16 shrink-0 rounded-xl object-cover" loading="lazy" />
           )}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className={clsx("text-lg", o.status === "new" ? "font-extrabold" : "font-bold")}>
-              <Ltr>#{o.order_number}</Ltr>
-            </span>
-            <OrderStatusBadge status={o.status} method={o.receive_method} />
-          </div>
-          <p className="text-sm text-neutral-500">{timeAgo(o.created_at, now)} · {he.butcherOrders.itemsCount(active.length || items.length)}</p>
-          <p className="font-semibold">
-            {title}{items.length > 1 && <span className="font-normal text-neutral-500"> {he.orders.moreItems(items.length - 1)}</span>}
-          </p>
-          <p className="text-sm">
-            <Ltr className="font-bold">₪{formatAgorot(o.total_agorot)}</Ltr>
-            {o.profiles && <> · {o.profiles.full_name}</>}
-          </p>
         </div>
       </Link>
     </li>

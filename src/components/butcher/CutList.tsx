@@ -10,7 +10,7 @@ import { CUT_STATUS_LABEL } from "@/lib/labels";
 import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { useBreeds, useRefetchOnFocus, safeStorage } from "@/lib/hooks";
 import { errorText } from "@/lib/errors";
-import { formatAgorot, formatWeight } from "@/lib/pricing";
+import { formatWeight, money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { removeStorageObjects } from "@/lib/upload";
 import type { CutStatus, CutWithMedia, OrderItemStatus } from "@/lib/types";
@@ -81,7 +81,7 @@ export function CutList() {
 
       {error ? <ErrorState onRetry={load} />
         : !rows ? (
-          <div className="flex flex-col gap-3 px-4 text-neutral-900">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-28" />)}</div>
+          <div className="flex flex-col gap-3 px-4 text-ivory">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-28" />)}</div>
         ) : visible.length === 0 ? <EmptyState text={he.butcher.emptyCuts} />
         : (
           <ul className="flex flex-col gap-3 px-4 pb-8">
@@ -107,8 +107,8 @@ function CutRow({ cut, title, onRemove }: { cut: Row; title: string; onRemove: (
 
   return (
     <li className="relative">
-      <Link href={href} className="flex gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-neutral-200 active:bg-neutral-50">
-        <div className="size-24 shrink-0 overflow-hidden rounded-xl bg-neutral-200">
+      <Link href={href} className="flex gap-3 rounded-2xl bg-ink-2 p-3 shadow-sm ring-1 ring-line active:bg-ink">
+        <div className="size-24 shrink-0 overflow-hidden rounded-xl bg-ink-3">
           {cover && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${cut.code}`} className="h-full w-full object-cover" loading="lazy" />
@@ -116,16 +116,16 @@ function CutRow({ cut, title, onRemove }: { cut: Row; title: string; onRemove: (
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <div className="flex items-center justify-between gap-2">
-            <Ltr className="text-sm font-bold text-neutral-500">{cut.code}</Ltr>
+            <Ltr className="text-sm font-bold text-stone">{cut.code}</Ltr>
             <StatusPill status={cut.status} />
           </div>
           <p className="truncate text-lg font-extrabold">{title || he.butcher.untitled}</p>
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-stone">
             {cut.weight_g ? <Ltr>{formatWeight(cut.weight_g)}</Ltr> : "—"}
             {" · "}
-            {cut.price_per_kg_agorot ? <Ltr>₪{formatAgorot(cut.price_per_kg_agorot)}</Ltr> : "—"} {he.feed.perKg}
+            {cut.price_per_kg_agorot ? <Ltr>{money(cut.price_per_kg_agorot)}</Ltr> : "—"} {he.feed.perKg}
           </p>
-          <p className="text-sm font-semibold text-neutral-800">
+          <p className="text-sm font-semibold text-ivory">
             {stock}{stock && " · "}{he.butcher.ordersCount(activeOrders)}
           </p>
         </div>
@@ -146,7 +146,7 @@ export function StatusPill({ status }: { status: CutStatus }) {
     <span className={clsx("rounded-full px-2.5 py-0.5 text-xs font-bold",
       status === "published" && "bg-emerald-100 text-emerald-800",
       status === "draft" && "bg-amber-100 text-amber-900",
-      status === "sold_out" && "bg-neutral-200 text-neutral-700",
+      status === "sold_out" && "bg-ink-3 text-ivory",
       status === "withdrawn" && "bg-red-100 text-red-800")}>
       {CUT_STATUS_LABEL[status]}
     </span>

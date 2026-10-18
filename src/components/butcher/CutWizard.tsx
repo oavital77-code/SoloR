@@ -150,13 +150,13 @@ export function CutWizard({ cutId }: { cutId: string }) {
 
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-neutral-50/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-line bg-ink/95 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur">
         <div className="flex items-center justify-between gap-2">
-          <Link href={isDraft ? "/butcher" : `/butcher/cuts/${cutId}`} className="flex min-h-11 items-center px-1 text-sm font-semibold text-neutral-600">
+          <Link href={isDraft ? "/butcher" : `/butcher/cuts/${cutId}`} className="flex min-h-11 items-center px-1 text-sm font-semibold text-stone">
             {he.app.close}
           </Link>
           <h1 className="flex-1 text-lg font-extrabold">
-            {isDraft ? he.wizard.newTitle : he.wizard.editTitle(cut.code)} {isDraft && <Ltr className="text-sm font-semibold text-neutral-500">{cut.code}</Ltr>}
+            {isDraft ? he.wizard.newTitle : he.wizard.editTitle(cut.code)} {isDraft && <Ltr className="text-sm font-semibold text-stone">{cut.code}</Ltr>}
           </h1>
           {isDraft ? <SaveIndicator state={saveState} onRetry={save} />
             : dirty ? <span className="text-sm font-semibold text-amber-700">{he.wizard.unsavedChanges}</span> : null}
@@ -166,7 +166,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
             <li key={label}>
               <button type="button" onClick={() => goStep(i + 1)} className="flex w-full flex-col items-center gap-1" aria-current={step === i + 1 ? "step" : undefined}>
                 <span className={clsx("h-1.5 w-full rounded-full", i + 1 <= step ? "bg-brand" : "bg-neutral-300")} />
-                <span className={clsx("text-xs", step === i + 1 ? "font-extrabold text-neutral-900" : "text-neutral-500")}>{label}</span>
+                <span className={clsx("text-xs", step === i + 1 ? "font-extrabold text-ivory" : "text-stone")}>{label}</span>
               </button>
             </li>
           ))}
@@ -196,7 +196,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
         )}
       </div>
 
-      <footer className="sticky bottom-0 z-20 flex flex-col gap-2 border-t border-neutral-200 bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <footer className="sticky bottom-0 z-20 flex flex-col gap-2 border-t border-line bg-ink-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {!isDraft && dirty && (
           <Button size="lg" loading={saveState === "saving"} onClick={async () => {
             if (await save()) { toast(he.wizard.changesSaved, { tone: "success" }); load(); }
@@ -229,7 +229,7 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
     );
   }
   if (state === "saved") return <span className="text-sm font-semibold text-emerald-700" role="status">{he.wizard.saved}</span>;
-  return <span className="text-sm text-neutral-500" role="status">{he.wizard.saving}…</span>;
+  return <span className="text-sm text-stone" role="status">{he.wizard.saving}…</span>;
 }
 
 type StepProps = {
@@ -258,7 +258,7 @@ function StepWhat({ form, set, locked, breeds }: StepProps & { breeds: ReturnTyp
       <section>
         <h2 className="mb-3 text-xl font-extrabold">{he.wizard.breed}</h2>
         {!form.cut_type ? (
-          <p className="text-neutral-500">{he.wizard.pickCutFirst}</p>
+          <p className="text-stone">{he.wizard.pickCutFirst}</p>
         ) : (
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
@@ -439,10 +439,10 @@ function StepWeight({ form, set, locked }: StepProps) {
 
       {hasSteaks && (
         <>
-          <section className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
+          <section className="rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
             <div className="flex items-baseline justify-between">
               <h2 className="text-lg font-extrabold">{he.wizard.steakWeight}</h2>
-              <span className="text-4xl font-extrabold text-brand"><Ltr>{steakW}</Ltr> <span className="text-base text-neutral-500">{he.wizard.grams}</span></span>
+              <span className="text-4xl font-extrabold text-brand"><Ltr>{steakW}</Ltr> <span className="text-base text-stone">{he.wizard.grams}</span></span>
             </div>
             <input
               type="range" className="big-range mt-2" dir="ltr" min={150} max={1000} step={10} value={steakW}
@@ -453,14 +453,14 @@ function StepWeight({ form, set, locked }: StepProps) {
                 if (form.steaks_planned != null && form.steaks_planned >= maxSteaks(form.weight_g, v)) set("steaks_planned", null);
               }}
             />
-            <div className="flex justify-between text-xs text-neutral-500" dir="ltr"><span>150</span><span>1000</span></div>
+            <div className="flex justify-between text-xs text-stone" dir="ltr"><span>150</span><span>1000</span></div>
           </section>
 
-          <section className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
+          <section className="rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
             <div className="flex items-baseline justify-between">
               <h2 className="font-bold">{he.wizard.thickness}</h2>
               <span className="text-2xl font-extrabold">
-                {form.steak_thickness_cm ? <><Ltr>{Number(form.steak_thickness_cm)}</Ltr> <span className="text-sm text-neutral-500">{he.units.cm}</span></> : he.app.none}
+                {form.steak_thickness_cm ? <><Ltr>{Number(form.steak_thickness_cm)}</Ltr> <span className="text-sm text-stone">{he.units.cm}</span></> : he.app.none}
               </span>
             </div>
             <input
@@ -469,15 +469,15 @@ function StepWeight({ form, set, locked }: StepProps) {
               onChange={(e) => set("steak_thickness_cm", Number(e.target.value))}
             />
             {form.steak_thickness_cm != null && (
-              <button type="button" className="min-h-11 text-sm font-semibold text-neutral-500 underline" disabled={locked("steak_thickness_cm")}
+              <button type="button" className="min-h-11 text-sm font-semibold text-stone underline" disabled={locked("steak_thickness_cm")}
                 onClick={() => set("steak_thickness_cm", null)}>{he.app.none}</button>
             )}
           </section>
 
-          <section className="flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
+          <section className="flex items-center justify-between rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
             <div>
               <h2 className="font-bold">{he.wizard.steaksCount}</h2>
-              <p className="text-sm text-neutral-500">{mx > 0 ? he.wizard.steaksMax(mx) : form.weight_g ? he.wizard.noSteaksFit : ""}</p>
+              <p className="text-sm text-stone">{mx > 0 ? he.wizard.steaksMax(mx) : form.weight_g ? he.wizard.noSteaksFit : ""}</p>
             </div>
             {mx > 0 && (
               <Stepper size="lg" value={planned} min={1} max={mx} label={he.wizard.steaksCount}
@@ -543,7 +543,7 @@ function StepPreview({ cut, media, photoCount, breeds, goStep, isDraft, save, on
         <PurchaseBar cut={live} preview inline />
       </div>
 
-      <div className="flex flex-col gap-3 bg-neutral-50 px-4 py-5">
+      <div className="flex flex-col gap-3 bg-ink px-4 py-5">
         {missing.length > 0 && (
           <div className="rounded-2xl bg-red-50 p-4 ring-1 ring-red-200" role="alert">
             <p className="mb-2 font-extrabold text-red-800">{he.wizard.missingTitle}</p>
@@ -591,7 +591,7 @@ function PublishedScreen({ code }: { code: string }) {
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
       <span className="h-px w-12 bg-neutral-900" aria-hidden />
       <h1 className="font-display text-4xl font-bold">{he.wizard.published}</h1>
-      <Ltr className="text-lg text-neutral-500">{code}</Ltr>
+      <Ltr className="text-lg text-stone">{code}</Ltr>
       <div className="flex w-full flex-col gap-3">
         <Button size="xl" onClick={() => router.push("/butcher/cuts/new")}>{he.wizard.anotherCut}</Button>
         <Button size="lg" variant="secondary" onClick={() => router.push("/butcher")}>{he.wizard.toMyCuts}</Button>

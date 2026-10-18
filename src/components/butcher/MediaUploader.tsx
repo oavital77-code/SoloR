@@ -31,9 +31,9 @@ function StepHeading({ n, title, hint }: { n: number; title: string; hint: strin
   return (
     <div>
       <h2 className="flex items-baseline gap-2 text-lg font-extrabold">
-        <span className="text-neutral-400">{n}.</span>{title}
+        <span className="text-stone">{n}.</span>{title}
       </h2>
-      <p className="mt-0.5 text-sm text-neutral-500">{hint}</p>
+      <p className="mt-0.5 text-sm text-stone">{hint}</p>
     </div>
   );
 }
@@ -182,7 +182,7 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-neutral-500">{he.wizard.cameraOnly}</p>
+      <p className="text-sm text-stone">{he.wizard.cameraOnly}</p>
       <input ref={camPhoto} hidden type="file" accept="image/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "photo"); e.target.value = ""; }} />
       <input ref={camVideo} hidden type="file" accept="video/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "video"); e.target.value = ""; }} />
 
@@ -202,30 +202,30 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
           </div>
         )}
         {pending.filter((p) => p.kind === "video").map((p) => (
-          <div key={p.key} className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200">
+          <div key={p.key} className="rounded-2xl bg-ink-2 p-4 ring-1 ring-line">
             <ProgressLine p={p} onRetry={() => retry(p)} onCancel={() => { p.abort?.(); drop(p.key); }} />
           </div>
         ))}
       </section>
 
       {/* 2 — the finished cut */}
-      <section className="flex flex-col gap-3 border-t border-neutral-200 pt-5">
+      <section className="flex flex-col gap-3 border-t border-line pt-5">
         <StepHeading n={2} title={he.wizard.photosTitle} hint={he.wizard.photosHint} />
         <Button size={video ? "xl" : "lg"} variant={video ? "primary" : "secondary"} onClick={() => camPhoto.current?.click()}
           disabled={disabled || photos.length + pendingPhotos >= MEDIA_LIMITS.maxPhotos}>
           {he.wizard.takePhoto}
         </Button>
-        {(ordered.length > 0 || pending.length > 0) && <p className="text-sm text-neutral-500">{he.wizard.coverHint}</p>}
+        {(ordered.length > 0 || pending.length > 0) && <p className="text-sm text-stone">{he.wizard.coverHint}</p>}
 
       <ul className="grid grid-cols-3 gap-2">
         {ordered.map((m, i) => (
-          <li key={m.id} className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-200">
+          <li key={m.id} className="relative aspect-square overflow-hidden rounded-2xl bg-ink-3">
             <button type="button" className="h-full w-full" onClick={() => setCover(m)} aria-label={he.wizard.cover}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={mediaUrl(m.thumb_path ?? m.storage_path)} alt="" className="h-full w-full object-cover" />
             </button>
             {m.id === coverId && (
-              <span className="absolute top-1.5 start-1.5 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-neutral-900">
+              <span className="absolute top-1.5 start-1.5 rounded-full bg-ink-2 px-2 py-0.5 text-xs font-bold text-ivory">
                 {he.wizard.cover}
               </span>
             )}
@@ -254,14 +254,14 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
 
 function PendingTile({ p, onRetry, onCancel }: { p: Pending; onRetry: () => void; onCancel: () => void }) {
   return (
-    <li className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-200">
+    <li className="relative aspect-square overflow-hidden rounded-2xl bg-ink-3">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={p.preview} alt="" className="h-full w-full object-cover opacity-50" />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2 text-center">
         {p.status === "error" ? (
           <>
             <span className="text-xs font-bold text-red-700">{p.error}</span>
-            <button type="button" onClick={onRetry} className="flex min-h-9 items-center gap-1 rounded-full bg-white px-3 text-sm font-bold shadow">
+            <button type="button" onClick={onRetry} className="flex min-h-9 items-center gap-1 rounded-full bg-ink-2 px-3 text-sm font-bold shadow">
               {he.app.retry}
             </button>
           </>
@@ -270,7 +270,7 @@ function PendingTile({ p, onRetry, onCancel }: { p: Pending; onRetry: () => void
         )}
       </div>
       {p.status !== "error" && (
-        <div className="absolute inset-x-2 bottom-2 h-1.5 overflow-hidden rounded-full bg-white/70">
+        <div className="absolute inset-x-2 bottom-2 h-1.5 overflow-hidden rounded-full bg-ink-2/70">
           <div className="h-full bg-brand transition-[width]" style={{ width: `${p.progress}%` }} />
         </div>
       )}
@@ -291,7 +291,7 @@ function ProgressLine({ p, onRetry, onCancel }: { p: Pending; onRetry: () => voi
           </span>
           {p.status === "uploading" && <Ltr>{p.progress}%</Ltr>}
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-neutral-200">
+        <div className="h-2 overflow-hidden rounded-full bg-ink-3">
           <div className={clsx("h-full transition-[width]", p.status === "error" ? "bg-red-500" : "bg-brand")} style={{ width: `${p.status === "error" ? 100 : p.progress}%` }} />
         </div>
       </div>
