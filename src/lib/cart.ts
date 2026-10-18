@@ -1,5 +1,7 @@
 // The cart lives on the device (localStorage): guests can fill it, and it survives moving between shops and
-// signing in. Adding to the cart reserves nothing — stock is checked for the whole cart at checkout.
+// signing in. Once signed in it is also kept on the account (table `carts`) and merged with what the account
+// already had (customer spec §9.1), so it follows the customer to another device.
+// Adding to the cart reserves nothing — stock is checked for the whole cart at checkout.
 // One line per cut; adding the same cut again replaces its line (mode / quantity).
 import { useSyncExternalStore } from "react";
 import type { OrderMode } from "./types";
@@ -30,6 +32,16 @@ export function upsertLine(lines: CartLine[], line: CartLine): CartLine[] {
 
 export function removeLine(lines: CartLine[], cutId: string): CartLine[] {
   return lines.filter((l) => l.cutId !== cutId);
+}
+
+/** This device's cart merged into the account's: every cut from both; for a cut in both, this device's line wins. */
+export function mergeCarts(local: CartLine[], account: CartLine[]): CartLine[] {
+  const merged = [...account];
+  for (const l of local) {
+    const i = merged.findIndex((a) => a.cutId === l.cutId);
+    if (i === -1) merged.push(l); else merged[i] = l;
+  }
+  return merged.sort((a, b) => a.addedAt - b.addedAt).slice(-MAX_CART_LINES);
 }
 
 export function sanitizeCart(raw: unknown): CartLine[] {
@@ -87,6 +99,9 @@ export const cart = {
   setQty: (cutId: string, qty: number) =>
     write(read().map((l) => (l.cutId === cutId && l.mode === "steaks" ? { ...l, qty: Math.max(1, qty) } : l))),
   clear: () => write([]),
+  /** replace the whole cart (merging with the account) */
+  replace: (lines: CartLine[]) => write(lines),
+  subscribe,
 };
 
 export function useCart(): CartLine[] {

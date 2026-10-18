@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { AppHeader } from "@/components/customer/AppHeader";
 import { BottomNav } from "@/components/customer/BottomNav";
 import { CartBar } from "@/components/customer/CartBar";
+import { CartSync } from "@/components/customer/CartSync";
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         <AppHeader />
         {children}
         <CartBar />
+        <CartSync />
         <Suspense><BottomNav /></Suspense>
       </div>
     </div>

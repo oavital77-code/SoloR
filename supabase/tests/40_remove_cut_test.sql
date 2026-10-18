@@ -7,7 +7,7 @@ create or replace function pg_temp.expect_error(p_sql text, p_code text) returns
 language plpgsql as $$
 begin
   begin execute p_sql;
-  exception when others then if sqlerrm = p_code then return; end if;
+  exception when others then if sqlerrm = p_code or sqlstate = p_code then return; end if;
     raise exception 'expected % but got %: %', p_code, sqlerrm, p_sql;
   end;
   raise exception 'expected % but statement succeeded: %', p_code, p_sql;
@@ -47,3 +47,15 @@ select pg_temp.check(not exists (select 1 from stock_events where cut_id = curre
 select pg_temp.check((select archived_at is not null and status = 'sold_out' from cuts where id = current_setting('t.sold')::uuid), 'archived, status kept');
 select pg_temp.check(exists (select 1 from order_items where cut_id = current_setting('t.sold')::uuid), 'its order lines kept');
 \echo 'Remove cut tests passed'
+
+-- ═════════ carts (0012): each customer reads and writes only their own ═════════
+set role authenticated;
+set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000c1';
+insert into carts (user_id, lines) values ('10000000-0000-4000-8000-0000000000c1', '[{"cutId":"x"}]');
+set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000c2';
+select pg_temp.check((select count(*) from carts) = 0, 'another customer sees no cart');
+select pg_temp.expect_error($$insert into carts (user_id, lines) values ('10000000-0000-4000-8000-0000000000c1', '[]')$$, '42501');
+update carts set lines = '[]' where user_id = '10000000-0000-4000-8000-0000000000c1';
+reset role;
+select pg_temp.check((select jsonb_array_length(lines) from carts where user_id = '10000000-0000-4000-8000-0000000000c1') = 1, 'cart untouched by others');
+\echo 'Cart tests passed'
