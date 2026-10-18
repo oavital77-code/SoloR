@@ -47,3 +47,27 @@ export function formatWeek(hours: OpeningHours | null | undefined): string {
 export function isolateTimes(text: string): string {
   return text.replace(/\d{1,2}:\d{2}(?:\s*[–-]\s*\d{1,2}:\d{2})?/g, (m) => `\u2066${m}\u2069`);
 }
+
+const DAY_NAME = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
+/** The week as rows for an hours card: consecutive days with the same hours joined ("ראשון–חמישי"), closed days kept. */
+export function weekRows(hours: OpeningHours | null | undefined): { days: string; ranges: string | null }[] {
+  if (!hours) return [];
+  const label = (d: number) => (hours[String(d) as keyof OpeningHours] ?? []).map(([a, b]) => `${a}–${b}`).join(", ") || null;
+  const rows: { from: number; to: number; ranges: string | null }[] = [];
+  for (let d = 0; d < 7; d++) {
+    const ranges = label(d);
+    const last = rows[rows.length - 1];
+    if (last && last.ranges === ranges && last.to === d - 1) last.to = d;
+    else rows.push({ from: d, to: d, ranges });
+  }
+  return rows.map((r) => ({ days: r.from === r.to ? DAY_NAME[r.from] : `${DAY_NAME[r.from]}–${DAY_NAME[r.to]}`, ranges: r.ranges }));
+}
+
+/** When the shop closes today, if it is open now ("20:00"). */
+export function closesAt(hours: OpeningHours | null | undefined, at = new Date()): string | null {
+  if (!hours) return null;
+  const { day, minutes } = israelClock(at);
+  const range = (hours[String(day) as keyof OpeningHours] ?? []).find(([from, to]) => minutes >= toMinutes(from) && minutes < toMinutes(to));
+  return range ? range[1] : null;
+}

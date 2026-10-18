@@ -190,6 +190,13 @@ export const he = {
     suppliers: "ספקים",
     sources: "מקורות",
     phone: "טלפון",
+    until: "עד",
+    pickupLine: "איסוף מהדלפק",
+    deliveryLine: "או משלוח עד הבית",
+    hoursShort: "שעות",
+    closedDay: "סגור",
+    origins: "מאיפה הבשר מגיע",
+    todayCuts: "הנתחים של היום",
   },
 
   feed: {
