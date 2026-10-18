@@ -165,6 +165,7 @@ export const he = {
     shops: "קצביות",
     filters: "סינון",
     clearAll: "נקה הכל",
+    multiHint: "אפשר לבחור כמה ביחד",
     remove: (label: string) => `הסר ${label}`,
     noResults: "לא נמצאו נתחים",
     removeHint: "אפשר להסיר אחד מהמסננים:",
@@ -223,8 +224,6 @@ export const he = {
     origin: "ארץ מקור",
     aging: "יישון",
     agingPreset: { none: "בלי יישון", "1-14": "עד 14 יום", "15-30": "15–30 יום", "31+": "מעל 30 יום" } as Record<string, string>,
-    agingRange: (min: number | null, max: number | null) =>
-      min === 0 && max === 0 ? "בלי יישון" : max == null ? `יישון ${min}+ יום` : `יישון ${min ?? 0}–${max} יום`,
     whole: "שלם",
     steaks: "סטייקים",
     more: "עוד מסננים",

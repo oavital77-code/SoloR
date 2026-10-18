@@ -43,15 +43,11 @@ export function FilterSheet({ open, onClose, value, onApply, cuts, breeds }: {
         </Group>
 
         <Group title={he.filter.aging}>
-          {AGING_PRESETS.map((a) => {
-            const on = f.agingMin === a.min && f.agingMax === a.max;
-            return (
-              <Chip dark key={a.key} selected={on}
-                onClick={() => setF({ ...f, agingMin: on ? null : a.min, agingMax: on ? null : a.max })}>
-                {he.filter.agingPreset[a.key]}
-              </Chip>
-            );
-          })}
+          {AGING_PRESETS.map((a) => (
+            <Chip dark key={a.key} selected={f.aging.includes(a.key)} onClick={() => setF({ ...f, aging: toggle(f.aging, a.key) })}>
+              {he.filter.agingPreset[a.key]}
+            </Chip>
+          ))}
         </Group>
 
         <section>

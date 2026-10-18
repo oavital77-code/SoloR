@@ -11,7 +11,7 @@ import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { useHeldCuts } from "@/components/customer/useHeldCuts";
 import { ShopMark } from "@/components/ShopMark";
-import { Chip, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
+import { Button, Chip, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { isReserved, rankFeed } from "@/lib/feed";
 import {
@@ -22,7 +22,7 @@ import { CUT_TYPES, ORIGINS, cutTypeLabel } from "@/lib/labels";
 import { categoryCounts, isAvailable, searchScore, shopPath } from "@/lib/market";
 import { useScrollMemory } from "@/lib/scroll";
 import { track } from "@/lib/track";
-import type { Breed, Butcher } from "@/lib/types";
+import type { Breed, Butcher, Cut } from "@/lib/types";
 
 let lastLogged: string | null = null;
 /** the active filters as short keys, for measurement */
@@ -121,7 +121,7 @@ function SearchView() {
         : !searching ? (
           <>
             <Shops butchers={butchers} />
-            <QuickFilters filter={filter} onChange={setFilter} types={categoryCounts(available).filter((t) => t.count > 0).map((t) => t.key)}
+            <QuickFilters filter={filter} onChange={setFilter} cuts={available} types={categoryCounts(available).filter((t) => t.count > 0).map((t) => t.key)}
               onMore={() => setSheet(true)} />
           </>
         )
@@ -181,35 +181,51 @@ function Shops({ butchers }: { butchers: Butcher[] }) {
   );
 }
 
-/** The compact panel of the empty search: one tap per cut type, aging range and whole / steaks; the rest in the sheet. */
-function QuickFilters({ filter, onChange, types, onMore }: {
-  filter: FeedFilter; onChange: (f: FeedFilter) => void; types: string[]; onMore: () => void;
+/**
+ * The compact panel of the empty search: cut types, aging ranges and whole / steaks as chips — several can be
+ * chosen together (any of the chosen types, any of the chosen ranges) — then "show N cuts"; the rest in the sheet.
+ */
+function QuickFilters({ filter, onChange, types, cuts, onMore }: {
+  filter: FeedFilter; onChange: (f: FeedFilter) => void; types: string[]; cuts: Cut[]; onMore: () => void;
 }) {
+  const [draft, setDraft] = useState<FeedFilter>(filter);
+  const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+  const count = cuts.filter((c) => matchesFilter(c, draft)).length;
+  const chosen = activeFilterCount(draft) > 0;
   const row = "flex flex-wrap justify-center gap-2";
   return (
     <section className="mt-8 flex flex-col gap-4 border-t border-ivory/10 pt-6">
       <h2 className="eyebrow">{he.search.filters}</h2>
+      <p className="-mt-2 text-xs text-stone">{he.search.multiHint}</p>
       {types.length > 0 && (
         <div className={row}>
           {CUT_TYPES.filter((t) => types.includes(t.key)).map((t) => (
-            <Chip dark key={t.key} className="shrink-0" onClick={() => onChange({ ...filter, cutTypes: [t.key] })}>{t.label}</Chip>
+            <Chip dark key={t.key} className="shrink-0" selected={draft.cutTypes.includes(t.key)}
+              onClick={() => setDraft({ ...draft, cutTypes: toggle(draft.cutTypes, t.key) })}>{t.label}</Chip>
           ))}
         </div>
       )}
       <div className={row}>
         {AGING_PRESETS.map((a) => (
-          <Chip dark key={a.key} className="shrink-0" onClick={() => onChange({ ...filter, agingMin: a.min, agingMax: a.max })}>
+          <Chip dark key={a.key} className="shrink-0" selected={draft.aging.includes(a.key)}
+            onClick={() => setDraft({ ...draft, aging: toggle(draft.aging, a.key) })}>
             {he.filter.agingPreset[a.key]}
           </Chip>
         ))}
       </div>
       <div className={row}>
-        <Chip dark className="shrink-0" onClick={() => onChange({ ...filter, canWhole: true })}>{he.filter.whole}</Chip>
-        <Chip dark className="shrink-0" onClick={() => onChange({ ...filter, canSteaks: true })}>{he.filter.steaks}</Chip>
+        <Chip dark className="shrink-0" selected={draft.canWhole} onClick={() => setDraft({ ...draft, canWhole: !draft.canWhole })}>{he.filter.whole}</Chip>
+        <Chip dark className="shrink-0" selected={draft.canSteaks} onClick={() => setDraft({ ...draft, canSteaks: !draft.canSteaks })}>{he.filter.steaks}</Chip>
         <button type="button" onClick={onMore} className="min-h-10 shrink-0 px-2 text-sm text-gold underline-offset-4 hover:underline">
           {he.filter.more}
         </button>
       </div>
+      {chosen && (
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 flex animate-fade-in gap-2 pt-2">
+          <Button size="lg" className="flex-[2] rounded-full" disabled={count === 0} onClick={() => onChange(draft)}>{he.filter.show(count)}</Button>
+          <Button size="lg" variant="dark" className="flex-1 rounded-full bg-ink" onClick={() => setDraft(EMPTY_FILTER)}>{he.filter.clearAll}</Button>
+        </div>
+      )}
     </section>
   );
 }
@@ -218,9 +234,7 @@ function QuickFilters({ filter, onChange, types, onMore }: {
 function activeChips(f: FeedFilter, breeds: Breed[]): ActiveChip[] {
   const out: ActiveChip[] = [];
   f.cutTypes.forEach((t) => out.push({ key: `t-${t}`, label: cutTypeLabel(t), next: { ...f, cutTypes: f.cutTypes.filter((x) => x !== t) } }));
-  if (f.agingMin != null || f.agingMax != null) {
-    out.push({ key: "age", label: he.filter.agingRange(f.agingMin, f.agingMax), next: { ...f, agingMin: null, agingMax: null } });
-  }
+  f.aging.forEach((a) => out.push({ key: `age-${a}`, label: he.filter.agingPreset[a] ?? a, next: { ...f, aging: f.aging.filter((x) => x !== a) } }));
   if (f.canWhole) out.push({ key: "whole", label: he.filter.whole, next: { ...f, canWhole: false } });
   if (f.canSteaks) out.push({ key: "steaks", label: he.filter.steaks, next: { ...f, canSteaks: false } });
   if (f.priceMin != null || f.priceMax != null) {

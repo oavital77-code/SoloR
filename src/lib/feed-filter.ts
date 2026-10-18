@@ -7,8 +7,7 @@ export interface FeedFilter {
   cutTypes: CutType[];
   breeds: string[];          // breed keys, or "other" for free-text breeds
   origins: OriginCountry[];
-  agingMin: number | null;   // days; a cut that is not aged counts as 0
-  agingMax: number | null;
+  aging: string[];           // AGING_PRESETS keys; a cut in any of them matches (not aged counts as 0 days)
   priceMin: number | null;   // agorot per kg
   priceMax: number | null;
   canWhole: boolean;
@@ -16,12 +15,12 @@ export interface FeedFilter {
 }
 
 export const EMPTY_FILTER: FeedFilter = {
-  cutTypes: [], breeds: [], origins: [], agingMin: null, agingMax: null, priceMin: null, priceMax: null, canWhole: false, canSteaks: false,
+  cutTypes: [], breeds: [], origins: [], aging: [], priceMin: null, priceMax: null, canWhole: false, canSteaks: false,
 };
 
 export const PRICE_SLIDER = { min: 0, max: 100000, step: 1000 }; // ₪0–₪1,000 per kg, in agorot
 
-/** The aging ranges offered as one tap each. */
+/** The aging ranges offered as chips; several can be chosen together. */
 export const AGING_PRESETS: { key: string; min: number | null; max: number | null }[] = [
   { key: "none", min: 0, max: 0 },
   { key: "1-14", min: 1, max: 14 },
@@ -35,7 +34,7 @@ export function agingDays(cut: Pick<Cut, "is_aged" | "aging_days">): number {
 
 export function activeFilterCount(f: FeedFilter): number {
   return (f.cutTypes.length ? 1 : 0) + (f.breeds.length ? 1 : 0) + (f.origins.length ? 1 : 0)
-    + (f.agingMin != null || f.agingMax != null ? 1 : 0) + (f.priceMin != null || f.priceMax != null ? 1 : 0)
+    + (f.aging.length ? 1 : 0) + (f.priceMin != null || f.priceMax != null ? 1 : 0)
     + (f.canWhole ? 1 : 0) + (f.canSteaks ? 1 : 0);
 }
 
@@ -46,9 +45,11 @@ export function matchesFilter(cut: Cut, f: FeedFilter): boolean {
     if (!f.breeds.includes(key)) return false;
   }
   if (f.origins.length && (!cut.origin_country || !f.origins.includes(cut.origin_country))) return false;
-  const days = agingDays(cut);
-  if (f.agingMin != null && days < f.agingMin) return false;
-  if (f.agingMax != null && days > f.agingMax) return false;
+  if (f.aging.length) {
+    const days = agingDays(cut);
+    const inRange = (a: (typeof AGING_PRESETS)[number]) => (a.min == null || days >= a.min) && (a.max == null || days <= a.max);
+    if (!AGING_PRESETS.some((a) => f.aging.includes(a.key) && inRange(a))) return false;
+  }
   const p = cut.price_per_kg_agorot ?? 0;
   if (f.priceMin != null && p < f.priceMin) return false;
   if (f.priceMax != null && f.priceMax < PRICE_SLIDER.max && p > f.priceMax) return false;
@@ -57,7 +58,7 @@ export function matchesFilter(cut: Cut, f: FeedFilter): boolean {
   return true;
 }
 
-// ───────── URL form: ?q=…&t=picanha,sinta&br=wagyu&o=AR&age=15-30&p=100-300&m=whole,steaks ─────────
+// ───────── URL form: ?q=…&t=picanha,sinta&br=wagyu&o=AR&age=none,15-30&p=100-300&m=whole,steaks ─────────
 
 const list = (v: string | null) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : []);
 const range = (v: string | null): [number | null, number | null] => {
@@ -67,14 +68,16 @@ const range = (v: string | null): [number | null, number | null] => {
 };
 
 export function filterFromParams(sp: URLSearchParams): FeedFilter {
-  const [agingMin, agingMax] = range(sp.get("age"));
+  // older links carried one range ("0-0", "31-"): read it as the matching preset
+  const legacy: Record<string, string> = { "0-0": "none", "31-": "31+" };
+  const aging = list(sp.get("age")).map((a) => legacy[a] ?? a).filter((a) => AGING_PRESETS.some((p) => p.key === a));
   const [pMin, pMax] = range(sp.get("p"));                       // shekels in the URL, agorot inside
   const modes = list(sp.get("m"));
   return {
     cutTypes: [...list(sp.get("t")), ...list(sp.get("cat"))] as CutType[],   // ?cat= — old category links
     breeds: list(sp.get("br")),
     origins: list(sp.get("o")) as OriginCountry[],
-    agingMin, agingMax,
+    aging,
     priceMin: pMin == null ? null : pMin * 100,
     priceMax: pMax == null ? null : pMax * 100,
     canWhole: modes.includes("whole"),
@@ -90,7 +93,7 @@ export function filterToParams(f: FeedFilter, q: string): URLSearchParams {
   put("t", f.cutTypes.join(","));
   put("br", f.breeds.join(","));
   put("o", f.origins.join(","));
-  put("age", rng(f.agingMin, f.agingMax));
+  put("age", AGING_PRESETS.filter((a) => f.aging.includes(a.key)).map((a) => a.key).join(","));
   put("p", rng(f.priceMin == null ? null : f.priceMin / 100, f.priceMax == null ? null : f.priceMax / 100));
   put("m", [f.canWhole && "whole", f.canSteaks && "steaks"].filter(Boolean).join(","));
   return sp;
