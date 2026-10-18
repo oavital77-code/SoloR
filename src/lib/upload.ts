@@ -129,6 +129,7 @@ export function mediaPath(butcherId: string, cutId: string, ext: string): string
 }
 
 export async function removeStorageObjects(paths: (string | null | undefined)[]) {
-  const list = paths.filter((p): p is string => !!p);
+  // paths starting with "/" are demo media shipped with the app, not storage objects
+  const list = paths.filter((p): p is string => !!p && !p.startsWith("/"));
   if (list.length) await supabaseBrowser().storage.from(MEDIA_BUCKET).remove(list);
 }

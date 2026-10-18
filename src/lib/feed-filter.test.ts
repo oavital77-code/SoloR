@@ -7,7 +7,7 @@ const base: Cut = {
   breed_other: null, origin_country: "AR", is_aged: true, aging_days: 28, aging_method: "dry", butcher_marbling: null,
   description: null, weight_g: 2400, price_per_kg_agorot: 22000, sale_mode: "both", steak_weight_g: 300,
   steak_thickness_cm: null, steaks_planned: null, steaks_total: 8, steaks_available: 8, whole_available: true,
-  published_at: new Date().toISOString(), sold_out_at: null, created_at: "", updated_at: "",
+  published_at: new Date().toISOString(), sold_out_at: null, archived_at: null, created_at: "", updated_at: "",
 };
 
 describe("feed filter", () => {

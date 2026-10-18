@@ -65,6 +65,7 @@ export interface Cut {
   whole_available: boolean;
   published_at: string | null;
   sold_out_at: string | null;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
 }

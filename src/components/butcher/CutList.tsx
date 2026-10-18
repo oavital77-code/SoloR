@@ -3,13 +3,16 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { useButcher } from "./ButcherShell";
-import { Chip, EmptyState, ErrorState, Ltr, Skeleton } from "../ui";
+import { Chip, ConfirmDialog, EmptyState, ErrorState, Ltr, Skeleton } from "../ui";
+import { useToast } from "../Toast";
 import { he } from "@/lib/i18n/he";
 import { CUT_STATUS_LABEL } from "@/lib/labels";
 import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { useBreeds, useRefetchOnFocus, safeStorage } from "@/lib/hooks";
+import { errorText } from "@/lib/errors";
 import { formatAgorot, formatWeight } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { removeStorageObjects } from "@/lib/upload";
 import type { CutStatus, CutWithMedia, OrderItemStatus } from "@/lib/types";
 
 type Row = CutWithMedia & { order_items: { status: OrderItemStatus }[] };
@@ -24,6 +27,9 @@ export function CutList() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState(false);
   const [counts, setCounts] = useState<Partial<Record<CutStatus, number>>>({});
+  const [removing, setRemoving] = useState<Row | null>(null);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   const setFilter = (f: CutStatus) => { setFilterState(f); safeStorage.set(FILTER_KEY, f); };
 
@@ -31,6 +37,7 @@ export function CutList() {
     const { data, error } = await supabaseBrowser()
       .from("cuts").select("*, cut_media(*), order_items(status)")
       .eq("butcher_id", butcher.id)
+      .is("archived_at", null)
       .order("updated_at", { ascending: false });
     if (error) return setError(true);
     setError(false);
@@ -45,6 +52,22 @@ export function CutList() {
   useRefetchOnFocus(load);
 
   const visible = rows?.filter((r) => r.status === filter) ?? [];
+
+  // a cut that never sold is deleted; one with order lines is only hidden, so its orders keep their cut
+  async function remove() {
+    if (!removing) return;
+    setBusy(true);
+    const { data, error } = await supabaseBrowser().rpc("remove_cut", { p_cut_id: removing.id });
+    setBusy(false);
+    const cut = removing;
+    setRemoving(null);
+    if (error) return toast(errorText(error), { tone: "error" });
+    if (data === "deleted") {
+      removeStorageObjects(cut.cut_media.flatMap((m) => [m.storage_path, m.thumb_path, m.poster_path])).catch(() => {});
+    }
+    toast(data === "deleted" ? he.butcher.removed : he.butcher.archived, { tone: "success" });
+    load();
+  }
 
   return (
     <div>
@@ -62,14 +85,18 @@ export function CutList() {
         ) : visible.length === 0 ? <EmptyState text={he.butcher.emptyCuts} />
         : (
           <ul className="flex flex-col gap-3 px-4 pb-8">
-            {visible.map((c) => <CutRow key={c.id} cut={c} title={cutTitle(c, breeds)} />)}
+            {visible.map((c) => <CutRow key={c.id} cut={c} title={cutTitle(c, breeds)} onRemove={() => setRemoving(c)} />)}
           </ul>
         )}
+
+      <ConfirmDialog open={!!removing} danger loading={busy}
+        text={removing?.order_items.length ? he.butcher.removeConfirmArchive : he.butcher.removeConfirm}
+        confirmLabel={he.butcher.remove} onConfirm={remove} onCancel={() => setRemoving(null)} />
     </div>
   );
 }
 
-function CutRow({ cut, title }: { cut: Row; title: string }) {
+function CutRow({ cut, title, onRemove }: { cut: Row; title: string; onRemove: () => void }) {
   const cover = coverOf(cut.cut_media);
   // one line per order on this cut; cancelling an order cancels its lines
   const activeOrders = cut.order_items.filter((i) => i.status !== "cancelled").length;
@@ -79,7 +106,7 @@ function CutRow({ cut, title }: { cut: Row; title: string }) {
   const href = cut.status === "draft" ? `/butcher/cuts/${cut.id}/edit` : `/butcher/cuts/${cut.id}`;
 
   return (
-    <li>
+    <li className="relative">
       <Link href={href} className="flex gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-neutral-200 active:bg-neutral-50">
         <div className="size-24 shrink-0 overflow-hidden rounded-xl bg-neutral-200">
           {cover && (
@@ -103,6 +130,13 @@ function CutRow({ cut, title }: { cut: Row; title: string }) {
           </p>
         </div>
       </Link>
+      {/* live cuts are taken off sale first ("הסר מהפרסום"), then they can be removed here */}
+      {cut.status !== "published" && (
+        <button type="button" onClick={onRemove}
+          className="absolute bottom-2 end-2 min-h-10 rounded-full px-3 text-sm font-semibold text-red-700 active:bg-red-50">
+          {he.butcher.remove}
+        </button>
+      )}
     </li>
   );
 }
