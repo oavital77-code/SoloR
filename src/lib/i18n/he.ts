@@ -156,6 +156,8 @@ export const he = {
     video: "וידאו העבודה",
     soundOn: "הפעל קול",
     fromButcher: "מילה מהקצב",
+    reserved: "שוריין",
+    left: (n: number, of: number) => `נותרו ${n} מתוך ${of}`,
     marblingLabel: "שיוש לפי הקצב",
   },
 

@@ -4,12 +4,14 @@
 // since it went live), the text aligned to the start (cut, facts, the butcher's note, "הערכת הקצב"), the media edge
 // to edge, and — in the feed — an order strip with "הוסף לסל". In the feed the media is a collage (PostCollage);
 // the full post swipes through it (PostMedia), shows the whole note and leaves buying to the page's purchase bar.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { PostCollage } from "./PostCollage";
 import { PostMedia } from "./PostMedia";
 import { ShopMark } from "./ShopMark";
+import { usePostView } from "./usePostView";
+import { markSoldNotice } from "@/lib/impressions";
 import { PurchaseBar } from "./PurchaseBar";
 import { BottomSheet, Button, Ltr } from "./ui";
 import { useToast } from "./Toast";
@@ -23,11 +25,13 @@ import type { Breed, Butcher, Cut, CutMedia, OrderMode } from "@/lib/types";
 
 const money = (a: number) => `₪${formatAgorot(a).replace(/\.00$/, "")}`;
 
-export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone, eager }: {
+export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone, reserved, eager }: {
   cut: Cut; media: CutMedia[]; breeds: Breed[]; shop?: Pick<Butcher, "name" | "slug" | "logo_path"> | null; now: number;
   variant?: "feed" | "full";
   /** sold while on screen: stays in place with the "אזל" stamp instead of vanishing (spec §4.3) */
   gone?: boolean;
+  /** held by another customer at checkout right now: "שוריין", can't be added, may come back (spec §13) */
+  reserved?: boolean;
   eager?: boolean;
 }) {
   const full = variant === "full";
@@ -37,6 +41,11 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
   const steaksOk = canBuySteaks(cut);
   const soldOut = gone || cut.status === "sold_out" || (cut.status === "published" && !wholeOk && !steaksOk);
   const [open, setOpen] = useState(false);
+  const { ref, visible } = usePostView<HTMLElement>(cut.id);
+  // the one-time sold-out notice counts as given once the stamped post was actually in view
+  useEffect(() => { if (gone && visible) markSoldNotice(cut.id); }, [gone, visible, cut.id]);
+  const steaksSale = cut.sale_mode === "steaks" || cut.sale_mode === "both";
+  const partlySold = !soldOut && steaksSale && cut.steaks_total > 0 && cut.steaks_available > 0 && cut.steaks_available < cut.steaks_total;
 
   const method = agingMethodLabel(cut.aging_method);
   const aged = cut.is_aged && cut.aging_days ? `${he.feed.agedDays(cut.aging_days)}${method ? ` · ${method}` : ""}` : null;
@@ -47,7 +56,7 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
 
   return (
     // in the feed each post is a warm card of its own; the full post stays edge to edge
-    <article className={clsx("text-start", !full && "overflow-hidden rounded-[28px] bg-gradient-to-b from-ink-2 to-[#130f0c] pt-4 shadow-[0_18px_40px_-22px_rgb(0_0_0/0.9)] ring-1 ring-gold/15")}>
+    <article ref={ref} className={clsx("text-start", !full && "overflow-hidden rounded-[28px] bg-gradient-to-b from-ink-2 to-[#130f0c] pt-4 shadow-[0_18px_40px_-22px_rgb(0_0_0/0.9)] ring-1 ring-gold/15")}>
       {/* 1 · header */}
       <header className="flex items-center gap-3 px-4 pb-3">
         {shop && (
@@ -59,6 +68,7 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
           {shop && <Link href={shopPath(shop)} className="block truncate text-[15px] font-bold text-ivory">{shop.name}</Link>}
           <p className="text-xs text-stone">
             {soldOut ? <span className="font-semibold text-[#e8a0a8]">{he.post.soldStamp}</span>
+              : reserved ? <span className="font-semibold text-gold">{he.post.reserved}</span>
               : cut.published_at ? timeAgo(cut.published_at, now) : null}
           </p>
         </div>
@@ -68,10 +78,15 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
       <div className="px-4 pb-3">
         {full ? <h1 className="font-display text-[28px] font-bold leading-tight text-ivory">{title}</h1>
           : <h2 className="font-display text-[19px] font-bold leading-snug text-ivory"><Link href={href}>{title}</Link></h2>}
-        {(aged || facts.length > 0) && (
+        {(aged || facts.length > 0 || partlySold) && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {aged && <span className="rounded-full bg-gold/15 px-2.5 py-1 text-[12.5px] font-semibold text-gold ring-1 ring-gold/30">{aged}</span>}
             {facts.map((f) => <span key={f} className="rounded-full bg-ivory/[0.06] px-2.5 py-1 text-[12.5px] text-ivory/80">{f}</span>)}
+            {partlySold && (
+              <span key={cut.steaks_available} className="animate-fade-in rounded-full bg-brand/20 px-2.5 py-1 text-[12.5px] font-semibold text-[#f0b8bf] ring-1 ring-brand/40">
+                {he.post.left(cut.steaks_available, cut.steaks_total)}
+              </span>
+            )}
           </div>
         )}
         {cut.description && <Note text={cut.description} full={full} />}
@@ -85,11 +100,11 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
 
       {/* 3 · media, edge to edge */}
       {full ? (
-        <PostMedia media={media} title={title} code={cut.code} eager={eager}>{soldOut && <SoldStamp />}</PostMedia>
+        <PostMedia media={media} title={title} code={cut.code} eager={eager}>{soldOut ? <SoldStamp /> : reserved && <ReservedTag />}</PostMedia>
       ) : (
         <div className="px-3">
           <div className="overflow-hidden rounded-2xl">
-            <PostCollage media={media} title={title} code={cut.code} href={href} eager={eager}>{soldOut && <SoldStamp />}</PostCollage>
+            <PostCollage media={media} title={title} code={cut.code} href={href} eager={eager}>{soldOut ? <SoldStamp /> : reserved && <ReservedTag />}</PostCollage>
           </div>
         </div>
       )}
@@ -103,7 +118,7 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
               {shop ? he.post.orderFrom(shop.name) : null}{shop ? "  ·  " : ""}<Ltr className="tracking-wider">{cut.code}</Ltr>
             </p>
           </div>
-          <AddButton cut={cut} disabled={soldOut} onChoose={() => setOpen(true)} />
+          <AddButton cut={cut} disabled={soldOut || !!reserved} onChoose={() => setOpen(true)} />
         </div>
       )}
 
@@ -193,9 +208,17 @@ function AddSheet({ cut, onDone }: { cut: Cut; onDone: () => void }) {
   return <PurchaseBar cut={cut} inline onOrder={onOrder} inCart={!!line} initialMode={line?.mode} initialQty={line?.qty} />;
 }
 
+function ReservedTag() {
+  return (
+    <span className="animate-fade-in pointer-events-none absolute top-3 start-3 rounded-full bg-ink/80 px-3 py-1.5 text-sm font-semibold text-gold ring-1 ring-gold/50 backdrop-blur-sm">
+      {he.post.reserved}
+    </span>
+  );
+}
+
 function SoldStamp() {
   return (
-    <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/35">
+    <div className="animate-fade-in pointer-events-none absolute inset-0 grid place-items-center bg-black/35 backdrop-grayscale-[0.8]">
       <span className="-rotate-12">
         <span className="animate-busted block border-2 border-[#e8a0a8] px-5 py-1.5 font-display text-3xl font-bold tracking-widest text-[#e8a0a8]">
           {he.post.soldStamp}

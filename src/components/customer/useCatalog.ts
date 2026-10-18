@@ -1,9 +1,13 @@
 "use client";
-// Available cuts for the marketplace / a single shop. Reloads on realtime changes and on focus.
+// Cuts for the marketplace / a single shop: everything on sale, plus what sold out in the last two days (so the
+// live feed can tell a sale from a withdrawal and apply the personal sold-out rule). Reloads on realtime changes
+// and on focus. Screens that list only what can be bought filter with isAvailable.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRefetchOnFocus } from "@/lib/hooks";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { CutWithMedia } from "@/lib/types";
+
+const SOLD_WINDOW_MS = 48 * 3600e3;
 
 export function useCatalog(shopId?: string | null, enabled = true) {
   const [cuts, setCuts] = useState<CutWithMedia[] | null>(null);
@@ -12,7 +16,9 @@ export function useCatalog(shopId?: string | null, enabled = true) {
 
   const load = useCallback(async () => {
     if (!enabled) return;
-    let q = supabaseBrowser().from("cuts").select("*, cut_media(*)").eq("status", "published");
+    const since = new Date(Date.now() - SOLD_WINDOW_MS).toISOString();
+    let q = supabaseBrowser().from("cuts").select("*, cut_media(*)")
+      .or(`status.eq.published,and(status.eq.sold_out,sold_out_at.gt.${since})`);
     if (shopId) q = q.eq("butcher_id", shopId);
     const { data, error } = await q.order("published_at", { ascending: false }).limit(200);
     if (error) { setError(true); return; }

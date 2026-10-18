@@ -9,10 +9,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CutTile } from "@/components/customer/CutTile";
 import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
+import { useHeldCuts } from "@/components/customer/useHeldCuts";
 import { ShopMark } from "@/components/ShopMark";
 import { Chip, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
-import { rankFeed } from "@/lib/feed";
+import { isReserved, rankFeed } from "@/lib/feed";
 import {
   AGING_PRESETS, EMPTY_FILTER, activeFilterCount, filterFromParams, filterToParams, matchesFilter, type FeedFilter,
 } from "@/lib/feed-filter";
@@ -54,7 +55,10 @@ function SearchView() {
   }, [query]);
 
   const shopOf = (id: string) => butchers.find((b) => b.id === id);
-  const available = useMemo(() => (cuts ?? []).filter(isAvailable), [cuts]);
+  const onSale = useMemo(() => (cuts ?? []).filter(isAvailable), [cuts]);
+  // a cut held at someone's checkout is not offered in search (spec §13)
+  const held = useHeldCuts(useMemo(() => onSale.map((c) => c.id), [onSale]));
+  const available = useMemo(() => onSale.filter((c) => !isReserved(c, held.get(c.id))), [onSale, held]);
   const searching = urlQuery.trim() !== "" || activeFilterCount(filter) > 0;
 
   const results = useMemo(() => {

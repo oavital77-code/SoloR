@@ -1,14 +1,17 @@
 "use client";
 // Home = the feed (customer spec §4): every available cut from every shop as a post, newest first (rankFeed).
-// Live without jumping: new posts wait behind a pill, sold ones keep their place with a stamp (useLiveFeed).
+// Live without jumping: new posts wait behind a pill; a sold cut is stamped only for whoever is looking at it or had
+// stopped on it (useLiveFeed); a cut held at someone's checkout shows "שוריין" until it is free again (useHeldCuts).
 // Rendered in pages as the customer scrolls; pull down at the top to refresh; an honest end of the feed.
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CutPost } from "@/components/CutPost";
 import { useCatalog } from "@/components/customer/useCatalog";
+import { useHeldCuts } from "@/components/customer/useHeldCuts";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
+import { isReserved } from "@/lib/feed";
 import { israelClock } from "@/lib/hours";
 import { useBreeds, useButchers, useNow, useSession } from "@/lib/hooks";
 import { shopPath } from "@/lib/market";
@@ -50,6 +53,7 @@ export default function FeedPage() {
   }, [items.length, limit]);
 
   useScrollMemory("feed", ready);
+  const held = useHeldCuts(items.slice(0, limit).filter((i) => !i.gone).map((i) => i.cut.id));
 
   const refresh = () => { showNew(); reload(); };
   const takeNew = () => { showNew(); window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -89,7 +93,8 @@ export default function FeedPage() {
           <ul className="flex flex-col gap-5 px-3">
             {items.slice(0, limit).map(({ cut, gone }, i) => (
               <li key={cut.id}>
-                <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone} eager={i === 0} />
+                <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}
+                  reserved={!gone && isReserved(cut, held.get(cut.id))} eager={i === 0} />
               </li>
             ))}
           </ul>

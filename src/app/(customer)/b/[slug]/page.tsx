@@ -6,7 +6,9 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 import { CutPost } from "@/components/CutPost";
 import { useCatalog } from "@/components/customer/useCatalog";
+import { useHeldCuts } from "@/components/customer/useHeldCuts";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
+import { isReserved } from "@/lib/feed";
 import { EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { mediaUrl } from "@/lib/cut-helpers";
@@ -25,6 +27,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
   const { cuts, error, reload } = useCatalog(shop?.id ?? null, !!shop);
   const { items, pending, showNew, ready } = useLiveFeed(cuts);
   useScrollMemory(`shop:${slug}`, ready);
+  const held = useHeldCuts(items.filter((i) => !i.gone).map((i) => i.cut.id));
 
   const back = () => (window.history.length > 1 ? router.back() : router.push("/"));
   const backLink = (
@@ -56,7 +59,8 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
               )}
               <ul className="flex flex-col gap-5 px-3">
                 {items.map(({ cut, gone }, i) => (
-                  <li key={cut.id}><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} eager={i === 0} /></li>
+                  <li key={cut.id}><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone}
+                    reserved={!gone && isReserved(cut, held.get(cut.id))} eager={i === 0} /></li>
                 ))}
               </ul>
             </>
