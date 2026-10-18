@@ -6,6 +6,7 @@ import { Ltr } from "./ui";
 import { he } from "@/lib/i18n/he";
 import { agingMethodLabel, originLabel } from "@/lib/labels";
 import { breedLabel, cutTitle } from "@/lib/cut-helpers";
+import { demoCredits, isDemoMedia } from "@/lib/demo-credits";
 import { formatAgorot, formatWeight } from "@/lib/pricing";
 import { shopPath } from "@/lib/market";
 import type { Breed, Butcher, Cut, CutMedia } from "@/lib/types";
@@ -15,6 +16,8 @@ export function CutDetail({ cut, media, breeds, butcher }: {
 }) {
   const title = cutTitle(cut, breeds) || he.butcher.untitled;
   const hasSteaks = cut.sale_mode === "steaks" || cut.sale_mode === "both";
+  const demo = isDemoMedia(media);
+  const credits = demoCredits(media);
 
   const rows: [string, React.ReactNode][] = [];
   if (cut.origin_country) rows.push([he.cut.origin, originLabel(cut.origin_country)]);
@@ -62,7 +65,7 @@ export function CutDetail({ cut, media, breeds, butcher }: {
                 <span className="ms-1.5 font-sans text-sm font-normal text-stone">{he.feed.perKg}</span>
               </span>
             ) : null}
-            <span className="text-xs text-stone/80">{he.cut.realPhoto}  ·  <Ltr className="tracking-wider">{cut.code}</Ltr></span>
+            <span className="text-xs text-stone/80">{demo ? he.cut.demoPhoto : he.cut.realPhoto}  ·  <Ltr className="tracking-wider">{cut.code}</Ltr></span>
           </div>
           {facts.length > 0 && (
             <p className="mt-4 border-t border-ivory/10 pt-4 text-[15px] leading-relaxed text-stone" aria-label={he.market.facts}>
@@ -99,6 +102,19 @@ export function CutDetail({ cut, media, breeds, butcher }: {
               {he.market.navigate}
             </a>
           </section>
+        )}
+
+        {credits.length > 0 && (
+          <p className="text-[11px] leading-relaxed text-stone/70" dir="ltr">
+            {he.cut.photoCredits}:{" "}
+            {credits.map((c, i) => (
+              <span key={c.page}>
+                {i > 0 && " · "}
+                <a href={c.page} target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">{c.author}</a>
+                {" "}({c.license}, Wikimedia Commons)
+              </span>
+            ))}
+          </p>
         )}
       </div>
     </article>

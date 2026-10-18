@@ -168,6 +168,8 @@ export const he = {
 
   cut: {
     realPhoto: "צילום אמיתי של הנתח",
+    demoPhoto: "תמונות הדגמה",
+    photoCredits: "צילומים",
     details: "פרטים",
     origin: "ארץ מקור",
     breed: "גזע / מותג",
