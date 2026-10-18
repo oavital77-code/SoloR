@@ -42,7 +42,7 @@ export default function ProfilePage() {
   if (loading) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
 
   return (
-    <main className="min-h-dvh px-5 pb-24">
+    <main className="min-h-dvh px-5 pb-24 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="pt-2 pb-6">
         <BackLink href="/" label={he.app.back} />
         <h1 className="mt-1 font-display text-3xl font-bold text-ivory">{he.profile.title}</h1>

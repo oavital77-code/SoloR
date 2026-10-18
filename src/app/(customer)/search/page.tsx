@@ -101,9 +101,9 @@ function SearchView() {
   );
 
   return (
-    <main className="min-h-dvh px-4 pb-24 text-start">
+    <main className="min-h-dvh px-4 pb-24 text-start lg:px-8">
       {!searching ? (
-        <div className="flex flex-col gap-5 pt-4">
+        <div className="flex flex-col gap-5 pt-4 lg:mx-auto lg:max-w-[760px] lg:pt-8">
           <h1 className="sr-screen-title">{he.market.search}</h1>
           {field}
           {error && !cuts ? <ErrorState dark onRetry={reload} /> : (
@@ -114,7 +114,7 @@ function SearchView() {
         </div>
       ) : (
         <>
-          <header className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 -mx-4 bg-ink/95 px-4 pt-3 pb-3 backdrop-blur">
+          <header className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 -mx-4 bg-ink/95 px-4 pt-3 pb-3 backdrop-blur lg:-mx-8 lg:px-8">
             <div className="flex items-center gap-2.5">
               <div className="flex-1">{field}</div>
               <button type="button" onClick={() => setSheet(true)} className="sr-fchip" aria-pressed={chips.length > 0}>
@@ -135,7 +135,7 @@ function SearchView() {
           </header>
 
           {error && !cuts ? <ErrorState dark onRetry={reload} />
-            : !cuts ? <div className="mt-2 grid grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[4/5]" />)}</div>
+            : !cuts ? <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[4/5]" />)}</div>
             : results.length === 0 ? (
               <div className="py-14 text-center">
                 <p className="font-display text-xl font-bold text-ivory">{he.search.noResults}</p>
@@ -155,7 +155,7 @@ function SearchView() {
             ) : (
               <>
                 <p className="mb-4 text-[13px] tracking-wide text-stone">{he.search.results(results.length)}</p>
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-7">
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-7 lg:grid-cols-4 lg:gap-x-6">
                   {results.map((c, i) => (
                     <CutTile key={c.id} cut={c} breeds={breeds} shop={shopOf(c.butcher_id)}
                       onOpen={() => track("search_result_click", { cut_id: c.id, position: i + 1 })} />
@@ -232,7 +232,7 @@ function QuickFilters({ filter, onChange, types, cuts, shops, onMore }: {
       {chosen && (
         <>
           <div className="h-16" />
-          <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-[480px] animate-fade-in items-center gap-2.5 border-t border-line bg-ink px-4 py-3">
+          <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-[480px] animate-fade-in items-center gap-2.5 border-t border-line bg-ink px-4 py-3 lg:bottom-0 lg:max-w-[760px] lg:rounded-t-3xl lg:border-x">
             <button type="button" className="sr-btn sr-btn--ghost" onClick={() => setDraft(EMPTY_FILTER)}>{he.filter.clearAll}</button>
             <button type="button" className="sr-btn flex-1" disabled={count === 0} onClick={() => onChange(draft)}>{he.filter.show(count)}</button>
           </div>

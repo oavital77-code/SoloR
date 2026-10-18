@@ -84,7 +84,7 @@ export function CutList() {
           <div className="flex flex-col gap-3 px-4 text-ivory">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-28" />)}</div>
         ) : visible.length === 0 ? <EmptyState text={he.butcher.emptyCuts} />
         : (
-          <ul className="flex flex-col gap-3 px-4 pb-8">
+          <ul className="grid gap-3 px-4 pb-8 lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
             {visible.map((c) => <CutRow key={c.id} cut={c} title={cutTitle(c, breeds)} onRemove={() => setRemoving(c)} />)}
           </ul>
         )}

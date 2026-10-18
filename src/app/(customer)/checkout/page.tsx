@@ -174,7 +174,7 @@ export default function CheckoutPage() {
   const step = hold ? 3 : tried && ready ? 2 : contactOk ? 1 : 0;
 
   return (
-    <main className="min-h-dvh px-4 text-start">
+    <main className="min-h-dvh px-4 text-start lg:mx-auto lg:w-full lg:max-w-[760px]">
       <ScreenHead title={he.checkout.title} back="/cart" backLabel={he.checkout.backToCart} />
       <Steps current={step} />
 

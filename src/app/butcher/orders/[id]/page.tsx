@@ -69,7 +69,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
   const canCancel = !["completed", "cancelled"].includes(order.status);
 
   return (
-    <main className="flex min-h-dvh flex-col">
+    <main className="flex min-h-dvh flex-col lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-ink/95 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
         <Link href="/butcher?tab=orders" className="flex min-h-11 items-center px-2 text-sm font-semibold text-stone">{he.app.back}</Link>
         <h1 className="flex-1 font-display text-2xl font-bold"><span className="code !text-2xl !text-ivory">#{order.order_number}</span></h1>

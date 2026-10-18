@@ -89,7 +89,7 @@ export function Stepper({ value, min, max, onChange, dark, size = "md", label }:
     dark ? "bg-ink-2 text-ivory" : "bg-neutral-100 text-neutral-900 ring-1 ring-neutral-300",
   );
   return (
-    <div className={clsx("flex items-center", dark ? "gap-1 rounded-full bg-ink-3 p-1" : "gap-3")} role="group" aria-label={label}>
+    <div className={clsx("items-center", dark ? "inline-flex gap-1 rounded-full bg-ink-3 p-1" : "flex gap-3")} role="group" aria-label={label}>
       <button type="button" className={btn} aria-label={he.a11y.less} disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
         <span className="text-2xl leading-none">−</span>
       </button>
@@ -119,11 +119,11 @@ export function BottomSheet({ open, onClose, title, children, dark }: {
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true" aria-label={title}>
       <div className="animate-fade-in absolute inset-0 bg-black/60" onClick={onClose} />
       <div
         className={clsx(
-          "animate-slide-up relative max-h-[90dvh] w-full max-w-[480px] overflow-y-auto",
+          "animate-slide-up relative max-h-[90dvh] w-full max-w-[480px] overflow-y-auto lg:!rounded-[28px]",
           // the customer's sheet (design system: sr-sheet): surface, 28px top corners, a thin gold edge
           dark ? "sr-sheet !block pb-[max(1.75rem,env(safe-area-inset-bottom))] text-ivory"
             : "rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-neutral-900",

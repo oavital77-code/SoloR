@@ -1,10 +1,11 @@
 "use client";
 // Fixed customer header (spec 3.1, design system: AppChrome): the wordmark at the start takes you to the top of the
-// feed; at the end the cart with its bordeaux count and the account menu (spec 12). The full post has its own overlay.
+// feed; at the end the cart with its bordeaux count and the account menu (spec 12).
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { IconBag, IconUser } from "../icons";
+import { clsx } from "clsx";
+import { IconBag, IconHome, IconSearch, IconUser } from "../icons";
 import { Ltr } from "../ui";
 import { he } from "@/lib/i18n/he";
 import { useCart } from "@/lib/cart";
@@ -17,7 +18,8 @@ export function AppHeader() {
   const lines = useCart();
   const { user } = useSession();
   const [open, setOpen] = useState(false);
-  if (path.startsWith("/cut/")) return null;
+  // the full post has its own overlay on phones and tablets; a wide screen keeps the header above it
+  const onCut = path.startsWith("/cut/");
 
   const toTop = (e: React.MouseEvent) => {
     forgetScroll("feed");
@@ -26,10 +28,11 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-ink/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <header className={clsx("sticky top-0 z-40 bg-ink/90 pt-[env(safe-area-inset-top)] backdrop-blur-md", onCut && "hidden lg:block")}>
         <div className="sr-header">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <Link href="/" onClick={toTop} aria-label="SoloR"><img src="/brand/wordmark-on-dark.svg" alt="SoloR" className="sr-header__logo" /></Link>
+          <DesktopNav path={path} />
           <div className="sr-header__actions">
             <Link href="/cart" aria-label={he.nav.cart(lines.length)} className="sr-iconbtn">
               <IconBag />
@@ -45,7 +48,7 @@ export function AppHeader() {
       {open && (
         <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={he.nav.account}>
           <div className="animate-fade-in absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
-          <nav className="sr-sheet animate-slide-up absolute inset-x-0 bottom-0 mx-auto max-w-[480px] pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center"
+          <nav className="sr-sheet animate-slide-up absolute inset-x-0 bottom-0 mx-auto max-w-[480px] lg:top-1/2 lg:bottom-auto lg:-translate-y-1/2 lg:!rounded-[28px] pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center"
             role="menu">
             <div className="sr-sheet__grab" />
             {user ? (
@@ -76,5 +79,24 @@ export function AppHeader() {
         </div>
       )}
     </>
+  );
+}
+
+/** On a wide screen the feed and search sit in the header (the tab bar is for phones and tablets). */
+function DesktopNav({ path }: { path: string }) {
+  const items = [
+    { href: "/", label: he.nav.home, Mark: IconHome, active: path === "/" || path.startsWith("/b/") || path === "/shops" },
+    { href: "/search", label: he.nav.search, Mark: IconSearch, active: path === "/search" },
+  ];
+  return (
+    <nav className="hidden flex-1 justify-center gap-2 lg:flex" aria-label={he.nav.main}>
+      {items.map(({ href, label, Mark, active }) => (
+        <Link key={href} href={href} aria-current={active ? "page" : undefined}
+          className={clsx("flex min-h-11 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors",
+            active ? "bg-ink-3 text-ivory" : "text-stone hover:text-ivory")}>
+          <Mark />{label}
+        </Link>
+      ))}
+    </nav>
   );
 }

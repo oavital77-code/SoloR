@@ -37,7 +37,7 @@ export default function CartPage() {
   const back = () => (window.history.length > 1 ? router.back() : router.push("/"));
 
   return (
-    <main className="flex min-h-dvh flex-col px-4 text-start">
+    <main className="flex min-h-dvh flex-col px-4 text-start lg:mx-auto lg:w-full lg:max-w-[1040px] lg:px-8">
       <ScreenHead title={he.cart.yours} back={back} backLabel={he.app.back} />
 
       {lines.length === 0 ? (
@@ -47,7 +47,7 @@ export default function CartPage() {
       ) : error && !cuts ? <ErrorState dark onRetry={load} />
         : !cuts ? <div className="flex flex-col gap-3 pt-4">{[0, 1].map((i) => <Skeleton key={i} className="h-28 rounded-3xl" />)}</div>
         : (
-          <>
+          <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8">
             <div className="flex flex-1 flex-col gap-5 pt-4 pb-6">
               {groups.map(({ shop, butcherId, rows: shopRows }) => (
                 <section key={butcherId} className="sr-card !gap-0 !border-line-gold">
@@ -66,7 +66,7 @@ export default function CartPage() {
               <Link href="/" className="sr-link self-start">{he.cart.continueShopping}</Link>
             </div>
 
-            <div className="sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 rounded-t-[28px] border-t border-line-gold bg-ink-2 px-4 pt-4 pb-[max(1.75rem,env(safe-area-inset-bottom))]">
+            <div className="sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 rounded-t-[28px] border-t border-line-gold bg-ink-2 px-4 pt-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] lg:top-24 lg:bottom-auto lg:mx-0 lg:mt-4 lg:rounded-[28px] lg:border lg:pb-4">
               <div className="sr-rowline !text-[17px]">
                 <span className="font-semibold">{he.cart.subtotal}</span>
                 <Ltr className="text-xl font-bold">{money(total)}</Ltr>
@@ -75,7 +75,7 @@ export default function CartPage() {
               {!user && <p className="m-0 text-[13px] text-stone">{he.cart.loginToPay}</p>}
               <button type="button" className="sr-btn sr-btn--block" disabled={blocked} onClick={proceed}>{he.cart.proceed}</button>
             </div>
-          </>
+          </div>
         )}
     </main>
   );

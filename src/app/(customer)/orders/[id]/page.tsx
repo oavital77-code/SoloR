@@ -67,7 +67,7 @@ export default function PurchasePage({ params }: { params: Promise<{ id: string 
   if (!k) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
 
   return (
-    <main className="min-h-dvh px-4 pb-12 text-start">
+    <main className="min-h-dvh px-4 pb-12 text-start lg:mx-auto lg:w-full lg:max-w-[760px]">
       <ScreenHead title={he.orders.yours} back="/orders" backLabel={he.app.back}
         sub={<span className="code">#{k.checkout_number} · {formatDateTime(k.created_at)}</span>} />
 

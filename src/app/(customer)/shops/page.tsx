@@ -17,7 +17,7 @@ export default function ShopsPage() {
     Number(a.is_test) - Number(b.is_test) || countFor(b.id) - countFor(a.id) || a.name.localeCompare(b.name, "he"));
 
   return (
-    <main className="min-h-dvh px-5 pb-28">
+    <main className="min-h-dvh px-5 pb-28 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="pt-3 pb-5">
         <BackLink href="/" label={he.market.backToMarket} />
         <h1 className="mt-2 font-display text-3xl font-bold text-ivory">{he.market.shops}</h1>

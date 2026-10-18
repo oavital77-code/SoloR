@@ -12,8 +12,10 @@ import { useNow } from "@/lib/hooks";
 import { formatAgorot, formatWeight } from "@/lib/pricing";
 import type { Breed, Butcher, Cut, CutMedia } from "@/lib/types";
 
-export function CutDetail({ cut, media, breeds, butcher }: {
+export function CutDetail({ cut, media, breeds, butcher, children }: {
   cut: Cut; media: CutMedia[]; breeds: Breed[]; butcher?: Butcher | null;
+  /** what comes after the certificate in the details column (the purchase bar) */
+  children?: React.ReactNode;
 }) {
   const now = useNow(60000);
   const hasSteaks = cut.sale_mode === "steaks" || cut.sale_mode === "both";
@@ -41,8 +43,8 @@ export function CutDetail({ cut, media, breeds, butcher }: {
 
   return (
     <article className="bg-ink text-start text-ivory">
-      <CutPost cut={cut} media={media} breeds={breeds} shop={butcher} now={now} variant="full" eager />
-      <div className="flex flex-col gap-6 px-4 pt-6 pb-8">
+      <CutPost cut={cut} media={media} breeds={breeds} shop={butcher} now={now} variant="full" eager>
+      <div className="flex flex-col gap-6 pt-6 pb-8">
         <div className="h-px bg-line" />
         <section className="flex flex-col gap-3" aria-label={he.cut.certificate}>
           <h2 className="sr-eyebrow m-0">{he.cut.certificate}</h2>
@@ -84,6 +86,8 @@ export function CutDetail({ cut, media, breeds, butcher }: {
           </p>
         )}
       </div>
+      {children}
+      </CutPost>
     </article>
   );
 }

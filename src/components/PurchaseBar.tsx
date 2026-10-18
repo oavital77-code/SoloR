@@ -92,7 +92,7 @@ export function PurchaseBar({ cut, preview, inline, onOrder, initialMode, initia
   const soldOut = cut.status !== "published" || (!canBuyWhole(cut) && !canBuySteaks(cut));
 
   return (
-    <div className={clsx(inline ? "relative" : "sticky bottom-0 z-20",
+    <div className={clsx(inline ? "relative -mx-4" : "sticky bottom-0 z-20 -mx-4 lg:mx-0 lg:px-0",
       "flex items-center gap-3.5 bg-gradient-to-b from-transparent to-ink to-30% px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]")}>
       <div className="flex flex-col">
         <span className={clsx("sr-price", soldOut && "text-stone")}>

@@ -99,9 +99,10 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
 
       {state === "ok" && cut && cut.status !== "withdrawn" && (
         <>
-          <CutDetail cut={cut} media={media} breeds={breeds} butcher={butcher} />
-          <PurchaseBar cut={cut} onOrder={addToCart} inCart={!!inCart}
-            initialMode={inCart?.mode} initialQty={inCart?.qty} key={inCart ? `${inCart.mode}-${inCart.qty}` : "new"} />
+          <CutDetail cut={cut} media={media} breeds={breeds} butcher={butcher}>
+            <PurchaseBar cut={cut} onOrder={addToCart} inCart={!!inCart}
+              initialMode={inCart?.mode} initialQty={inCart?.qty} key={inCart ? `${inCart.mode}-${inCart.qty}` : "new"} />
+          </CutDetail>
         </>
       )}
     </main>

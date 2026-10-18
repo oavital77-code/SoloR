@@ -185,7 +185,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
         </div>
       ) : (
         <>
-          <div className="flex flex-1 flex-col gap-5 px-4 pt-2 pb-8">
+          <div className="flex flex-1 flex-col gap-5 px-4 pt-2 pb-8 lg:mx-auto lg:w-full lg:max-w-[720px]">
             <FormSection id={1} focus={step}>
               <MediaUploader cutId={cutId} butcherId={butcher.id} media={media} onChange={loadMedia} disabled={cut.status === "withdrawn"} />
             </FormSection>
@@ -195,7 +195,7 @@ export function CutWizard({ cutId }: { cutId: string }) {
             <StepWord form={form} set={set} />
           </div>
 
-          <footer className="sticky bottom-0 z-20 flex flex-col gap-2.5 border-t border-line bg-ink-2 px-4 pt-3.5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <footer className="sticky bottom-0 z-20 flex flex-col gap-2.5 border-t border-line bg-ink-2 px-4 pt-3.5 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:px-[max(1rem,calc((100%-720px)/2))]">
             {isDraft ? (
               <div className="grid grid-cols-[1fr_2fr] gap-2.5">
                 <button type="button" className="sr-cbtn sr-cbtn--quiet !text-[17px]"
@@ -553,11 +553,12 @@ function StepPreview({ cut, media, photoCount, breeds, goStep, isDraft, save, on
     <div className="flex flex-col">
       <div className="bg-gold-soft px-4 py-2 text-center font-bold">{he.cut.previewBar}</div>
       <div data-theme="customer" className="pointer-events-auto bg-ink text-ivory">
-        <CutDetail cut={live} media={media} breeds={breeds} butcher={butcher} />
-        <PurchaseBar cut={live} preview inline />
+        <CutDetail cut={live} media={media} breeds={breeds} butcher={butcher}>
+          <PurchaseBar cut={live} preview inline />
+        </CutDetail>
       </div>
 
-      <div className="flex flex-col gap-3 bg-ink px-4 py-5">
+      <div className="flex flex-col gap-3 bg-ink px-4 py-5 lg:mx-auto lg:w-full lg:max-w-[720px]">
         {missing.length > 0 && (
           <div className="rounded-2xl bg-ink-2 p-4 shadow-[var(--shadow-card)]" role="alert">
             <p className="m-0 mb-2 font-bold text-sold">{he.wizard.missingTitle}</p>

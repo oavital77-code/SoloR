@@ -32,11 +32,11 @@ function ButcherHome() {
         <Toggle label={he.butcher.soundAlerts} checked={sound} onChange={setSound} />
         <Link
           href="/butcher/cuts/new"
-          className="sr-cbtn sr-cbtn--new mt-2 active:scale-[0.99]"
+          className="sr-cbtn sr-cbtn--new mt-2 active:scale-[0.99] lg:mx-auto lg:max-w-[480px]"
         >
           {he.butcher.newCut}
         </Link>
-        <nav className="sr-ctabs mt-3" role="tablist">
+        <nav className="sr-ctabs mt-3 lg:mx-auto lg:max-w-[480px]" role="tablist">
           {(["cuts", "orders"] as const).map((t) => (
             <button
               key={t} role="tab" aria-selected={tab === t}

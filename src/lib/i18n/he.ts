@@ -73,6 +73,7 @@ export const he = {
   },
 
   nav: {
+    main: "ניווט ראשי",
     home: "פיד",
     search: "חיפוש",
     cart: (n: number) => (n ? `סל, ${n} פריטים` : "סל"),

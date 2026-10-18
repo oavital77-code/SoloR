@@ -54,20 +54,20 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
       <div className="relative px-3 pt-3">{backBtn}</div>
       {!shop ? <div className="px-4 pt-4"><Skeleton className="h-40" /></div> : <ShopHead shop={shop} now={now} />}
 
-      <section className="relative flex flex-col gap-3.5 px-4 pt-7">
+      <section className="relative flex flex-col gap-3.5 px-4 pt-7 lg:px-8">
         <div className="flex items-baseline justify-between">
           <h2 className="sr-cutname !text-[20px]">{he.shop.todayCuts}</h2>
           {ready && <span className="text-[13px] text-stone">{he.search.results(live)}</span>}
         </div>
         {error && !cuts ? <ErrorState dark onRetry={reload} />
-          : !ready ? <div className="grid grid-cols-2 gap-3">{[0, 1].map((i) => <Skeleton key={i} className="aspect-square rounded-2xl" />)}</div>
+          : !ready ? <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[0, 1].map((i) => <Skeleton key={i} className="aspect-square rounded-2xl" />)}</div>
           : items.length === 0 && pending === 0 ? <EmptyState text={he.market.shopEmpty} />
           : (
             <>
               {pending > 0 && (
                 <button type="button" onClick={showNew} className="sr-newpill self-center">{he.feed.newPosts(pending)}</button>
               )}
-              <ul className="grid grid-cols-2 gap-x-3 gap-y-4">
+              <ul className="grid grid-cols-2 gap-x-3 gap-y-4 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-8">
                 {items.map(({ cut, gone }) => (
                   <ShopTile key={cut.id} cut={cut} breeds={breeds} gone={gone} reserved={!gone && isReserved(cut, held.get(cut.id))} />
                 ))}
@@ -110,7 +110,7 @@ function ShopHead({ shop, now }: { shop: Butcher; now: number }) {
         {shop.description && <p className="m-0 max-w-[340px] font-display text-[17px] leading-relaxed text-ivory/85">{shop.description}</p>}
       </section>
 
-      <section className="flex flex-col gap-4 px-4 pt-6">
+      <section className="flex flex-col gap-4 px-4 pt-6 lg:mx-auto lg:w-full lg:max-w-[760px]">
         {(rows.length > 0 || shop.pickup_hours) && (
           <div className="flex flex-col gap-2.5 rounded-3xl border border-line bg-ink-2 p-4">
             <span className="sr-eyebrow">{he.shop.hoursShort}</span>

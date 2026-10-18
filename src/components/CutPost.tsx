@@ -25,9 +25,11 @@ import { shopPath } from "@/lib/market";
 import { formatWeight, money, steakPrice, wholePrice } from "@/lib/pricing";
 import type { Breed, Butcher, Cut, CutMedia, OrderMode } from "@/lib/types";
 
-export function CutPost({ cut, media, breeds, shop, now, variant = "feed", source = "feed", gone, reserved, eager }: {
+export function CutPost({ cut, media, breeds, shop, now, variant = "feed", source = "feed", gone, reserved, eager, children }: {
   cut: Cut; media: CutMedia[]; breeds: Breed[]; shop?: Pick<Butcher, "name" | "slug" | "logo_path"> | null; now: number;
   variant?: "feed" | "full";
+  /** the full post only: what follows the post on its page (the certificate, the purchase bar) */
+  children?: React.ReactNode;
   /** where the post is shown, for measurement (§15): feed / butcher / post */
   source?: "feed" | "butcher" | "post";
   /** sold while on screen: stays in place with the "אזל" stamp instead of vanishing (spec §4.3) */
@@ -61,11 +63,18 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", sourc
   const overlay = soldOut ? <SoldStamp code={cut.code} at={cut.sold_out_at} /> : reserved ? <ReservedBadge /> : null;
 
   return (
-    <article ref={ref} className={clsx("text-start", full ? "flex flex-col" : "sr-post")}>
-      {/* the full post opens on its media, edge to edge (design: Cut); the feed card is a magazine page, text first */}
-      {full && <PostMedia media={media} title={title} code={cut.code} eager={eager} state={state}>{overlay}</PostMedia>}
+    <article ref={ref} className={clsx("text-start", full
+      ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-8 lg:pt-16"
+      : "sr-post")}>
+      {/* the full post opens on its media, edge to edge (design: Cut); the feed card is a magazine page, text first.
+          On a wide screen the media stays on one side while the details and buying scroll beside it */}
+      {full && (
+        <div className="lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
+          <PostMedia media={media} title={title} code={cut.code} eager={eager} state={state}>{overlay}</PostMedia>
+        </div>
+      )}
 
-      <div className={clsx("flex flex-col gap-3", full && "px-4 pt-5")}>
+      <div className={clsx("flex flex-col gap-3", full && "px-4 pt-5 lg:px-0 lg:pt-0")}>
         <header className="sr-post__head">
           {shop && <Link href={shopPath(shop)} aria-label={shop.name}><ShopMark shop={shop} /></Link>}
           <div className="min-w-0">
@@ -109,6 +118,7 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", sourc
             <AddButton cut={cut} soldOut={soldOut} reserved={!!reserved} onChoose={() => setOpen(true)} />
           </div>
         )}
+        {full && children}
       </div>
 
       {!full && open && (

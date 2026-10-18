@@ -98,7 +98,7 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
   const anyOrders = lines.length > 0;
 
   return (
-    <main className="pb-10">
+    <main className="pb-10 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-ink/95 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
         <Link href="/butcher" className="flex min-h-11 items-center px-2 text-sm font-semibold text-stone">{he.app.back}</Link>
         <div className="min-w-0 flex-1">

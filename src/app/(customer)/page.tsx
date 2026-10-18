@@ -95,7 +95,7 @@ export default function FeedPage() {
       )}
 
       <div className="wash pointer-events-none absolute inset-x-0 top-0 h-[360px]" aria-hidden />
-      <header className="relative px-4 pt-2 pb-5 text-start">
+      <header className="relative px-4 pt-2 pb-5 text-start lg:px-8 lg:pt-6">
         <p className="sr-eyebrow">
           {he.feed.greeting(Math.floor(israelClock(new Date(now)).minutes / 60))}{firstName ? `, ${firstName}` : ""}
         </p>
@@ -105,12 +105,12 @@ export default function FeedPage() {
       </header>
 
       {!ready ? (
-        <div className="relative flex flex-col gap-6 px-4">{[0, 1].map((i) => <Skeleton key={i} className="h-[520px] rounded-3xl" />)}</div>
+        <div className="relative grid gap-6 px-4 lg:grid-cols-3 lg:px-8">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-[520px] rounded-3xl" />)}</div>
       ) : items.length === 0 ? (
         <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
       ) : (
         <>
-          <ul className="relative flex flex-col gap-6 px-4">
+          <ul className="relative grid items-start gap-6 px-4 lg:grid-cols-3 lg:px-8">
             {items.slice(0, limit).map(({ cut, gone }, i) => (
               <li key={cut.id}>
                 <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}

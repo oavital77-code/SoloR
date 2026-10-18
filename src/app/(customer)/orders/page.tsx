@@ -38,7 +38,7 @@ function MyOrders() {
   useMyOrdersRealtime(load);
 
   return (
-    <main className="min-h-dvh pb-24">
+    <main className="min-h-dvh pb-24 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="flex flex-col items-center bg-ink/90 px-4 pt-4 pb-3 backdrop-blur">
         <h1 className="font-display text-3xl font-bold text-ivory">{history ? he.nav.history : he.orders.title}</h1>
         <Link href={history ? "/orders" : "/orders?view=history"} className="min-h-10 py-2.5 text-sm text-ivory/70 underline-offset-4 hover:underline">

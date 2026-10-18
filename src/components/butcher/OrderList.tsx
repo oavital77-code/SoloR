@@ -68,7 +68,7 @@ export function OrderList() {
         : !rows ? <div className="flex flex-col gap-3 px-4">{[0, 1].map((i) => <Skeleton key={i} className="h-28" />)}</div>
         : rows.length === 0 ? <EmptyState text={tab === "active" ? he.butcherOrders.empty : he.butcherOrders.emptyHistory} />
         : (
-          <ul className="flex flex-col gap-4 px-4 pb-8">
+          <ul className="grid items-start gap-4 px-4 pb-8 lg:grid-cols-2 xl:grid-cols-3">
             {rows.map((o) => <OrderCard key={o.id} order={o} breeds={breeds} now={now} />)}
           </ul>
         )}

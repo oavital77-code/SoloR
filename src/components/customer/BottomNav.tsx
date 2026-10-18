@@ -1,5 +1,6 @@
 "use client";
-// Tab bar (spec 3.2, design system: AppChrome): the feed and search, icon over a short label. The active tab in ink
+// Tab bar (spec 3.2, design system: AppChrome): the feed and search, icon over a short label. On a wide screen
+// the same two live in the header instead (AppHeader). The active tab in ink
 // with a small bordeaux dot, the other muted. The cart and the account live in the header.
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -30,7 +31,7 @@ export function BottomNav() {
     { href: searchHref, label: he.nav.search, Mark: IconSearch, active: path === "/search" },
   ];
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t border-line bg-ink/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t lg:hidden border-line bg-ink/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
       <ul className="grid h-16 grid-cols-2">
         {items.map(({ href, label, Mark, active }) => (
           <li key={href}>

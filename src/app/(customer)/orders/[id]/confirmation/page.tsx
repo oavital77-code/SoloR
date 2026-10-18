@@ -32,7 +32,7 @@ export default function ConfirmationPage({ params }: { params: Promise<{ id: str
   if (!k) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
 
   return (
-    <main className="relative min-h-dvh pb-12">
+    <main className="relative min-h-dvh pb-12 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] [background:radial-gradient(90%_60%_at_50%_0%,rgb(201_169_110/0.18),transparent_70%)]" aria-hidden />
       <section className="relative flex flex-col items-center gap-3.5 px-6 pt-16 pb-7 text-center">
         <span aria-hidden className="grid size-[88px] place-items-center rounded-full text-gold shadow-[inset_0_0_0_2px_var(--gold),0_0_0_10px_var(--gold-soft)]">
