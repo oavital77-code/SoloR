@@ -50,10 +50,10 @@ export function PostMedia({ media, title, code, href, eager, children }: {
     else v.pause();
   }, [playing]);
 
-  if (slides.length === 0) return <div ref={box} className="relative aspect-[4/5] w-full rounded-2xl bg-ink-3">{children}</div>;
+  if (slides.length === 0) return <div ref={box} className="relative aspect-[4/5] w-full bg-ink-3">{children}</div>;
 
   return (
-    <div ref={box} className="relative overflow-hidden rounded-2xl bg-ink-3">
+    <div ref={box} className="relative overflow-hidden bg-ink-3">
       {/* horizontal-only strip in a fixed-ratio box: a vertical swipe always scrolls the page (iOS) */}
       <div className="relative aspect-[4/5] w-full">
         <div ref={track} onScroll={onScroll} className="no-scrollbar absolute inset-0 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden">

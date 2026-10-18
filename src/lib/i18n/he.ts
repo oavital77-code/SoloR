@@ -142,7 +142,8 @@ export const he = {
   post: {
     more: "עוד",
     less: "פחות",
-    certificate: "תעודת בשר",
+    certificate: "לפרטים ולתעודת הבשר",
+    orderFrom: (shop: string) => `להזמנה מ${shop}`,
     addToCart: "הוסף לסל",
     inCart: "בסל",
     from: "מ־",

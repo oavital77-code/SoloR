@@ -55,7 +55,7 @@ export default function FeedPage() {
   if (error && !cuts) return <main className="min-h-dvh pt-10"><ErrorState dark onRetry={reload} /></main>;
 
   return (
-    <main className="min-h-dvh px-4 pt-2 pb-28">
+    <main className="min-h-dvh pt-2 pb-28">
       {pull > 0 && (
         <p className="pb-2 text-center text-xs text-stone" style={{ opacity: Math.min(1, pull / PULL) }} aria-live="polite">
           {pull >= PULL ? he.feed.refreshing : he.feed.pullToRefresh}
@@ -70,14 +70,14 @@ export default function FeedPage() {
       )}
 
       {!ready ? (
-        <div className="flex flex-col gap-4">{[0, 1].map((i) => <Skeleton key={i} className="aspect-[4/5]" />)}</div>
+        <div className="flex flex-col gap-4 px-4">{[0, 1].map((i) => <Skeleton key={i} className="aspect-square" />)}</div>
       ) : items.length === 0 ? (
         <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
       ) : (
         <>
-          <ul className="flex flex-col gap-14">
+          <ul className="flex flex-col divide-y-[10px] divide-black">
             {items.slice(0, limit).map(({ cut, gone }, i) => (
-              <li key={cut.id}>
+              <li key={cut.id} className="pt-4 first:pt-1">
                 <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone} eager={i === 0} />
               </li>
             ))}
@@ -93,7 +93,7 @@ export default function FeedPage() {
 /** End of the feed (and the empty feed): say so, and offer the shops' pages (spec §2.2, §4.4). */
 function FeedEnd({ title, hint, butchers }: { title: string; hint?: string; butchers: Butcher[] }) {
   return (
-    <section className="mt-14 border-t border-ivory/10 pt-8 text-center">
+    <section className="mt-6 border-t-[10px] border-black px-4 pt-8 text-center">
       <p className="font-display text-xl font-bold text-ivory">{title}</p>
       {hint && <p className="mt-1 text-sm text-stone">{hint}</p>}
       {butchers.length > 0 && (

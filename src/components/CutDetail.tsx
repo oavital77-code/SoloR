@@ -43,7 +43,7 @@ export function CutDetail({ cut, media, breeds, butcher }: {
 
   return (
     <article className="bg-ink text-center text-ivory">
-      <div className="px-4 pt-[max(4rem,calc(env(safe-area-inset-top)+3.5rem))]">
+      <div className="pt-[max(4rem,calc(env(safe-area-inset-top)+3.5rem))]">
         <CutPost cut={cut} media={media} breeds={breeds} shop={butcher} now={now} variant="full" eager />
       </div>
       <div className="flex flex-col gap-7 px-5 pt-5 pb-8">

@@ -1,11 +1,13 @@
 "use client";
-// One post = one cut (customer spec §5). The same component in the feed, on a shop's page and as the full post:
-// header (shop, time since it went live, state), text (cut, facts, the butcher's note, "הערכת הקצב"), the media
-// carousel and — in the feed — the purchase row with "הוסף לסל". The full post shows the whole note and leaves
-// buying to the page's purchase bar.
+// One post = one cut (customer spec §5). The same component in the feed, on a shop's page and as the full post,
+// laid out like the founders' reference (a social-feed post, 18.10.2026): header (the shop's mark and name, time
+// since it went live), the text aligned to the start (cut, facts, the butcher's note, "הערכת הקצב"), the media edge
+// to edge, and — in the feed — an order strip with "הוסף לסל". In the feed the media is a collage (PostCollage);
+// the full post swipes through it (PostMedia), shows the whole note and leaves buying to the page's purchase bar.
 import { useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
+import { PostCollage } from "./PostCollage";
 import { PostMedia } from "./PostMedia";
 import { ShopMark } from "./ShopMark";
 import { PurchaseBar } from "./PurchaseBar";
@@ -13,7 +15,7 @@ import { BottomSheet, Button, Ltr } from "./ui";
 import { useToast } from "./Toast";
 import { he } from "@/lib/i18n/he";
 import { cart, useCart } from "@/lib/cart";
-import { canBuySteaks, canBuyWhole, cutTitle, mediaUrl, timeAgo } from "@/lib/cut-helpers";
+import { canBuySteaks, canBuyWhole, cutTitle, timeAgo } from "@/lib/cut-helpers";
 import { agingMethodLabel, originLabel } from "@/lib/labels";
 import { shopPath } from "@/lib/market";
 import { formatAgorot, formatWeight, steakPrice, wholePrice } from "@/lib/pricing";
@@ -43,42 +45,47 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
   ].filter(Boolean) as string[];
 
   return (
-    <article className="text-center">
+    <article className="text-start">
       {/* 1 · header */}
-      <header className="mb-3 flex items-center justify-between gap-3 px-1">
-        {shop ? (
-          <Link href={shopPath(shop)} className="flex min-w-0 items-center gap-2.5">
-            <ShopMark shop={shop} />
-            <span className="truncate text-[15px] font-semibold text-ivory">{shop.name}</span>
-          </Link>
-        ) : <span />}
-        <span className="shrink-0 text-xs text-stone">
-          {soldOut ? <span className="font-semibold text-[#e8a0a8]">{he.post.soldStamp}</span>
-            : cut.published_at ? timeAgo(cut.published_at, now) : null}
-        </span>
+      <header className="flex items-center gap-3 px-4 pb-3">
+        {shop && <Link href={shopPath(shop)} aria-label={shop.name}><ShopMark shop={shop} className="size-10 text-base" /></Link>}
+        <div className="min-w-0 flex-1">
+          {shop && <Link href={shopPath(shop)} className="block truncate text-[15px] font-bold text-ivory">{shop.name}</Link>}
+          <p className="text-xs text-stone">
+            {soldOut ? <span className="font-semibold text-[#e8a0a8]">{he.post.soldStamp}</span>
+              : cut.published_at ? timeAgo(cut.published_at, now) : null}
+          </p>
+        </div>
       </header>
 
       {/* 2 · text */}
-      <div className="mb-3 px-1">
-        {full ? <h1 className="font-display text-[30px] font-bold leading-tight text-ivory">{title}</h1>
-          : <h2 className="font-display text-[22px] font-bold leading-tight text-ivory"><Link href={href}>{title}</Link></h2>}
-        {facts.length > 0 && <p className="mt-1 text-[15px] text-stone">{facts.join("  ·  ")}</p>}
+      <div className="px-4 pb-3">
+        {full ? <h1 className="font-display text-[28px] font-bold leading-tight text-ivory">{title}</h1>
+          : <h2 className="font-display text-[19px] font-bold leading-snug text-ivory"><Link href={href}>{title}</Link></h2>}
+        {facts.length > 0 && <p className="mt-0.5 text-[14px] text-stone">{facts.join("  ·  ")}</p>}
         {cut.description && <Note text={cut.description} full={full} />}
-        {cut.butcher_marbling ? <p className="mt-2 text-xs text-stone">{he.post.marbling(cut.butcher_marbling)}</p> : null}
+        {cut.butcher_marbling ? <p className="mt-1.5 text-xs text-stone">{he.post.marbling(cut.butcher_marbling)}</p> : null}
+        {!full && (
+          <Link href={href} className="mt-1.5 inline-block min-h-9 py-1.5 text-[15px] font-semibold text-gold underline-offset-4 hover:underline">
+            {he.post.certificate}
+          </Link>
+        )}
       </div>
 
-      {/* 3 · media */}
-      <PostMedia media={media} title={title} code={cut.code} href={full ? undefined : href} eager={eager}>
-        {soldOut && <SoldStamp />}
-      </PostMedia>
+      {/* 3 · media, edge to edge */}
+      {full ? (
+        <PostMedia media={media} title={title} code={cut.code} eager={eager}>{soldOut && <SoldStamp />}</PostMedia>
+      ) : (
+        <PostCollage media={media} title={title} code={cut.code} href={href} eager={eager}>{soldOut && <SoldStamp />}</PostCollage>
+      )}
 
-      {/* 4 · purchase row (the full post has the sticky purchase bar instead) */}
+      {/* 4 · order strip (the full post has the sticky purchase bar instead) */}
       {!full && (
-        <div className="mt-3 flex items-center justify-between gap-3 px-1">
-          <div className="min-w-0 text-start">
+        <div className="flex items-center justify-between gap-3 bg-ink-2 px-4 py-3">
+          <div className="min-w-0">
             <Price cut={cut} />
             <p className="truncate text-xs text-stone">
-              <Ltr className="tracking-wider">{cut.code}</Ltr>  ·  <Link href={href} className="text-gold underline-offset-4 hover:underline">{he.post.certificate}</Link>
+              {shop ? he.post.orderFrom(shop.name) : null}{shop ? "  ·  " : ""}<Ltr className="tracking-wider">{cut.code}</Ltr>
             </p>
           </div>
           <AddButton cut={cut} disabled={soldOut} onChoose={() => setOpen(true)} />
@@ -98,10 +105,10 @@ function Note({ text, full }: { text: string; full: boolean }) {
   const [more, setMore] = useState(false);
   const long = text.length > 140 || text.split("\n").length > 3;
   return (
-    <div className="mt-2">
-      <p className={clsx("whitespace-pre-line font-display text-[16px] leading-relaxed text-ivory/85", !full && !more && "line-clamp-3")}>{text}</p>
+    <div className="mt-1.5">
+      <p className={clsx("whitespace-pre-line text-[15px] leading-relaxed text-ivory/90", !full && !more && "line-clamp-3")}>{text}</p>
       {!full && long && (
-        <button type="button" onClick={() => setMore((m) => !m)} className="min-h-9 text-sm text-ivory/60 underline-offset-4 hover:underline">
+        <button type="button" onClick={() => setMore((m) => !m)} className="min-h-8 text-sm font-semibold text-stone">
           {more ? he.post.less : he.post.more}
         </button>
       )}
@@ -117,7 +124,7 @@ function Price({ cut }: { cut: Cut }) {
     : cut.weight_g ? money(wholePrice(cut.weight_g, cut.price_per_kg_agorot)) : null;
   return (
     <p className="text-ivory">
-      {unit && <span className="font-display text-xl font-bold"><Ltr>{unit}</Ltr></span>}
+      {unit && <span className="font-display text-lg font-bold"><Ltr>{unit}</Ltr></span>}
       <span className="ms-2 text-sm text-stone"><Ltr>{money(cut.price_per_kg_agorot)}</Ltr> {he.feed.perKg}</span>
     </p>
   );

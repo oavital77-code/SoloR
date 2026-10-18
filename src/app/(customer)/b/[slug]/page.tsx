@@ -54,9 +54,9 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
                   </button>
                 </div>
               )}
-              <ul className="flex flex-col gap-14 px-4">
+              <ul className="flex flex-col divide-y-[10px] divide-black border-t-[10px] border-black">
                 {items.map(({ cut, gone }, i) => (
-                  <li key={cut.id}><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} eager={i === 0} /></li>
+                  <li key={cut.id} className="pt-4"><CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} eager={i === 0} /></li>
                 ))}
               </ul>
             </>
