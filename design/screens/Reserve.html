@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>שריון ותשלום</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09}</style>
+</helmet>
+<div class="phone sr" style="height: 844px;">
+  <div style="padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; filter: blur(1.5px);" aria-hidden="true">
+    <h1 class="screen-title">קופה</h1>
+    <div class="steps4"><div class="on">פרטים</div><div class="on">קבלה</div><div class="on">סיכום</div><div>תשלום</div></div>
+    <div class="card" style="height: 180px;"></div>
+    <div class="card" style="height: 120px;"></div>
+  </div>
+  <div style="position: absolute; inset: 0; background: var(--scrim);"></div>
+
+  <div class="sr-sheet" style="position: absolute; left: 0; right: 0; bottom: 0; padding-bottom: 28px;">
+    <div class="sr-sheet__grab"></div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;">
+      <h2 class="sr-sheet__title">הנתחים שמורים לך</h2>
+      <span class="sr-muted" style="font-size: 14px;">אף אחד אחר לא יכול לקנות אותם בזמן הזה</span>
+    </div>
+    <div class="sr-timer-ring" style="--p: .96;"><div><span class="sr-timer">9:36</span></div></div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="sr-rowline"><span>אנטריקוט · <span class="sr-num">2</span> סטייקים · <span class="sr-code">SOL-0012</span></span><span class="sr-num">₪132</span></div>
+      <div class="sr-rowline"><span>סינטה · <span class="sr-num">2</span> סטייקים · <span class="sr-code">SOL-0019</span></span><span class="sr-num">₪116</span></div>
+      <div class="sr-rowline"><span class="sr-muted">משלוח · האחים חדיף</span><span class="sr-num sr-muted">₪25</span></div>
+      <div class="sr-rowline" style="font-weight: 700; font-size: 18px; border-top: 1px solid var(--line); padding-top: 12px;"><span>לתשלום</span><span class="sr-num">₪273</span></div>
+    </div>
+    <p class="sr-legal" style="margin: 0;">המשקל בפועל עשוי לסטות ב־<span class="sr-num">±5%</span>. חריגה מעל <span class="sr-num">5%</span> תוחזר לך אוטומטית.</p>
+    <a class="sr-btn sr-btn--block" href="Confirmed.html" style="text-decoration: none;">אישור ותשלום · <span class="sr-num">₪273</span></a>
+    <span class="sr-proto" style="align-self: center;">אב טיפוס — לא יבוצע חיוב</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

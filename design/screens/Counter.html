@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>קצב · הזמנות</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f7f3ec} .ctabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface-raised)} .ctabs a{min-height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:17px;color:var(--ink-muted);text-decoration:none} .ctabs a.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-card)} .badge{min-width:24px;height:24px;border-radius:12px;background:var(--status-new);color:var(--on-bordeaux);font-size:13px;display:grid;place-items:center;padding:0 6px}</style>
+</helmet>
+<div class="phone sr" data-theme="counter" style="height: 1000px; background: var(--ground); color: var(--ink);">
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 16px;">
+    <img src="../assets/Logos/solor-wordmark-on-light.svg" alt="SoloR" style="height: 22px;">
+    <span style="font-weight: 600; font-size: 15px;">קצביית האחים חדיף</span>
+  </header>
+  <div style="padding: 0 16px 16px;"><nav class="ctabs"><a class="on" href="#">הזמנות <span class="badge sr-num">1</span></a><a href="CounterNew.html">הנתחים שלי</a></nav></div>
+
+  <div style="padding: 0 16px 24px; display: flex; flex-direction: column; gap: 16px;">
+    <article class="sr-ocard" style="box-shadow: 0 0 0 3px rgba(163,18,42,.18), var(--shadow-card);">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span class="sr-status sr-status--new">חדשה · עכשיו</span><span class="sr-code" style="font-size: 15px; color: var(--ink);">#1042</span></div>
+      <div style="font-size: 22px; font-weight: 700; line-height: 28px;">דנה לוי · משלוח</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 18px;"><div>אנטריקוט · <span class="sr-num">2</span> סטייקים</div><span class="sr-code" style="font-size: 14px;">SOL-0012</span></div>
+      <button class="sr-cbtn sr-cbtn--new">התחל הכנה</button>
+    </article>
+
+    <article class="sr-ocard sr-ocard--prep">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span class="sr-status sr-status--prep">בהכנה</span><span class="sr-code" style="font-size: 15px; color: var(--ink);">#1039</span></div>
+      <div style="font-size: 20px; font-weight: 700;">יוני א. · איסוף</div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 18px;">צלעות · נתח שלם · <span class="sr-code" style="font-size: 14px;">SOL-0017</span></div>
+        <label class="sr-weightfield"><span>משקל בפועל</span><b class="sr-num" style="flex: 1;">1.84</b><span>ק״ג</span></label>
+      </div>
+      <button class="sr-cbtn" style="background: var(--surface-raised); color: var(--ink);"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z"/><circle cx="12" cy="13.2" r="3.4"/></svg>צלם את המנה</button>
+      <button class="sr-cbtn">מוכן לאיסוף</button>
+      <button style="background: none; border: 0; color: var(--ink-muted); font: 500 15px var(--font-sans); min-height: 44px; text-decoration: underline;">ביטול פריט</button>
+    </article>
+
+    <article class="sr-ocard sr-ocard--ready">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span class="sr-status sr-status--ready">מוכנה · ממתינה לאיסוף</span><span class="sr-code" style="font-size: 15px; color: var(--ink);">#1036</span></div>
+      <div style="font-size: 18px;">מיכל ר. · סינטה · <span class="sr-num">3</span> סטייקים</div>
+      <button class="sr-cbtn" style="background: var(--status-ready); color: #fff;">נאסף</button>
+    </article>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

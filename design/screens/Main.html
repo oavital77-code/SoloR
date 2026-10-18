@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>פיד</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09}</style>
+</helmet>
+<div class="phone sr" style="height: 1640px;">
+  <div class="wash"></div>
+
+  <header class="sr-header hd">
+    <img class="sr-header__logo" src="../assets/Logos/solor-wordmark-on-dark.svg" alt="SoloR">
+    <div class="sr-header__actions">
+      <button class="sr-iconbtn" aria-label="סל, 2 פריטים"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 8.5h13l-1 11.5h-11z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg><span class="sr-iconbtn__count sr-num">2</span></button>
+      <button class="sr-iconbtn" aria-label="החשבון שלי"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.7-5.5 7-5.5s6.2 1.9 7 5.5"/></svg></button>
+    </div>
+  </header>
+
+  <section class="hd" style="padding: 8px 16px 20px; display: flex; flex-direction: column; gap: 4px;">
+    <span class="sr-eyebrow">ערב טוב, דנה</span>
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 32px;">12 נתחים עלו היום, משתי קצביות</h1>
+  </section>
+
+  <div class="hd" style="position: absolute; top: 64px; left: 0; right: 0; display: flex; justify-content: center; z-index: 5;">
+    <a class="sr-newpill" href="#" style="text-decoration: none;"><span class="sr-newpill__dots"><img src="../assets/Samples/sample-ribeye-wagyu.svg" alt=""><img src="../assets/Samples/sample-striploin.svg" alt=""><img src="../assets/Samples/sample-ribeye.svg" alt=""></span><span><span class="sr-num">3</span> נתחים חדשים</span><span aria-hidden="true">↑</span></a>
+  </div>
+
+  <main class="hd" style="padding: 0 16px; display: flex; flex-direction: column; gap: 24px;">
+    <article class="sr-post">
+      <header class="sr-post__head"><span class="sr-mark"><span>ח</span></span><div><div class="sr-post__shop">קצביית האחים חדיף</div><div class="sr-post__when">לפני 10 דק׳</div></div></header>
+      <h2 class="sr-cutname">אנטריקוט <small>· בלאק אנגוס</small></h2>
+      <div class="sr-chips">
+        <span class="sr-chip sr-chip--aging"><svg class="sr-ic sr-ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10M7 20h10M8 4c0 4 8 4.5 8 8s-8 4-8 8M16 4c0 4-8 4.5-8 8"/></svg>יושן 28 יום · יבש</span>
+        <span class="sr-chip">אורוגוואי</span>
+        <span class="sr-chip"><span class="sr-num">1.2</span>&nbsp;ק״ג</span>
+      </div>
+      <div class="sr-note"><span class="sr-eyebrow">מילה מהקצב</span><p>שומן לבן ויציב ושיוש עדין לכל האורך. הייתי פורס אותו לשני סטייקים של 3 ס״מ, צלייה חזקה ומנוחה של חמש דקות.</p><button class="sr-note__more">עוד</button></div>
+      <div class="sr-marbling"><span class="sr-marbling__bar" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="sr-marbling__label">שיוש <b class="sr-num">8/10</b> · הערכת הקצב</span></div>
+      <a class="sr-link" href="Cut.html">לפרטים ולתעודת הבשר</a>
+      <div class="sr-media"><img src="../assets/Samples/sample-ribeye.svg" alt="אנטריקוט בלאק אנגוס, SOL-0012"><span class="sr-media__sample">תמונת דוגמה</span></div>
+      <div class="sr-thumbs">
+        <div class="sr-thumb"><img src="../assets/Samples/sample-ribeye.svg" alt="" style="transform: scale(1.6);"></div>
+        <div class="sr-thumb"><img src="../assets/Samples/sample-striploin.svg" alt="" style="filter: brightness(.8);"><span class="sr-thumb__play"><svg class="sr-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.5 6v12l9.5-6z"/></svg></span></div>
+        <div class="sr-thumb"><img src="../assets/Samples/sample-ribeye-wagyu.svg" alt=""><span class="sr-thumb__more">+<span class="sr-num">2</span></span></div>
+      </div>
+      <div class="sr-orderbar">
+        <div class="sr-orderbar__info"><span class="sr-price"><span class="sr-num">₪66</span> <small>לסטייק</small></span><span class="sr-meta"><span class="sr-num">₪289</span> לק״ג · <span class="sr-code">SOL-0012</span></span><span class="sr-meta">להזמנה מקצביית האחים חדיף</span></div>
+        <a class="sr-btn sr-btn--round" href="AddSheet.html" aria-label="הוסף לסל"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+      </div>
+    </article>
+
+    <article class="sr-post">
+      <header class="sr-post__head"><span class="sr-mark"><span>ב</span></span><div><div class="sr-post__shop">מעדני בן עזרא</div><div class="sr-post__when">לפני 42 דק׳</div></div></header>
+      <h2 class="sr-cutname">סינטה <small>· הרפורד</small></h2>
+      <div class="sr-chips">
+        <span class="sr-chip sr-chip--aging"><svg class="sr-ic sr-ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10M7 20h10M8 4c0 4 8 4.5 8 8s-8 4-8 8M16 4c0 4-8 4.5-8 8"/></svg>יושן 21 יום · רטוב</span>
+        <span class="sr-chip">ישראל</span>
+        <span class="sr-chip"><span class="sr-num">2.4</span>&nbsp;ק״ג</span>
+        <span class="sr-chip sr-chip--left">נותרו <span class="sr-num">5</span> מתוך <span class="sr-num">8</span></span>
+      </div>
+      <div class="sr-note"><span class="sr-eyebrow">מילה מהקצב</span><p>סינטה מגב קצר, פרוסה לסטייקים של 2.5 ס״מ. מתאים למחבת ברזל, מלח גס ושום.</p></div>
+      <div class="sr-media"><img src="../assets/Samples/sample-striploin.svg" alt="סינטה הרפורד, SOL-0019"><span class="sr-media__sample">תמונת דוגמה</span></div>
+    </article>
+  </main>
+
+  <div style="position: absolute; left: 12px; right: 12px; bottom: 76px; z-index: 6;">
+    <a class="sr-cartbar" href="Cart.html" style="text-decoration: none;"><span class="sr-cartbar__count sr-num">2</span><span class="sr-cartbar__label">לסל · 2 קצביות</span><span class="sr-cartbar__sum sr-num">₪462</span></a>
+  </div>
+  <nav class="sr-tabbar" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;">
+    <a class="sr-tab sr-tab--on" href="#"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>פיד</a>
+    <a class="sr-tab" href="Search.html"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>חיפוש</a>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

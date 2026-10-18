@@ -1,0 +1,16 @@
+/* SoloR — generated from tokens.json */
+:root, [data-theme="customer"] { --ground: #0f0b09; --surface: #1a1411; --surface-raised: #2a211c; --line: #f3ede41a; --line-gold: #c9a96e66; --ink: #f3ede4; --ink-muted: #a99f93; --gold: #c9a96e; --gold-soft: #c9a96e1f; --bordeaux: #a3122a; --bordeaux-press: #7d0d20; --bordeaux-glow: #c21a36; --on-bordeaux: #f8f2ea; --state-new: #f3ede4; --on-state-new: #0f0b09; --state-partial: #a3122a; --state-reserved: #c9a96e; --on-state-reserved: #0f0b09; --state-sold: #e8a0a8; --state-error: #e8a0a8; --state-success: #93bb9c; --status-new: #a3122a; --status-prep: #d9a441; --status-ready: #93bb9c; --scrim: #0f0b09b3; --shadow-card: 0 18px 40px -22px rgba(0,0,0,0.9); --shadow-action: 0 8px 22px -8px rgba(194,26,54,0.75); }
+[data-theme="counter"] { --ground: #f7f3ec; --surface: #ffffff; --surface-raised: #efe8de; --line: #1a14111f; --line-gold: #8a6a2f59; --ink: #1a1411; --ink-muted: #6b5f53; --gold: #7d5f27; --gold-soft: #c9a96e29; --bordeaux: #a3122a; --bordeaux-press: #7d0d20; --bordeaux-glow: #c21a36; --on-bordeaux: #ffffff; --state-new: #1a1411; --on-state-new: #ffffff; --state-partial: #a3122a; --state-reserved: #c9a96e; --on-state-reserved: #0f0b09; --state-sold: #b3263f; --state-error: #b3263f; --state-success: #2e7d4f; --status-new: #a3122a; --status-prep: #9a6400; --status-ready: #2e7d4f; --scrim: #1a141166; --shadow-card: 0 1px 3px rgba(26,20,17,0.12); --shadow-action: 0 8px 22px -8px rgba(194,26,54,0.75); }
+:root { --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px; --radius-sm: 8px; --radius-md: 16px; --radius-lg: 24px; --radius-sheet: 28px; --radius-pill: 999px; --tap-min: 44px; --tap-counter: 64px; --screen-max: 480px; --header-h: 56px; --nav-h: 64px; --font-display: "Frank Ruhl Libre", "David Libre", Georgia, serif; --font-sans: "IBM Plex Sans Hebrew", "Heebo", "Rubik", system-ui, sans-serif; --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+.display-xl { font-family: var(--font-display); font-size: 40px; line-height: 44px; font-weight: 700; }
+.title { font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 700; }
+.cut-name { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 700; }
+.section { font-family: var(--font-display); font-size: 18px; line-height: 24px; font-weight: 600; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 400; }
+.body-strong { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 600; }
+.small { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 400; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 500; }
+.eyebrow { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.04em; }
+.price { font-family: var(--font-sans); font-size: 22px; line-height: 26px; font-weight: 600; }
+.code { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.06em; }
+.timer { font-family: var(--font-mono); font-size: 32px; line-height: 36px; font-weight: 500; }

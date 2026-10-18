@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>סל</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09} .rm{background:none;border:0;color:var(--ink-muted);font:500 13px var(--font-sans);min-height:44px;padding:0}</style>
+</helmet>
+<div class="phone sr" style="height: 1000px;">
+  <div style="padding: 12px 16px 0; display: flex; align-items: center; gap: 8px;">
+    <a class="backbtn" href="Main.html" aria-label="חזרה לפיד" style="background: none;"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg></a>
+    <h1 class="screen-title">הסל שלך</h1>
+  </div>
+
+  <div style="padding: 16px 16px 200px; display: flex; flex-direction: column; gap: 20px;">
+    <section class="card" style="gap: 0; border-color: var(--line-gold);">
+      <div class="sr-post__head" style="padding-bottom: 4px;"><span class="sr-mark sr-mark--sm"><span>ח</span></span><span class="section" style="font-family: var(--font-display); font-weight: 600; font-size: 18px;">קצביית האחים חדיף</span></div>
+      <div class="sr-cartrow"><img src="../assets/Samples/sample-ribeye.svg" alt=""><div><div class="sr-cartrow__title">אנטריקוט · בלאק אנגוס</div><div class="sr-cartrow__sub"><span class="sr-num">2</span> סטייקים · <span class="sr-code">SOL-0012</span></div></div><div style="text-align: end;"><div class="sr-num" style="font-weight: 600;">₪132</div><button class="rm">הסר</button></div></div>
+      <div class="sr-cartrow sr-cartrow--sold" style="border-bottom: 0;"><img src="../assets/Samples/sample-ribeye-wagyu.svg" alt=""><div><div class="sr-cartrow__title" style="color: var(--ink-muted); text-decoration: line-through;">אנטריקוט · ואגיו F1</div><div class="sr-cartrow__warn">אזל בינתיים · <span class="sr-code" style="color: inherit;">SOL-0021</span></div></div><div style="text-align: end;"><button class="sr-btn sr-btn--quiet" style="min-height: 40px; padding: 0 14px; font-size: 14px;">הסר</button></div></div>
+    </section>
+
+    <section class="card" style="gap: 0; border-color: var(--line-gold);">
+      <div class="sr-post__head" style="padding-bottom: 4px;"><span class="sr-mark sr-mark--sm"><span>ב</span></span><span style="font-family: var(--font-display); font-weight: 600; font-size: 18px;">מעדני בן עזרא</span></div>
+      <div class="sr-cartrow" style="border-bottom: 0;"><img src="../assets/Samples/sample-striploin.svg" alt=""><div><div class="sr-cartrow__title">סינטה · הרפורד</div><div class="sr-cartrow__sub"><span class="sr-num">2</span> סטייקים · <span class="sr-code">SOL-0019</span></div></div><div style="text-align: end;"><div class="sr-num" style="font-weight: 600;">₪116</div><button class="rm">הסר</button></div></div>
+    </section>
+
+    <p class="sr-legal" style="margin: 0;">ההזמנה תתפצל לשתי קצביות. לכל אחת תבחרו איסוף או משלוח בקופה.</p>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 16px 28px; background: var(--surface); border-top: 1px solid var(--line-gold); border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 12px;">
+    <div class="sr-rowline" style="font-size: 17px;"><span style="font-weight: 600;">סך הכל לפני משלוח</span><span class="sr-num" style="font-weight: 700; font-size: 20px;">₪248</span></div>
+    <p style="margin: 0; font-size: 13px; color: var(--state-sold); font-weight: 600;">נתח אחד אזל. הסירו אותו כדי להמשיך.</p>
+    <button class="sr-btn sr-btn--block" disabled>לקופה</button>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

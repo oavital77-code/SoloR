@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>דף קצבייה</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09} .tile{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit} .tile img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:16px;display:block}</style>
+</helmet>
+<div class="phone sr" style="height: 1240px;">
+  <div style="position: absolute; inset: 0 0 auto 0; height: 300px; background: radial-gradient(110% 80% at 50% 0%, rgba(163,18,42,.35), transparent 75%);"></div>
+  <div style="position: relative; padding: 12px 12px 0; display: flex; justify-content: space-between;">
+    <a class="backbtn" href="Main.html" aria-label="חזרה"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg></a>
+  </div>
+
+  <section style="position: relative; padding: 8px 16px 0; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+    <span class="sr-mark sr-mark--lg" style="--s: 88px;"><span>ח</span></span>
+    <h1 class="screen-title">קצביית האחים חדיף</h1>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--state-success);"></span><span style="color: var(--state-success); font-weight: 600;">פתוח עכשיו</span><span class="sr-muted">· עד <span class="sr-num">20:00</span></span></div>
+    <p class="sr-muted" style="margin: 0; font-size: 14px; line-height: 20px; max-width: 300px;">איסוף מהדלפק או משלוח עד הבית</p>
+  </section>
+
+  <section style="position: relative; padding: 24px 16px 0; display: flex; flex-direction: column; gap: 16px;">
+    <div class="card" style="gap: 10px;">
+      <span class="sr-eyebrow">שעות</span>
+      <div class="sr-rowline"><span>ראשון–חמישי</span><span class="sr-num">08:00–20:00</span></div>
+      <div class="sr-rowline"><span>שישי</span><span class="sr-num">07:00–14:00</span></div>
+      <div class="sr-rowline"><span class="sr-muted">שבת</span><span class="sr-muted">סגור</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span class="sr-eyebrow">מאיפה הבשר מגיע</span>
+      <div class="sr-chips"><span class="sr-chip">[ספק בקר 1]</span><span class="sr-chip">[ספק בקר 2]</span><span class="sr-chip">[ספק טלה]</span></div>
+    </div>
+  </section>
+
+  <section style="position: relative; padding: 28px 16px 0; display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;"><h2 class="sr-cutname" style="font-size: 20px;">הנתחים של היום</h2><span class="sr-muted" style="font-size: 13px;"><span class="sr-num">6</span> נתחים</span></div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px;">
+      <a class="tile" href="Cut.html"><img src="../assets/Samples/sample-ribeye.svg" alt=""><span style="font-weight: 600; font-size: 15px;">אנטריקוט · בלאק אנגוס</span><span class="sr-muted" style="font-size: 13px;">יושן <span class="sr-num">28</span> יום · מ־<span class="sr-num">₪66</span></span></a>
+      <a class="tile" href="#" style="position: relative;"><img src="../assets/Samples/sample-ribeye-wagyu.svg" alt="" style="filter: brightness(.8);"><span class="sr-badge-reserved" style="top: 8px; inset-inline-end: 8px; height: 26px; font-size: 12px;">שוריין</span><span style="font-weight: 600; font-size: 15px;">אנטריקוט · ואגיו F1</span><span class="sr-muted" style="font-size: 13px;">יושן <span class="sr-num">35</span> יום · <span class="sr-num">₪612</span></span></a>
+      <a class="tile" href="#"><img src="../assets/Samples/sample-striploin.svg" alt=""><span style="font-weight: 600; font-size: 15px;">סינטה · אנגוס</span><span class="sr-muted" style="font-size: 13px;">יושן <span class="sr-num">21</span> יום · מ־<span class="sr-num">₪58</span></span></a>
+      <a class="tile" href="#"><img src="../assets/Samples/sample-ribeye.svg" alt="" style="transform: scaleX(-1);"><span style="font-weight: 600; font-size: 15px;">צלעות · בלאק אנגוס</span><span class="sr-muted" style="font-size: 13px;">יושן <span class="sr-num">14</span> יום · <span class="sr-num">₪420</span></span></a>
+    </div>
+  </section>
+</div>
+</x-dc>
+</body>
+</html>

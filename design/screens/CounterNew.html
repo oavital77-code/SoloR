@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>קצב · נתח חדש</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#f7f3ec} .cf{display:flex;flex-direction:column;gap:6px} .cf label{font-size:14px;font-weight:600;color:var(--ink-muted)} .cf input,.cf textarea{min-height:52px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 14px;font:600 18px var(--font-sans)} .cf textarea{padding:12px 14px;font-weight:500;font-size:16px;line-height:22px;min-height:80px;resize:none} .row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} .cchip{min-height:48px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font:600 16px var(--font-sans);color:var(--ink)} .cchip.on{background:var(--ink);color:var(--ground);border-color:var(--ink)} .mscale{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;direction:ltr} .mscale button{height:44px;border-radius:8px;border:0;background:var(--surface-raised);font:700 15px var(--font-sans);color:var(--ink-muted)} .mscale button.on{background:var(--ink);color:var(--ground)}</style>
+</helmet>
+<div class="phone sr" data-theme="counter" style="height: 1120px; background: var(--ground); color: var(--ink);">
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px;">
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 26px;">נתח חדש</h1>
+    <a href="Counter.html" style="min-height: 44px; display: flex; align-items: center; color: var(--ink-muted); font-weight: 600; text-decoration: none;">ביטול</a>
+  </header>
+
+  <div style="padding: 8px 16px 120px; display: flex; flex-direction: column; gap: 16px;">
+    <div style="position: relative; aspect-ratio: 4/3; border-radius: 16px; overflow: hidden; background: #1c1815;">
+      <img src="../assets/Samples/sample-ribeye.svg" alt="תצוגה מקדימה של הצילום" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+      <div style="position: absolute; inset: 12px; border: 2px dashed rgba(255,255,255,.55); border-radius: 10px;"></div>
+      <span style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px;">מלמעלה · אור מהחלון · בלי פלאש</span>
+      <div style="position: absolute; bottom: 14px; left: 14px; right: 14px; display: flex; gap: 8px;">
+        <button class="cchip" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z"/><circle cx="12" cy="13.2" r="3.4"/></svg>צלם שוב</button>
+        <button class="cchip" style="flex: 1;">+ וידאו</button>
+      </div>
+    </div>
+
+    <div class="cf"><label>סוג נתח</label><div style="display: flex; flex-wrap: wrap; gap: 8px;"><button class="cchip on">אנטריקוט</button><button class="cchip">סינטה</button><button class="cchip">פילה</button><button class="cchip">צלעות</button><button class="cchip">אחר</button></div></div>
+    <div class="row2"><div class="cf"><label for="br">גזע</label><input id="br" value="בלאק אנגוס"></div><div class="cf"><label for="or">מקור</label><input id="or" value="אורוגוואי"></div></div>
+    <div class="row2"><div class="cf"><label for="ag">יישון (ימים)</label><input id="ag" value="28" dir="ltr" style="text-align: right;"></div><div class="cf"><label>סוג יישון</label><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;"><button class="cchip on">יבש</button><button class="cchip">רטוב</button></div></div></div>
+    <div class="row2"><div class="cf"><label for="wt">משקל (ק״ג)</label><input id="wt" value="1.20" dir="ltr" style="text-align: right;"></div><div class="cf"><label for="pk">מחיר לק״ג (₪)</label><input id="pk" value="289" dir="ltr" style="text-align: right;"></div></div>
+    <div class="cf"><label>שיוש, להערכתך</label><div class="mscale"><button>1</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button class="on">8</button><button>9</button><button>10</button></div></div>
+    <div class="cf"><label for="nt">מילה מהקצב</label><textarea id="nt">שומן לבן ויציב ושיוש עדין לכל האורך. הייתי פורס לשני סטייקים של 3 ס״מ.</textarea></div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 16px 24px; background: var(--surface); border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+    <button class="sr-cbtn" style="background: var(--surface-raised); color: var(--ink); font-size: 17px;">טיוטה</button>
+    <button class="sr-cbtn sr-cbtn--new">העלה לפיד</button>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

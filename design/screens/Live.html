@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מצבים חיים בפיד</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09}</style>
+</helmet>
+<div class="phone sr" style="height: 1500px;">
+  <header class="sr-header hd">
+    <img class="sr-header__logo" src="../assets/Logos/solor-wordmark-on-dark.svg" alt="SoloR">
+    <div class="sr-header__actions">
+      <button class="sr-iconbtn" aria-label="סל"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 8.5h13l-1 11.5h-11z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg></button>
+      <button class="sr-iconbtn" aria-label="החשבון שלי"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.7-5.5 7-5.5s6.2 1.9 7 5.5"/></svg></button>
+    </div>
+  </header>
+
+  <main style="padding: 8px 16px 0; display: flex; flex-direction: column; gap: 24px;">
+    <article class="sr-post">
+      <header class="sr-post__head"><span class="sr-mark"><span>ח</span></span><div><div class="sr-post__shop">קצביית האחים חדיף</div><div class="sr-post__when sr-post__when--reserved">שוריין</div></div></header>
+      <h2 class="sr-cutname">אנטריקוט <small>· ואגיו F1</small></h2>
+      <div class="sr-chips"><span class="sr-chip sr-chip--aging"><svg class="sr-ic sr-ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10M7 20h10M8 4c0 4 8 4.5 8 8s-8 4-8 8M16 4c0 4-8 4.5-8 8"/></svg>יושן 35 יום · יבש</span><span class="sr-chip">אוסטרליה</span><span class="sr-chip"><span class="sr-num">0.9</span>&nbsp;ק״ג</span></div>
+      <div class="sr-media sr-media--reserved"><img src="../assets/Samples/sample-ribeye-wagyu.svg" alt="אנטריקוט ואגיו, SOL-0021"><span class="sr-media__sample">תמונת דוגמה</span><span class="sr-badge-reserved"><svg class="sr-ic sr-ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg>שוריין · חוזר בעוד <span class="sr-num">8</span> דק׳</span></div>
+      <div class="sr-orderbar"><div class="sr-orderbar__info"><span class="sr-price"><span class="sr-num">₪612</span> <small>נתח שלם</small></span><span class="sr-meta"><span class="sr-num">₪680</span> לק״ג · <span class="sr-code">SOL-0021</span></span></div><button class="sr-btn sr-btn--round sr-btn--disabled" disabled aria-label="שוריין על ידי לקוח אחר"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg></button></div>
+    </article>
+
+    <article class="sr-post">
+      <header class="sr-post__head"><span class="sr-mark"><span>ח</span></span><div><div class="sr-post__shop">קצביית האחים חדיף</div><div class="sr-post__when sr-post__when--sold">אזל עכשיו</div></div></header>
+      <h2 class="sr-cutname">אנטריקוט <small>· בלאק אנגוס</small></h2>
+      <div class="sr-chips"><span class="sr-chip sr-chip--aging"><svg class="sr-ic sr-ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10M7 20h10M8 4c0 4 8 4.5 8 8s-8 4-8 8M16 4c0 4-8 4.5-8 8"/></svg>יושן 28 יום · יבש</span><span class="sr-chip">אורוגוואי</span><span class="sr-chip"><span class="sr-num">1.2</span>&nbsp;ק״ג</span></div>
+      <div class="sr-media sr-media--sold"><img src="../assets/Samples/sample-ribeye.svg" alt="אנטריקוט בלאק אנגוס, SOL-0012, אזל"><div class="sr-stamp sr-stamp--landing"><div class="sr-stamp__ink"><div><span class="sr-stamp__word">אזל</span><span class="sr-stamp__meta">SOL-0012 · 18.10</span></div></div></div></div>
+      <div class="sr-orderbar"><div class="sr-orderbar__info"><span class="sr-price" style="color: var(--ink-muted);"><span class="sr-num">₪66</span> <small>לסטייק</small></span><span class="sr-meta"><a href="Shop.html" style="color: var(--gold);">עוד נתחים מהאחים חדיף</a></span></div><button class="sr-btn sr-btn--round sr-btn--disabled" disabled aria-label="אזל"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg></button></div>
+    </article>
+
+    <article class="sr-post">
+      <header class="sr-post__head"><span class="sr-mark"><span>ב</span></span><div><div class="sr-post__shop">מעדני בן עזרא</div><div class="sr-post__when">לפני 42 דק׳</div></div></header>
+      <h2 class="sr-cutname">סינטה <small>· הרפורד</small></h2>
+      <div class="sr-chips"><span class="sr-chip sr-chip--aging"><svg class="sr-ic sr-ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10M7 20h10M8 4c0 4 8 4.5 8 8s-8 4-8 8M16 4c0 4-8 4.5-8 8"/></svg>יושן 21 יום · רטוב</span><span class="sr-chip">ישראל</span><span class="sr-chip sr-chip--left">נותרו <span class="sr-num">5</span> מתוך <span class="sr-num">8</span></span></div>
+      <div class="sr-media"><img src="../assets/Samples/sample-striploin.svg" alt="סינטה הרפורד, SOL-0019"><span class="sr-media__sample">תמונת דוגמה</span></div>
+      <div class="sr-orderbar"><div class="sr-orderbar__info"><span class="sr-price"><span class="sr-num">₪58</span> <small>לסטייק</small></span><span class="sr-meta"><span class="sr-num">₪239</span> לק״ג · <span class="sr-code">SOL-0019</span></span></div><a class="sr-btn sr-btn--round" href="AddSheet.html" aria-label="הוסף לסל"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a></div>
+    </article>
+  </main>
+</div>
+</x-dc>
+</body>
+</html>

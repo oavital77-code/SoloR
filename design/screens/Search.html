@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>חיפוש</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09}</style>
+</helmet>
+<div class="phone sr" style="height: 844px;">
+  <div style="padding: 16px 16px 0; display: flex; flex-direction: column; gap: 20px;">
+    <h1 class="screen-title">חיפוש</h1>
+    <label style="display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border-radius: 999px; background: var(--surface-raised); color: var(--ink-muted);">
+      <svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      <input id="q" type="search" placeholder="נתח, גזע או קצבייה" style="flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 500 16px var(--font-sans); outline: none;">
+    </label>
+
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <span class="sr-eyebrow">סוג נתח</span>
+      <div class="sr-chips">
+        <button class="fchip on">אנטריקוט</button><button class="fchip on">סינטה</button><button class="fchip">פילה</button><button class="fchip">צלעות</button><button class="fchip">פיקניה</button><button class="fchip">שייטל</button>
+      </div>
+    </section>
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <span class="sr-eyebrow">יישון</span>
+      <div class="sr-chips"><button class="fchip">עד <span class="sr-num">14</span> יום</button><button class="fchip on"><span class="sr-num">14–28</span> יום</button><button class="fchip on"><span class="sr-num">28</span>+ יום</button><button class="fchip">יבש בלבד</button></div>
+    </section>
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <span class="sr-eyebrow">איך לקנות</span>
+      <div class="seg"><button class="on">הכל</button><button>שלם</button></div>
+    </section>
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <span class="sr-eyebrow">קצביות</span>
+      <div style="display: flex; gap: 20px;">
+        <button style="display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; color: var(--ink); font: 500 13px var(--font-sans);"><span class="sr-mark" style="--s: 56px;"><span>ח</span></span>האחים חדיף</button>
+        <button style="display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; color: var(--ink-muted); font: 500 13px var(--font-sans); opacity: .7;"><span class="sr-mark" style="--s: 56px; background: var(--line);"><span>ב</span></span>בן עזרא</button>
+      </div>
+    </section>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 64px; padding: 12px 16px; display: flex; gap: 10px; align-items: center; background: var(--ground); border-top: 1px solid var(--line);">
+    <button class="sr-btn sr-btn--ghost" style="min-height: 52px;">נקה הכל</button>
+    <a class="sr-btn sr-btn--block" href="Main.html" style="flex: 1; text-decoration: none;">הצג <span class="sr-num">7</span> נתחים</a>
+  </div>
+  <nav class="sr-tabbar" style="position: absolute; left: 0; right: 0; bottom: 0;">
+    <a class="sr-tab" href="Main.html"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>פיד</a>
+    <a class="sr-tab sr-tab--on" href="#"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>חיפוש</a>
+  </nav>
+</div>
+</x-dc>
+</body>
+</html>

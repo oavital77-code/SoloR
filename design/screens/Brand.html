@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>לוגו ואייקון</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09} .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--ink-muted);direction:ltr;text-align:right} .sw{display:flex;flex-direction:column;gap:8px} .sw i{display:block;height:72px;border-radius:12px} .sw b{font-size:14px} .sw span{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);direction:ltr;text-align:right}</style>
+</helmet>
+<div class="sr" style="width: 880px; height: 1000px; box-sizing: border-box; padding: 48px; background: var(--ground); color: var(--ink); display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 48px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <span class="lbl">SPLASH</span>
+    <div style="position: relative; width: 300px; height: 620px; border-radius: 36px; overflow: hidden; background: var(--ground); box-shadow: 0 0 0 1px var(--line-gold); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;">
+      <div style="position: absolute; inset: 0; background: radial-gradient(90% 50% at 50% 0%, rgba(163,18,42,.4), transparent 70%);"></div>
+      <img src="../assets/Logos/solor-symbol.svg" alt="" style="position: relative; width: 104px; height: 104px;">
+      <img src="../assets/Logos/solor-wordmark-on-dark.svg" alt="SoloR" style="position: relative; height: 34px;">
+    </div>
+    <p class="sr-muted" style="margin: 0; font-size: 13px; line-height: 19px;">הסמל נושם פעם אחת (<span class="sr-num">1.4</span> שנ׳) עד שהפיד נטען. בלי טקסט, בלי מחוון טעינה.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 36px; min-width: 0;">
+    <section style="display: flex; flex-direction: column; gap: 16px;">
+      <span class="lbl">APP ICON</span>
+      <div style="display: flex; align-items: flex-end; gap: 28px;">
+        <img src="../assets/Logos/solor-app-icon.svg" alt="אייקון האפליקציה" style="width: 180px; height: 180px; border-radius: 40px;">
+        <img src="../assets/Logos/solor-app-icon.svg" alt="" style="width: 76px; height: 76px; border-radius: 17px;">
+        <img src="../assets/Logos/solor-app-icon.svg" alt="" style="width: 48px; height: 48px; border-radius: 11px;">
+        <img src="../assets/Logos/solor-app-icon.svg" alt="" style="width: 32px; height: 32px; border-radius: 8px;">
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 16px;">
+      <span class="lbl">WORDMARK</span>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+        <div style="height: 120px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: grid; place-items: center;"><img src="../assets/Logos/solor-wordmark-on-dark.svg" alt="SoloR על כהה" style="height: 44px;"></div>
+        <div style="height: 120px; border-radius: 16px; background: #f7f3ec; display: grid; place-items: center;"><img src="../assets/Logos/solor-wordmark-on-light.svg" alt="SoloR על בהיר" style="height: 44px;"></div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 16px;">
+      <span class="lbl">COLOR</span>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;">
+        <div class="sw"><i style="background: #0f0b09; box-shadow: inset 0 0 0 1px var(--line);"></i><b>ground</b><span>#0F0B09</span></div>
+        <div class="sw"><i style="background: #f3ede4;"></i><b>ink</b><span>#F3EDE4</span></div>
+        <div class="sw"><i style="background: #a3122a;"></i><b>bordeaux</b><span>#A3122A</span></div>
+        <div class="sw"><i style="background: #c9a96e;"></i><b>gold</b><span>#C9A96E</span></div>
+        <div class="sw"><i style="background: #e8a0a8;"></i><b>state-sold</b><span>#E8A0A8</span></div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 12px;">
+      <span class="lbl">TYPE</span>
+      <div style="font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: 48px;">אנטריקוט · יושן 28 יום</div>
+      <div style="font-size: 17px; line-height: 26px; max-width: 460px;">IBM Plex Sans Hebrew לכל הממשק. שומן לבן ויציב, שיוש עדין לאורך כל הנתח.</div>
+      <div style="display: flex; gap: 20px; align-items: baseline;"><span class="sr-price"><span class="sr-num">₪289</span> <small>לק״ג</small></span><span class="sr-code" style="font-size: 14px;">SOL-0012</span><span class="sr-timer" style="font-size: 24px;">9:59</span></div>
+    </section>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

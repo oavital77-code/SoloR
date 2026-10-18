@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>הוספה לסל</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09}</style>
+</helmet>
+<div class="phone sr" style="height: 844px;">
+  <div style="padding: 72px 16px 0; filter: blur(1px);" aria-hidden="true">
+    <div class="sr-post" style="gap: 12px;">
+      <h2 class="sr-cutname">אנטריקוט <small>· בלאק אנגוס</small></h2>
+      <div class="sr-media"><img src="../assets/Samples/sample-ribeye.svg" alt=""></div>
+    </div>
+  </div>
+  <div style="position: absolute; inset: 0; background: var(--scrim);"></div>
+
+  <div class="sr-sheet" style="position: absolute; left: 0; right: 0; bottom: 0; padding-bottom: 28px;">
+    <div class="sr-sheet__grab"></div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <img src="../assets/Samples/sample-ribeye.svg" alt="" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover;">
+      <div style="flex: 1; min-width: 0;"><h3 class="sr-sheet__title" style="font-size: 20px; line-height: 26px;">אנטריקוט · בלאק אנגוס</h3><span class="sr-code">SOL-0012</span> <span class="sr-muted" style="font-size: 13px;">· <span class="sr-num">1.2</span> ק״ג · נותרו <span class="sr-num">6</span> סטייקים</span></div>
+      <button class="backbtn" aria-label="סגירה" style="background: var(--surface-raised);"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg></button>
+    </div>
+
+    <div class="seg"><button>נתח שלם · <span class="sr-num">₪346</span></button><button class="on">סטייקים · <span class="sr-num">₪66</span></button></div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div><div style="font-weight: 600;">כמה סטייקים?</div><div class="sr-muted" style="font-size: 13px;">כ־<span class="sr-num">3</span> ס״מ כל אחד, לפי הקצב</div></div>
+      <div class="stepper"><button aria-label="פחות">−</button><b class="sr-num">2</b><button aria-label="עוד">+</button></div>
+    </div>
+
+    <div class="hr"></div>
+    <div class="sr-rowline"><span class="sr-muted">משקל משוער</span><span><span class="sr-num">0.46</span> ק״ג</span></div>
+    <p class="sr-legal" style="margin: 0;">המשקל בפועל עשוי לסטות ב־<span class="sr-num">±5%</span>. חריגה מעל <span class="sr-num">5%</span> תוחזר לך אוטומטית.</p>
+    <a class="sr-btn sr-btn--block" href="Cart.html" style="text-decoration: none;">הוסף לסל · <span class="sr-num">₪132</span></a>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

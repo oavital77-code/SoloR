@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>ההזמנה התקבלה</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<link rel="stylesheet" href="./screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700;800&amp;family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0;background:#0f0b09}</style>
+</helmet>
+<div class="phone sr" style="height: 900px;">
+  <div class="wash" style="height: 420px; background: radial-gradient(90% 60% at 50% 0%, rgba(201,169,110,.18), transparent 70%);"></div>
+  <section style="position: relative; padding: 72px 24px 28px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;">
+    <span style="width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; color: var(--gold); box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 10px var(--gold-soft);">
+      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    </span>
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 42px;">ההזמנה התקבלה</h1>
+    <span class="sr-muted" style="font-size: 15px;">מספר הזמנה <span class="sr-code" style="font-size: 15px; color: var(--ink);">SR-1042</span></span>
+    <p style="margin: 0; font-size: 15px; line-height: 22px; max-width: 300px;">הקצבים קיבלו את ההזמנה. נעדכן אותך כשהנתחים מוכנים.</p>
+  </section>
+
+  <div style="position: relative; padding: 0 16px; display: flex; flex-direction: column; gap: 14px;">
+    <div class="card" style="border-color: var(--line-gold);">
+      <div class="sr-post__head"><span class="sr-mark sr-mark--sm"><span>ח</span></span><span style="font-family: var(--font-display); font-weight: 600; font-size: 18px; flex: 1;">קצביית האחים חדיף</span><span class="sr-num">₪157</span></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--gold);"><path d="M3 6.5h11v10H3zM14 10h3.5l3 3.5v3H14"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>משלוח · אנטריקוט, <span class="sr-num">2</span> סטייקים</div>
+    </div>
+    <div class="card" style="border-color: var(--line-gold);">
+      <div class="sr-post__head"><span class="sr-mark sr-mark--sm"><span>ב</span></span><span style="font-family: var(--font-display); font-weight: 600; font-size: 18px; flex: 1;">מעדני בן עזרא</span><span class="sr-num">₪116</span></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;"><svg class="sr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--gold);"><path d="M4 9.5 5.5 5h13L20 9.5"/><path d="M4 9.5h16v1a2.7 2.7 0 0 1-5.3 0 2.7 2.7 0 0 1-5.4 0A2.7 2.7 0 0 1 4 10.5z"/><path d="M5.5 13.5V20h13v-6.5M10 20v-4h4v4"/></svg>איסוף מהדלפק · סינטה, <span class="sr-num">2</span> סטייקים</div>
+    </div>
+    <a class="sr-btn sr-btn--block" href="Tracking.html" style="text-decoration: none; margin-top: 10px;">למעקב ההזמנה</a>
+    <a class="sr-link" href="Main.html" style="align-self: center;">חזרה לפיד</a>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
