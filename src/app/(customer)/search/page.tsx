@@ -171,7 +171,7 @@ function Shops({ butchers }: { butchers: Butcher[] }) {
         {active.map((b) => (
           <li key={b.id}>
             <Link href={shopPath(b)} className="flex w-20 flex-col items-center gap-2">
-              <ShopMark shop={b} className="size-16 text-2xl" />
+              <ShopMark shop={b} size="xl" />
               <span className="line-clamp-2 text-center text-xs leading-tight text-ivory/80">{b.name}</span>
             </Link>
           </li>

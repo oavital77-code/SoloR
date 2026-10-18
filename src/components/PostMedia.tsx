@@ -12,10 +12,12 @@ import { mediaUrl, photosOf, videoOf } from "@/lib/cut-helpers";
 import type { CutMedia } from "@/lib/types";
 import { track as logEvent } from "@/lib/track";
 
-export function PostMedia({ media, title, code, href, eager, children }: {
+export function PostMedia({ media, title, code, href, eager, state, children }: {
   media: CutMedia[]; title: string; code: string;
   /** feed: a tap on a photo opens this post; full post: undefined → full-screen viewer */
   href?: string; eager?: boolean; children?: React.ReactNode;
+  /** sold: the photos lose their colour under the stamp; reserved: they dim (design system: PostStates) */
+  state?: "sold" | "reserved" | null;
 }) {
   const photos = photosOf(media);
   const video = videoOf(media);
@@ -75,7 +77,8 @@ export function PostMedia({ media, title, code, href, eager, children }: {
     <div ref={box} className="relative overflow-hidden bg-ink-3">
       {/* horizontal-only strip in a fixed-ratio box: a vertical swipe always scrolls the page (iOS) */}
       <div className="relative aspect-square w-full">
-        <div ref={track} onScroll={onScroll} className="no-scrollbar absolute inset-0 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
+        <div ref={track} onScroll={onScroll} className={clsx("no-scrollbar absolute inset-0 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden transition-[filter] duration-[600ms]",
+          state === "sold" && "grayscale brightness-[.55]", state === "reserved" && "brightness-[.8]")}>
           {slides.map((m, i) => (
             <div key={m.id} className="relative h-full w-full shrink-0 snap-center bg-black">
               {m.type === "video" ? (
@@ -108,11 +111,11 @@ export function PostMedia({ media, title, code, href, eager, children }: {
 
       {slides.length > 1 && (
         <>
-          <span className="pointer-events-none absolute top-3 end-3 rounded-full bg-ink/60 px-2.5 py-0.5 text-xs text-ivory backdrop-blur-sm" dir="ltr">
+          <span className="pointer-events-none absolute bottom-3 end-3 rounded-full bg-scrim px-2.5 py-0.5 text-xs text-ivory" dir="ltr">
             {he.post.counter(active + 1, slides.length)}
           </span>
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-2" aria-hidden>
-            {slides.map((m, i) => <span key={m.id} className={clsx("size-1.5 rounded-full transition-colors", i === active ? "bg-ivory" : "bg-ivory/40")} />)}
+          <div className="pointer-events-none absolute inset-x-0 bottom-[18px] flex justify-center gap-1.5" aria-hidden>
+            {slides.map((m, i) => <span key={m.id} className={clsx("h-1.5 rounded-full transition-all", i === active ? "w-[18px] bg-ivory" : "w-1.5 bg-ivory/40")} />)}
           </div>
         </>
       )}

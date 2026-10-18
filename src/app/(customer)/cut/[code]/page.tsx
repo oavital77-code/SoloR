@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CutDetail } from "@/components/CutDetail";
 import { PurchaseBar } from "@/components/PurchaseBar";
 import { ErrorState, Spinner } from "@/components/ui";
+import { IconBack } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
 import { track } from "@/lib/track";
@@ -16,7 +17,7 @@ import { shopPath } from "@/lib/market";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Cut, CutMedia, OrderMode } from "@/lib/types";
 
-const overlayBtn = "pointer-events-auto min-h-10 rounded-full bg-ink/55 px-4 text-sm tracking-wide text-ivory backdrop-blur-md ring-1 ring-ivory/15";
+const overlayBtn = "pointer-events-auto grid size-11 place-items-center rounded-full bg-scrim text-ivory";
 
 export default function CutPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
@@ -68,14 +69,15 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
 
   return (
     <main className="relative min-h-dvh">
+      {/* over the photo (design: Cut): a round back button, and the cut's code — tap it to share the cut */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-between px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <button type="button"
+        <button type="button" aria-label={he.app.back}
           onClick={() => (window.history.length > 1 ? router.back() : router.push(butcher ? shopPath(butcher) : "/"))}
           className={overlayBtn}>
-          {he.app.back}
+          <IconBack />
         </button>
         {cut && (
-          <button type="button"
+          <button type="button" aria-label={he.cut.share}
             onClick={async () => {
               const url = `${window.location.origin}/cut/${cut.code}`;
               try {
@@ -83,8 +85,8 @@ export default function CutPage({ params }: { params: Promise<{ code: string }> 
                 else { await navigator.clipboard.writeText(url); toast(he.cut.linkCopied, { tone: "success" }); }
               } catch { /* user cancelled */ }
             }}
-            className={overlayBtn}>
-            {he.cut.share}
+            className="code pointer-events-auto self-center rounded-full bg-scrim px-2.5 py-1.5 text-ivory">
+            {cut.code}
           </button>
         )}
       </div>

@@ -16,7 +16,7 @@ export function DemoChooser({ shops, next, failed }: { shops: Shop[]; next: stri
     <main className="relative mx-auto flex min-h-dvh max-w-[480px] flex-col justify-end overflow-hidden bg-ink px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] text-center text-ivory">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,16,46,0.4),transparent_60%)]" aria-hidden />
       <div className="relative mb-auto pt-[20dvh]">
-        <Logo className="text-6xl" />
+        <Logo height={44} />
         <p className="mt-4 text-xl font-semibold leading-snug text-ivory/85">{he.app.tagline}</p>
       </div>
 

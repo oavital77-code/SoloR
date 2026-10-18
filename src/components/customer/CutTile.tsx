@@ -25,7 +25,7 @@ export function CutTile({ cut, breeds, shop, onOpen }: {
           )}
           {shop && (
             <span className="absolute bottom-2 start-2" title={shop.name}>
-              <ShopMark shop={shop} className="size-7 text-xs" />
+              <ShopMark shop={shop} size="sm" />
             </span>
           )}
         </div>

@@ -86,16 +86,16 @@ export function Stepper({ value, min, max, onChange, dark, size = "md", label }:
   value: number; min: number; max: number; onChange: (v: number) => void; dark?: boolean; size?: "md" | "lg"; label?: string;
 }) {
   const btn = clsx(
-    "grid place-items-center rounded-2xl font-bold disabled:opacity-30",
-    size === "lg" ? "size-14" : "size-11",
-    dark ? "bg-white/10 text-white" : "bg-neutral-100 text-neutral-900 ring-1 ring-neutral-300",
+    "grid place-items-center font-bold disabled:opacity-30",
+    size === "lg" ? "size-14 rounded-2xl" : dark ? "size-10 rounded-full" : "size-11 rounded-2xl",
+    dark ? "bg-ink-2 text-ivory" : "bg-neutral-100 text-neutral-900 ring-1 ring-neutral-300",
   );
   return (
-    <div className="flex items-center gap-3" role="group" aria-label={label}>
+    <div className={clsx("flex items-center", dark ? "gap-1 rounded-full bg-ink-3 p-1" : "gap-3")} role="group" aria-label={label}>
       <button type="button" className={btn} aria-label={he.a11y.less} disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
         <span className="text-2xl leading-none">−</span>
       </button>
-      <span className={clsx("ltr min-w-10 text-center font-extrabold tabular-nums", size === "lg" ? "text-3xl" : "text-2xl")} aria-live="polite">
+      <span className={clsx("ltr min-w-8 text-center font-bold tabular-nums", size === "lg" ? "text-3xl" : dark ? "text-[17px]" : "text-2xl")} aria-live="polite">
         {value}
       </span>
       <button type="button" className={btn} aria-label={he.a11y.more} disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>
@@ -125,12 +125,14 @@ export function BottomSheet({ open, onClose, title, children, dark }: {
       <div className="animate-fade-in absolute inset-0 bg-black/60" onClick={onClose} />
       <div
         className={clsx(
-          "animate-slide-up relative max-h-[90dvh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]",
-          dark ? "bg-ink-2 text-white" : "bg-white text-neutral-900",
+          "animate-slide-up relative max-h-[90dvh] w-full max-w-[480px] overflow-y-auto",
+          // the customer's sheet (design system: sr-sheet): surface, 28px top corners, a thin gold edge
+          dark ? "sr-sheet !block pb-[max(1.75rem,env(safe-area-inset-bottom))] text-ivory"
+            : "rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-neutral-900",
         )}
       >
-        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-current opacity-20" />
-        {title && <h2 className="mb-4 text-xl font-extrabold">{title}</h2>}
+        <div className={clsx("mx-auto mb-3 h-1 w-10 rounded-full", dark ? "bg-line" : "h-1.5 w-12 bg-current opacity-20")} />
+        {title && <h2 className={clsx("mb-4", dark ? "sr-sheet__title" : "text-xl font-extrabold")}>{title}</h2>}
         {children}
       </div>
     </div>
@@ -209,7 +211,7 @@ export function Field({ label, hint, error, children, htmlFor, dark }: {
 export const inputClass =
   "min-h-14 w-full rounded-2xl bg-white px-4 text-lg ring-1 ring-neutral-300 outline-none focus:ring-2 focus:ring-brand disabled:bg-neutral-100 disabled:text-neutral-500";
 export const inputDarkClass =
-  "min-h-12 w-full rounded-xl bg-ivory/[0.04] px-4 text-center text-base text-ivory ring-1 ring-ivory/15 outline-none placeholder:text-stone/80 focus:ring-ivory/50";
+  "min-h-12 w-full rounded-2xl border border-line bg-ink-3 px-3.5 text-base text-ivory outline-none placeholder:text-stone/80 focus:border-gold";
 
 /** Shows numbers/codes LTR inside Hebrew text */
 export function Ltr({ children, className }: { children: React.ReactNode; className?: string }) {

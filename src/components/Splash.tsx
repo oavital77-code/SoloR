@@ -28,7 +28,13 @@ export function Splash() {
   return (
     <div aria-hidden className={clsx("fixed inset-0 z-[200] grid place-items-center bg-ink text-ivory transition-opacity duration-400",
       phase === "fading" && "opacity-0")}>
-      <Logo className="animate-splash text-6xl" />
+      <div className="wash absolute inset-0" />
+      {/* the symbol at the centre on ground, a soft bordeaux glow above (design system: Logos) */}
+      <div className="relative flex flex-col items-center gap-7">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/symbol.svg" alt="" className="animate-splash size-28" />
+        <Logo height={36} />
+      </div>
     </div>
   );
 }

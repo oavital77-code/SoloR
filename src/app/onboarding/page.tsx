@@ -36,7 +36,7 @@ export default function OnboardingPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col bg-ink px-6 py-10 text-center text-white">
-      <Logo className="text-3xl" />
+      <Logo height={28} />
       <h1 className="mt-10 text-3xl font-extrabold">{he.onboarding.title}</h1>
       <p className="mt-2 text-white/70">{he.onboarding.subtitle}</p>
       <form onSubmit={submit} className="mt-8 flex flex-col gap-5 [&_label]:text-white">

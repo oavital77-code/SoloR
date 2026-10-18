@@ -1,11 +1,12 @@
 "use client";
-// The cut page body — shared by the customer cut page (C4) and the butcher preview (B3 step 5):
-// the post itself in full (customer spec §6), then the meat certificate and pickup details.
+// The cut page body (design: Cut) — shared by the customer cut page (C4) and the butcher preview (B3 step 5):
+// the post in full, media first and edge to edge, then the meat certificate fact by fact, and where to pick it up.
 import { CutPost } from "./CutPost";
 import { Ltr } from "./ui";
 import { he } from "@/lib/i18n/he";
-import { agingMethodLabel, originLabel } from "@/lib/labels";
-import { breedLabel } from "@/lib/cut-helpers";
+import { agingMethodLabel, cutTypeLabel, originLabel } from "@/lib/labels";
+import { breedLabel, formatDateTime } from "@/lib/cut-helpers";
+import { isolateTimes } from "@/lib/hours";
 import { demoCredits, isDemoMedia } from "@/lib/demo-credits";
 import { useNow } from "@/lib/hooks";
 import { formatAgorot, formatWeight } from "@/lib/pricing";
@@ -19,57 +20,52 @@ export function CutDetail({ cut, media, breeds, butcher }: {
   const demo = isDemoMedia(media);
   const credits = demoCredits(media);
 
+  // the meat certificate (design: Cut): what this one piece is, fact by fact
   const rows: [string, React.ReactNode][] = [];
-  if (cut.origin_country) rows.push([he.cut.origin, originLabel(cut.origin_country)]);
+  rows.push([he.cut.code, <span key="c" className="code text-[14px] text-ivory">{cut.code}</span>]);
+  if (cut.cut_type) rows.push([he.cut.cutLabel, <>{cutTypeLabel(cut.cut_type)}{cut.sale_mode ? ` · ${he.cut.soldAs[cut.sale_mode]}` : ""}</>]);
   const breed = breedLabel(cut, breeds);
   if (breed) rows.push([he.cut.breed, breed]);
+  if (cut.origin_country) rows.push([he.cut.origin, originLabel(cut.origin_country)]);
   if (cut.is_aged != null) {
     rows.push([he.cut.aging, cut.is_aged && cut.aging_days
       ? <>{he.cut.aged(cut.aging_days, agingMethodLabel(cut.aging_method))}</>
       : he.feed.notAged]);
   }
-  if (cut.weight_g) rows.push([he.cut.weight, <Ltr key="w">{formatWeight(cut.weight_g)}</Ltr>]);
-  if (cut.price_per_kg_agorot) rows.push([he.cut.pricePerKg, <Ltr key="p">₪{formatAgorot(cut.price_per_kg_agorot)}</Ltr>]);
+  if (cut.weight_g) {
+    rows.push([he.cut.weight, <><Ltr>{formatWeight(cut.weight_g)}</Ltr>{cut.price_per_kg_agorot ? <> · <Ltr>₪{formatAgorot(cut.price_per_kg_agorot).replace(/\.00$/, "")}</Ltr> {he.feed.perKg}</> : null}</>]);
+  }
   if (hasSteaks && cut.steak_weight_g) rows.push([he.cut.steakWeight, <Ltr key="s">{he.units.approxG(cut.steak_weight_g)}</Ltr>]);
   if (hasSteaks && cut.steak_thickness_cm) rows.push([he.cut.steakThickness, he.cut.thicknessCm(Number(cut.steak_thickness_cm))]);
-  if (cut.butcher_marbling) {
-    rows.push([he.cut.butcherScore, (
-      <span key="m" className="flex flex-col">
-        <span><Ltr className="font-semibold">{cut.butcher_marbling}/10</Ltr></span>
-        <span className="text-xs text-stone">{he.cut.butcherScoreNote}</span>
-      </span>
-    )]);
-  }
+  if (cut.published_at) rows.push([he.cut.photographed, formatDateTime(cut.published_at)]);
 
   return (
-    <article className="bg-ink text-center text-ivory">
-      <div className="pt-[max(4rem,calc(env(safe-area-inset-top)+3.5rem))]">
-        <CutPost cut={cut} media={media} breeds={breeds} shop={butcher} now={now} variant="full" eager />
-      </div>
-      <div className="flex flex-col gap-7 px-5 pt-5 pb-8">
-        <p className="text-xs text-stone/80">{demo ? he.cut.demoPhoto : he.cut.realPhoto}  ·  <Ltr className="tracking-wider">{cut.code}</Ltr></p>
-
-        {rows.length > 0 && (
-          <section aria-label={he.cut.details}>
-            <h2 className="eyebrow mb-3">{he.cut.details}</h2>
-            <dl className="grid grid-cols-2 border-t border-ivory/10">
-              {rows.map(([k, v]) => (
-                <div key={k} className="flex flex-col items-center gap-0.5 border-b border-ivory/10 px-2 py-3.5 text-[15px]">
-                  <dt className="text-xs text-stone">{k}</dt>
-                  <dd>{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        )}
+    <article className="bg-ink text-start text-ivory">
+      <CutPost cut={cut} media={media} breeds={breeds} shop={butcher} now={now} variant="full" eager />
+      <div className="flex flex-col gap-6 px-4 pt-6 pb-8">
+        <div className="h-px bg-line" />
+        <section className="flex flex-col gap-3" aria-label={he.cut.certificate}>
+          <h2 className="sr-eyebrow m-0">{he.cut.certificate}</h2>
+          <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2.5 text-[15px] leading-5">
+            {rows.map(([k, v]) => (
+              <div key={k} className="contents">
+                <dt className="text-stone">{k}</dt>
+                <dd className="m-0 font-semibold">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="sr-legal m-0">{he.cut.weightRuleShort}</p>
+          <p className="sr-legal m-0">{demo ? he.cut.demoPhoto : he.cut.realPhoto}</p>
+        </section>
 
         {butcher && (
-          <section>
-            <h2 className="eyebrow mb-3">{he.market.pickupAt(butcher.name)}</h2>
-            <p className="text-[15px] leading-relaxed">{butcher.address}{butcher.pickup_hours ? `  ·  ${butcher.pickup_hours}` : ""}</p>
+          <section className="flex flex-col gap-1.5">
+            <div className="h-px bg-line" />
+            <h2 className="sr-eyebrow m-0 mt-5">{he.market.pickupAt(butcher.name)}</h2>
+            <p className="m-0 text-[15px] leading-relaxed">{butcher.address}{butcher.pickup_hours ? <>  ·  {isolateTimes(butcher.pickup_hours)}</> : ""}</p>
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(butcher.address)}`}
               target="_blank" rel="noreferrer"
-              className="mt-2 inline-block min-h-10 py-2 text-sm text-gold underline-offset-4 hover:underline">
+              className="sr-link w-fit">
               {he.market.navigate}
             </a>
           </section>

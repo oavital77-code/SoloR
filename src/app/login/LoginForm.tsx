@@ -77,7 +77,7 @@ function LoginForm() {
     <main className="relative mx-auto flex min-h-dvh max-w-[480px] flex-col justify-end overflow-hidden bg-ink px-6 pb-[max(2rem,env(safe-area-inset-bottom))] text-center text-white">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,16,46,0.45),transparent_60%)]" aria-hidden />
       <div className="relative mb-auto pt-[18dvh]">
-        <Logo className="text-5xl" />
+        <Logo height={40} />
         <p className="mt-4 text-2xl font-semibold leading-snug text-white/90">{he.app.tagline}</p>
         {next !== "/" && <p className="mt-3 text-white/70">{he.auth.loginToOrder}</p>}
       </div>

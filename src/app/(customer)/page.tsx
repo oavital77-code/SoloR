@@ -15,6 +15,7 @@ import { isReserved } from "@/lib/feed";
 import { israelClock } from "@/lib/hours";
 import { useBreeds, useButchers, useNow, useSession } from "@/lib/hooks";
 import { shopPath } from "@/lib/market";
+import { coverOf, mediaUrl } from "@/lib/cut-helpers";
 import { useScrollMemory } from "@/lib/scroll";
 import { track } from "@/lib/track";
 import type { Butcher } from "@/lib/types";
@@ -32,7 +33,7 @@ export default function FeedPage() {
   // the shared demo account's name is not a person's: greet without it
   const firstName = user?.email?.endsWith("@solor.example") ? null : profile?.full_name.trim().split(/\s+/)[0];
   const live = useLiveFeed(cuts);
-  const { pending, showNew, ready } = live;
+  const { pending, waiting, showNew, ready } = live;
   // only shops that are active (spec §4.1); before the shop list loads, everything shows
   const items = live.items.filter(({ cut }) => butchers.find((b) => b.id === cut.butcher_id)?.status !== "inactive");
 
@@ -60,11 +61,18 @@ export default function FeedPage() {
   const takeNew = () => { track("new_posts_pill_click", { count: pending }); showNew(); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const pull = usePullToRefresh(refresh);
   const shopOf = (id: string) => butchers.find((b) => b.id === id);
+  // "12 נתחים עלו היום, משתי קצביות": what went live today (Israel time) and from how many shops
+  const today = (() => {
+    const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" }) : "");
+    const d = day(new Date(now).toISOString());
+    const list = items.filter((i) => !i.gone && day(i.cut.published_at) === d).map((i) => i.cut);
+    return { cuts: list.length, shops: new Set(list.map((c) => c.butcher_id)).size };
+  })();
 
   if (error && !cuts) return <main className="min-h-dvh pt-10"><ErrorState dark onRetry={reload} /></main>;
 
   return (
-    <main className="min-h-dvh pt-2 pb-28">
+    <main className="relative min-h-dvh pt-2 pb-28">
       {pull > 0 && (
         <p className="pb-2 text-center text-xs text-stone" style={{ opacity: Math.min(1, pull / PULL) }} aria-live="polite">
           {pull >= PULL ? he.feed.refreshing : he.feed.pullToRefresh}
@@ -72,26 +80,37 @@ export default function FeedPage() {
       )}
 
       {pending > 0 && (
+        // design system: NewCutsPill — ivory, the new cuts' photos, waits until tapped; the feed never moves by itself
         <button type="button" onClick={takeNew}
-          className="animate-toast-in fixed top-[calc(4.25rem+env(safe-area-inset-top))] left-1/2 z-30 -translate-x-1/2 rounded-full bg-ivory px-4 py-2 text-sm font-semibold text-ink shadow-lg shadow-black/40">
-          {he.feed.newPosts(pending)}
+          className="sr-newpill animate-toast-in fixed top-[calc(4.25rem+env(safe-area-inset-top))] left-1/2 z-30 -translate-x-1/2">
+          <span className="sr-newpill__dots">
+            {waiting.slice(0, 3).map((c) => {
+              const cover = coverOf(c.cut_media);
+              // eslint-disable-next-line @next/next/no-img-element
+              return cover ? <img key={c.id} src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" /> : null;
+            })}
+          </span>
+          <span>{he.feed.newPosts(pending)}</span>
         </button>
       )}
 
-      <header className="px-5 pt-2 pb-5 text-start">
-        <p className="font-display text-[24px] font-bold leading-tight text-ivory">
+      <div className="wash pointer-events-none absolute inset-x-0 top-0 h-[360px]" aria-hidden />
+      <header className="relative px-4 pt-2 pb-5 text-start">
+        <p className="sr-eyebrow">
           {he.feed.greeting(Math.floor(israelClock(new Date(now)).minutes / 60))}{firstName ? `, ${firstName}` : ""}
         </p>
-        <p className="mt-0.5 text-sm text-stone">{he.feed.greetingSub}</p>
+        <h1 className="mt-1 font-display text-[26px] font-bold leading-8 text-ivory">
+          {today.cuts > 0 ? he.feed.todaySummary(today.cuts, today.shops) : he.feed.greetingSub}
+        </h1>
       </header>
 
       {!ready ? (
-        <div className="flex flex-col gap-5 px-3">{[0, 1].map((i) => <Skeleton key={i} className="h-[440px] rounded-[28px]" />)}</div>
+        <div className="relative flex flex-col gap-6 px-4">{[0, 1].map((i) => <Skeleton key={i} className="h-[520px] rounded-3xl" />)}</div>
       ) : items.length === 0 ? (
         <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
       ) : (
         <>
-          <ul className="flex flex-col gap-5 px-3">
+          <ul className="relative flex flex-col gap-6 px-4">
             {items.slice(0, limit).map(({ cut, gone }, i) => (
               <li key={cut.id}>
                 <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}

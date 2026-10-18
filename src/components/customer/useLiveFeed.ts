@@ -54,10 +54,11 @@ export function useLiveFeed(cuts: CutWithMedia[] | null) {
   }), [ids, byId, sold]);
 
   const shown = useMemo(() => new Set(ids ?? []), [ids]);
-  const pending = ids === null ? 0 : available.filter((c) => !shown.has(c.id)).length;
+  const waiting = useMemo(() => (ids === null ? [] : available.filter((c) => !shown.has(c.id))), [ids, available, shown]);
+  const pending = waiting.length;
 
   /** take in the waiting posts and let the stamped ones go (the pill, pull-to-refresh) */
   const showNew = fresh;
 
-  return { items, pending, showNew, ready: ids !== null };
+  return { items, pending, waiting, showNew, ready: ids !== null };
 }
