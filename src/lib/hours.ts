@@ -42,3 +42,8 @@ export function formatWeek(hours: OpeningHours | null | undefined): string {
     .map((g) => `${g.from === g.to ? DAY_LETTER[g.from] : `${DAY_LETTER[g.from]}–${DAY_LETTER[g.to]}`} ${g.text}`)
     .join("  ·  ");
 }
+
+/** Free text with times ("ו׳ 09:00-12:00"): each time range kept left-to-right, so it does not flip in a Hebrew line. */
+export function isolateTimes(text: string): string {
+  return text.replace(/\d{1,2}:\d{2}(?:\s*[–-]\s*\d{1,2}:\d{2})?/g, (m) => `\u2066${m}\u2069`);
+}

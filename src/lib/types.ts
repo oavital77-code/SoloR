@@ -39,6 +39,10 @@ export interface Butcher {
   pickup_enabled: boolean;
   delivery_enabled: boolean;
   delivery_areas: string[];
+  /** {"<area>": fee in agorot, "*": any other listed area}; a missing fee is 0 */
+  delivery_pricing: Record<string, number>;
+  /** time windows the shop offers for delivery; none = waiting for the shop to coordinate */
+  delivery_windows: string[];
   status: "active" | "inactive";
 }
 
@@ -107,6 +111,46 @@ export interface Checkout {
   customer_id: string;
   total_agorot: number;
   payment_status: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  /** prototype: no payment was taken */
+  is_demo: boolean;
+  created_at: string;
+}
+
+export type ReceiveMethod = "pickup" | "delivery";
+
+/** Where a delivery goes — may be someone else (a friend, family). */
+export interface DeliveryAddress {
+  name: string;
+  phone: string;
+  street: string;
+  city: string;
+  notes?: string | null;
+}
+
+/** How one shop's part is received, as checked by the server. */
+export interface ReceiveChoice {
+  method: ReceiveMethod;
+  address: DeliveryAddress | null;
+  /** null with delivery = waiting for the shop to coordinate */
+  window: string | null;
+  fee_agorot: number;
+}
+
+/** A checkout attempt holding the cart until expires_at (customer spec §10.4). */
+export interface Hold {
+  id: string;
+  idempotency_key: string;
+  customer_id: string;
+  receive: Record<string, ReceiveChoice>;
+  contact: { name: string; phone: string };
+  items_agorot: number;
+  fees_agorot: number;
+  total_agorot: number;
+  status: "active" | "released" | "consumed";
+  expires_at: string;
+  checkout_id: string | null;
   created_at: string;
 }
 
@@ -124,6 +168,10 @@ export interface Order {
   customer_note: string | null;
   cancel_reason: string | null;
   cancelled_by: UserRole | null;
+  receive_method: ReceiveMethod;
+  delivery_address: DeliveryAddress | null;
+  delivery_window: string | null;
+  delivery_fee_agorot: number;
   created_at: string;
   updated_at: string;
 }

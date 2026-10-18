@@ -10,7 +10,9 @@ export interface DbError {
 export const ERROR_CODES = [
   "CUT_NOT_AVAILABLE", "WHOLE_NOT_AVAILABLE", "NOT_ENOUGH_STEAKS", "INVALID_QTY", "MISSING_FIELDS",
   "NOT_ALLOWED", "INVALID_TRANSITION", "HAS_ACTIVE_ORDERS", "STOCK_CHANGED", "REASON_REQUIRED",
-  "NOTE_TOO_LONG", "LAST_PHOTO", "CART_UNAVAILABLE", "INVALID_CART",
+  "NOTE_TOO_LONG", "LAST_PHOTO", "CART_UNAVAILABLE", "INVALID_CART", "CUT_RESERVED",
+  "RECEIVE_NOT_AVAILABLE", "DELIVERY_NOT_ELIGIBLE", "INVALID_ADDRESS", "INVALID_WINDOW", "INVALID_CONTACT",
+  "HOLD_RELEASED", "PRICE_CHANGED",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
@@ -33,11 +35,11 @@ export function errorText(err: DbError | null | undefined): string {
   return he.errors[code] as string;
 }
 
-/** One line of the cart that could not be bought (place_checkout → CART_UNAVAILABLE, details = JSON list). */
+/** One line of the cart that could not be bought (reserve / pay → CART_UNAVAILABLE, details = JSON list). */
 export interface CartProblem {
   cut_id: string;
   code?: string;
-  reason: "CUT_NOT_AVAILABLE" | "WHOLE_NOT_AVAILABLE" | "NOT_ENOUGH_STEAKS";
+  reason: "CUT_NOT_AVAILABLE" | "WHOLE_NOT_AVAILABLE" | "NOT_ENOUGH_STEAKS" | "CUT_RESERVED";
   available?: number;
 }
 
