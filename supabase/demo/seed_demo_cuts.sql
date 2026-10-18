@@ -14,14 +14,14 @@ create temp table demo_in (
 insert into demo_in values
  ('d01','butcher-1','entrecote','black_angus',null,'AR',true,28,'dry',8,'אנטריקוט מהצלע הגבוהה, שיש עדין לאורך כל הנתח ושכבת שומן מלאה בצד. מושלם לגריל חם.',2400,22000,'both',300,3.0,0.4,true),
  ('d02','butcher-1','picanha','villa_mercedes',null,'UY',false,null,null,6,'פיקניה שלמה עם כובע שומן עבה. לצלייה בשלמותה או לחיתוך לסטייקים לאורך הסיבים.',1600,16000,'whole',null,null,2,true),
- ('d03','butcher-1','ontrib',null,'הולשטיין','IL',true,21,'wet',7,'אונטריב עם עצם, יושן בוואקום. מתאים לבישול ארוך או לצלייה איטית.',2800,14500,'steaks',400,4.0,5,true),
+ ('d03','test-b','ontrib',null,'הולשטיין','IL',true,21,'wet',7,'אונטריב עם עצם, יושן בוואקום. מתאים לבישול ארוך או לצלייה איטית.',2800,14500,'steaks',400,4.0,5,true),
  ('d04','test-b','asado','black_angus',null,'AR',false,null,null,6,'רצועת אסאדו עם שלוש עצמות, לעישון או לצלייה ארוכה על גחלים.',3200,11000,'whole',null,null,7,true),
  ('d05','butcher-1','sinta','wagyu',null,'AU',true,35,'dry',10,'סינטה ואגיו אוסטרלי, שיש צפוף מאוד. פרוסות דקות, צלייה קצרה מאוד.',1800,69000,'steaks',250,2.5,1,true),
  ('d06','test-b','denver','villa_mercedes',null,'PY',false,null,null,7,'דנוור — נתח מהכתף, רך וטעים, במחיר נוח. לסטייקים דקים.',1200,17500,'steaks',200,2.0,9,false),
  ('d07','butcher-1','shaitel',null,'אנגוס מקומי','IL',true,14,'dry',5,'שייטל רזה עם קצה שומן, יושן שבועיים. לסטייקים או לרוסטביף.',2000,13000,'both',250,2.5,12,false),
  ('d08','butcher-1','entrecote','wagyu',null,'JP',true,21,'wet',10,'אנטריקוט ואגיו יפני, דרגת שיש גבוהה במיוחד. כמות מוגבלת.',1400,120000,'steaks',200,2.0,0.2,true),
  ('d09','test-b','sinta','black_angus',null,'UY',true,28,'dry',7,'סינטה מיושנת יבש 28 יום, טעם עמוק ואגוזי. מגיעה עם שכבת שומן.',2200,18500,'both',300,3.0,3,true),
- ('d10','butcher-1','picanha','black_angus',null,'AR',true,14,'dry',6,'פיקניה בלאק אנגוס מיושנת, חתוכה לסטייקים עם כובע השומן.',1400,17000,'steaks',300,3.0,20,false);
+ ('d10','test-b','picanha','black_angus',null,'AR',true,14,'dry',6,'פיקניה בלאק אנגוס מיושנת, חתוכה לסטייקים עם כובע השומן.',1400,17000,'steaks',300,3.0,20,false);
 
 create temp table demo_new (key text, id uuid) on commit drop;
 

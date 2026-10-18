@@ -10,9 +10,9 @@ import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { useBreeds, useRefetchOnFocus, safeStorage } from "@/lib/hooks";
 import { formatAgorot, formatWeight } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import type { CutStatus, CutWithMedia, OrderStatus } from "@/lib/types";
+import type { CutStatus, CutWithMedia, OrderItemStatus } from "@/lib/types";
 
-type Row = CutWithMedia & { orders: { status: OrderStatus }[] };
+type Row = CutWithMedia & { order_items: { status: OrderItemStatus }[] };
 const FILTERS: CutStatus[] = ["draft", "published", "sold_out", "withdrawn"];
 const FILTER_KEY = "solor.butcher.cutFilter";
 
@@ -29,7 +29,7 @@ export function CutList() {
 
   const load = useCallback(async () => {
     const { data, error } = await supabaseBrowser()
-      .from("cuts").select("*, cut_media(*), orders(status)")
+      .from("cuts").select("*, cut_media(*), order_items(status)")
       .eq("butcher_id", butcher.id)
       .order("updated_at", { ascending: false });
     if (error) return setError(true);
@@ -71,7 +71,8 @@ export function CutList() {
 
 function CutRow({ cut, title }: { cut: Row; title: string }) {
   const cover = coverOf(cut.cut_media);
-  const activeOrders = cut.orders.filter((o) => o.status !== "cancelled").length;
+  // one line per order on this cut; cancelling an order cancels its lines
+  const activeOrders = cut.order_items.filter((i) => i.status !== "cancelled").length;
   const stock = cut.status === "draft" ? null
     : cut.sale_mode === "whole" ? (cut.whole_available ? he.butcher.stockWhole : he.butcher.stockNone)
     : he.butcher.stockSteaks(cut.steaks_available, cut.steaks_total);
