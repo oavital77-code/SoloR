@@ -6,6 +6,9 @@
 --
 -- Adding to the cart reserves nothing. place_checkout locks every cut in the cart and either buys all of it
 -- or nothing (CART_UNAVAILABLE lists what is missing). Existing single-cut orders are migrated as one-line orders.
+--
+-- This migration only adds. The old single-cut columns of `orders` and place_order are removed in 0008
+-- (kept separate because destructive statements need an explicit confirmation on the hosted database).
 
 -- ───────── tables ─────────
 create sequence checkout_number_seq start 5001;
@@ -23,7 +26,7 @@ create index on checkouts (customer_id, created_at desc);
 create type order_item_status as enum ('active', 'cancelled');
 create table order_items (
   id                   uuid primary key default gen_random_uuid(),
-  order_id             uuid not null references orders(id) on delete cascade,
+  order_id             uuid not null references orders(id),
   cut_id               uuid not null references cuts(id),
   mode                 order_mode not null,
   steaks_qty           int,
@@ -56,15 +59,7 @@ update order_items i set status = 'cancelled', cancel_reason = o.cancel_reason, 
                          cancelled_at = o.updated_at, restocked = true
 from orders o where o.id = i.order_id and o.status = 'cancelled';
 
-alter table orders alter column checkout_id set not null;
 create index on orders (checkout_id);
-alter table orders
-  drop column idempotency_key,
-  drop column cut_id,
-  drop column mode,
-  drop column steaks_qty,
-  drop column est_weight_g,
-  drop column price_per_kg_agorot;
 -- orders.total_agorot = sum of its active items (kept as the last value when the whole order is cancelled)
 
 -- ───────── helpers ─────────
@@ -367,8 +362,7 @@ end $$;
 
 -- ───────── cancel a whole shop order ─────────
 -- customer: own order while 'new'. butcher: own shop before completed, with a reason. Returns the stock.
-drop function if exists cancel_order(uuid, text);
-create function cancel_order(p_order_id uuid, p_reason text default null) returns orders
+create or replace function cancel_order(p_order_id uuid, p_reason text default null) returns orders
 language plpgsql security definer set search_path = public as $$
 declare
   v_uid uuid := auth.uid();
@@ -467,8 +461,6 @@ begin
   end if;
   return o;
 end $$;
-
-drop function if exists place_order(uuid, order_mode, int, uuid, text);
 
 -- ───────── RLS + grants ─────────
 alter table checkouts   enable row level security;
