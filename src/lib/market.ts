@@ -15,15 +15,37 @@ function norm(s: string): string {
   return s.toLowerCase().replace(/[֑-ׇ]/g, "").replace(/["'״׳\-_.]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/** Every word of the query must appear in the cut's searchable text (type, breed, origin, code, shop). */
+// Where each word may be found and how much a hit there counts (customer spec §8: type, shop, breed, origin,
+// words from the butcher's note). The cut must contain every word; the score orders the results.
+function fields(cut: Cut, breeds: Breed[], butcher?: Butcher | null): [string, number][] {
+  return [
+    [norm(cutTypeLabel(cut.cut_type)), 5],
+    [norm(breedLabel(cut, breeds)), 4],
+    [norm(butcher?.name ?? ""), 3],
+    [norm(originLabel(cut.origin_country)), 3],
+    [norm(cut.code), 3],
+    [cut.is_aged ? "מיושן יושן" : "", 2],
+    [norm(cut.description ?? ""), 1],
+  ];
+}
+
+/** Relevance of a cut for a query: 0 when some word is missing, higher for hits in more telling fields. */
+export function searchScore(cut: Cut, query: string, breeds: Breed[], butcher?: Butcher | null): number {
+  const words = norm(query).split(" ").filter(Boolean);
+  if (!words.length) return 1;
+  const f = fields(cut, breeds, butcher);
+  let score = 0;
+  for (const w of words) {
+    const best = Math.max(0, ...f.filter(([text]) => text.includes(w)).map(([, weight]) => weight));
+    if (!best) return 0;
+    score += best;
+  }
+  return score;
+}
+
+/** Every word of the query must appear in the cut's searchable text. */
 export function matchesQuery(cut: Cut, query: string, breeds: Breed[], butcher?: Butcher | null): boolean {
-  const q = norm(query);
-  if (!q) return true;
-  const hay = norm([
-    cutTypeLabel(cut.cut_type), breedLabel(cut, breeds), originLabel(cut.origin_country),
-    cut.code, butcher?.name ?? "", cut.description ?? "", cut.is_aged ? "מיושן יושן" : "",
-  ].join(" "));
-  return q.split(" ").every((w) => hay.includes(w));
+  return searchScore(cut, query, breeds, butcher) > 0;
 }
 
 export function categoryCounts(cuts: Cut[]): { key: CutType; label: string; count: number }[] {

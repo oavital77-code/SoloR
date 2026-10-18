@@ -156,6 +156,16 @@ export const he = {
     soundOn: "הפעל קול",
   },
 
+  search: {
+    shops: "קצביות",
+    filters: "סינון",
+    clearAll: "נקה הכל",
+    remove: (label: string) => `הסר ${label}`,
+    noResults: "לא נמצאו נתחים",
+    removeHint: "אפשר להסיר אחד מהמסננים:",
+    results: (n: number) => (n === 1 ? "נתח אחד" : `${n} נתחים`),
+  },
+
   shop: {
     openNow: "פתוח עכשיו",
     closed: "סגור עכשיו",
@@ -204,9 +214,15 @@ export const he = {
     cutType: "סוג נתח",
     breed: "גזע / מותג",
     origin: "ארץ מקור",
-    agedOnly: "רק מיושן",
+    aging: "יישון",
+    agingPreset: { none: "בלי יישון", "1-14": "עד 14 יום", "15-30": "15–30 יום", "31+": "מעל 30 יום" } as Record<string, string>,
+    agingRange: (min: number | null, max: number | null) =>
+      min === 0 && max === 0 ? "בלי יישון" : max == null ? `יישון ${min}+ יום` : `יישון ${min ?? 0}–${max} יום`,
+    whole: "שלם",
+    steaks: "סטייקים",
+    more: "עוד מסננים",
     priceRange: "מחיר לק״ג",
-    saleMode: "אופן מכירה",
+    saleMode: "שלם / סטייקים",
     canWhole: "אפשר לקנות שלם",
     canSteaks: "אפשר לקנות סטייקים",
     show: (n: number) => `הצג ${n} נתחים`,
@@ -417,7 +433,7 @@ export const he = {
     // step 4
     weight: "משקל הנתח (גרם)",
     price: "מחיר לק״ג (₪)",
-    saleMode: "אופן מכירה",
+    saleMode: "שלם / סטייקים",
     saleModes: { whole: "נתח שלם", steaks: "סטייקים", both: "גם וגם" },
     steakWeight: "משקל לסטייק",
     grams: "גרם",

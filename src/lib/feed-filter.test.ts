@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_FILTER, activeFilterCount, matchesFilter, sanitizeFilter } from "./feed-filter";
+import { EMPTY_FILTER, activeFilterCount, filterFromParams, filterToParams, matchesFilter } from "./feed-filter";
 import type { Cut } from "./types";
 
 const base: Cut = {
@@ -10,8 +10,8 @@ const base: Cut = {
   published_at: new Date().toISOString(), sold_out_at: null, archived_at: null, created_at: "", updated_at: "",
 };
 
-describe("feed filter", () => {
-  it("matches Argentina + picanha (acceptance stage 4)", () => {
+describe("search filters", () => {
+  it("cut type + origin", () => {
     const f = { ...EMPTY_FILTER, origins: ["AR" as const], cutTypes: ["picanha" as const] };
     expect(matchesFilter(base, f)).toBe(true);
     expect(matchesFilter({ ...base, origin_country: "IL" }, f)).toBe(false);
@@ -23,14 +23,29 @@ describe("feed filter", () => {
     expect(matchesFilter({ ...base, breed_key: null, breed_other: "מקומי" }, f)).toBe(true);
     expect(matchesFilter(base, f)).toBe(false);
   });
-  it("price range and sale mode", () => {
+  it("aging range in days; a cut that is not aged is 0", () => {
+    expect(matchesFilter(base, { ...EMPTY_FILTER, agingMin: 15, agingMax: 30 })).toBe(true);
+    expect(matchesFilter(base, { ...EMPTY_FILTER, agingMin: 31 })).toBe(false);
+    expect(matchesFilter({ ...base, is_aged: false, aging_days: null }, { ...EMPTY_FILTER, agingMin: 0, agingMax: 0 })).toBe(true);
+    expect(matchesFilter(base, { ...EMPTY_FILTER, agingMin: 0, agingMax: 0 })).toBe(false);
+  });
+  it("price range and sale mode, alone and combined", () => {
     expect(matchesFilter(base, { ...EMPTY_FILTER, priceMax: 20000 })).toBe(false);
     expect(matchesFilter(base, { ...EMPTY_FILTER, priceMin: 20000, priceMax: 30000 })).toBe(true);
     expect(matchesFilter({ ...base, whole_available: false }, { ...EMPTY_FILTER, canWhole: true })).toBe(false);
     expect(matchesFilter({ ...base, sale_mode: "whole", steaks_total: 0, steaks_available: 0 }, { ...EMPTY_FILTER, canSteaks: true })).toBe(false);
+    expect(matchesFilter(base, { ...EMPTY_FILTER, canSteaks: true, agingMin: 15, agingMax: 30, cutTypes: ["picanha"] })).toBe(true);
   });
-  it("sanitizes garbage from storage", () => {
-    expect(sanitizeFilter("x")).toEqual(EMPTY_FILTER);
-    expect(sanitizeFilter({ origins: ["AR"], priceMin: "a" }).origins).toEqual(["AR"]);
+  it("round-trips through the URL", () => {
+    const f = { ...EMPTY_FILTER, cutTypes: ["picanha" as const], breeds: ["wagyu"], origins: ["AR" as const],
+      agingMin: 31, agingMax: null, priceMin: 10000, priceMax: 30000, canWhole: true, canSteaks: false };
+    const sp = filterToParams(f, " ואגיו ");
+    expect(sp.toString()).toContain("age=31-");
+    expect(sp.get("q")).toBe("ואגיו");
+    expect(filterFromParams(sp)).toEqual(f);
+    expect(filterToParams(EMPTY_FILTER, "").toString()).toBe("");
+  });
+  it("reads old ?cat= links as a cut type", () => {
+    expect(filterFromParams(new URLSearchParams("cat=sinta")).cutTypes).toEqual(["sinta"]);
   });
 });

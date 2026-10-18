@@ -1,115 +1,218 @@
 "use client";
-// Search — across the market (results tagged with their shop) or inside one shop (`?b=<slug>`).
-// Shows only stock that can be bought now; keeps all the existing filters. `?cat=<cut_type>` narrows by category.
+// Search (customer spec §8). Before searching: the field, the shops (by logo) and a compact filter panel.
+// Once there is a word or a filter: the field and the active filters stay on top as removable chips, and the
+// shops give way to a two-column grid of what can be bought now, best match first. Everything lives in the URL,
+// so the search tab comes back exactly as it was left.
 import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CutTile } from "@/components/customer/CutTile";
-import { BackLink, CategoryChips } from "@/components/customer/market-ui";
 import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
-import { Button, EmptyState, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
+import { ShopMark } from "@/components/ShopMark";
+import { Chip, ErrorState, Skeleton, inputDarkClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
-import { EMPTY_FILTER, activeFilterCount, matchesFilter, type FeedFilter } from "@/lib/feed-filter";
-import { useBreeds, useButchers, useNow } from "@/lib/hooks";
-import { isAvailable, matchesQuery, shopPath } from "@/lib/market";
-import type { CutType } from "@/lib/types";
+import { rankFeed } from "@/lib/feed";
+import {
+  AGING_PRESETS, EMPTY_FILTER, activeFilterCount, filterFromParams, filterToParams, matchesFilter, type FeedFilter,
+} from "@/lib/feed-filter";
+import { useBreeds, useButchers } from "@/lib/hooks";
+import { CUT_TYPES, ORIGINS, cutTypeLabel } from "@/lib/labels";
+import { categoryCounts, isAvailable, searchScore, shopPath } from "@/lib/market";
+import { useScrollMemory } from "@/lib/scroll";
+import type { Breed, Butcher } from "@/lib/types";
 
 export default function SearchPage() {
   return <Suspense><SearchView /></Suspense>;
 }
 
+type ActiveChip = { key: string; label: string; next: FeedFilter };
+
 function SearchView() {
   const params = useSearchParams();
   const router = useRouter();
-  const slug = params.get("b");
-  const cat = params.get("cat") as CutType | null;
   const breeds = useBreeds();
   const butchers = useButchers();
-  const now = useNow(60000);
-  const shop = slug ? butchers.find((b) => b.slug === slug) ?? null : null;
-  const { cuts, error, reload } = useCatalog(shop?.id ?? null, !slug || !!shop);
+  const { cuts, error, reload } = useCatalog();
+  const filter = useMemo(() => filterFromParams(new URLSearchParams(params.toString())), [params]);
+  const urlQuery = params.get("q") ?? "";
+  const [query, setQuery] = useState(urlQuery);
+  const [sheet, setSheet] = useState(false);
 
-  const [query, setQuery] = useState(params.get("q") ?? "");
-  const [filter, setFilter] = useState<FeedFilter>(EMPTY_FILTER);
-  const [filterOpen, setFilterOpen] = useState(false);
+  const go = (f: FeedFilter, q: string) => {
+    const sp = filterToParams(f, q);
+    router.replace(`/search${sp.size ? `?${sp}` : ""}`, { scroll: false });
+  };
+  const setFilter = (f: FeedFilter) => go(f, query);
 
-  // keep the query in the URL (back button / sharing) without spamming history
+  // typing goes to the URL after a short pause (back button, sharing, the tab remembering it)
   useEffect(() => {
-    const t = window.setTimeout(() => {
-      const sp = new URLSearchParams(params.toString());
-      if (query.trim()) sp.set("q", query.trim()); else sp.delete("q");
-      router.replace(`/search${sp.toString() ? `?${sp}` : ""}`, { scroll: false });
-    }, 350);
+    if (query.trim() === urlQuery.trim()) return;
+    const t = window.setTimeout(() => go(filter, query), 350);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const shopOf = (id: string) => butchers.find((b) => b.id === id);
   const available = useMemo(() => (cuts ?? []).filter(isAvailable), [cuts]);
-  const results = useMemo(
-    () => available.filter((c) =>
-      (!cat || c.cut_type === cat)
-      && matchesFilter(c, filter)
-      && matchesQuery(c, query, breeds, shopOf(c.butcher_id))),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [available, cat, filter, query, breeds, butchers],
-  );
+  const searching = urlQuery.trim() !== "" || activeFilterCount(filter) > 0;
 
-  const setParam = (key: string, value: string | null) => {
-    const sp = new URLSearchParams(params.toString());
-    if (value) sp.set(key, value); else sp.delete(key);
-    router.replace(`/search${sp.toString() ? `?${sp}` : ""}`, { scroll: false });
-  };
-  const nFilters = activeFilterCount(filter);
+  const results = useMemo(() => {
+    const scored = rankFeed(available)
+      .filter((c) => matchesFilter(c, filter))
+      .map((c) => ({ c, s: searchScore(c, urlQuery, breeds, shopOf(c.butcher_id)) }))
+      .filter((x) => x.s > 0);
+    // best match first; equal matches keep the feed order (newest first)
+    return scored.map((x, i) => ({ ...x, i })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => x.c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [available, filter, urlQuery, breeds, butchers]);
+
+  useScrollMemory(`search?${params.toString()}`, cuts !== null);
+  const chips = activeChips(filter, breeds);
 
   return (
     <main className="min-h-dvh px-4 pb-24">
       <header className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 -mx-4 bg-ink/95 px-4 pt-3 pb-3 backdrop-blur">
-        <div className="flex items-center justify-center gap-6">
-          <BackLink href={shop ? shopPath(shop) : "/"} label={shop ? he.market.backToShop : he.market.backToMarket} />
-          <button type="button" onClick={() => setFilterOpen(true)} className="min-h-11 text-sm text-ivory/80">
-            {he.feed.filter}{nFilters > 0 && <span className="ltr ms-1.5 text-gold">({nFilters})</span>}
+        <div className="flex items-center gap-3">
+          <input
+            type="search" enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") go(filter, query); }}
+            placeholder={he.market.searchPlaceholder} aria-label={he.market.search}
+            className={inputDarkClass + " min-h-12 flex-1"}
+          />
+          <button type="button" onClick={() => setSheet(true)} className="min-h-11 shrink-0 text-sm text-ivory/80">
+            {he.search.filters}{chips.length > 0 && <span className="ms-1 text-gold">({chips.length})</span>}
           </button>
         </div>
-        <input
-          type="search" autoFocus enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)}
-          placeholder={shop ? he.market.searchIn(shop.name) : he.market.searchPlaceholder}
-          aria-label={he.market.search} className={inputDarkClass + " mt-1 min-h-12"}
-        />
-        {shop && (
-          <p className="mt-2 text-sm text-stone">
-            {he.market.inShop(shop.name)}
-            <button type="button" onClick={() => setParam("b", null)} className="ms-3 min-h-9 text-gold underline-offset-4 hover:underline">
-              {he.market.inMarket}
+        {searching && (
+          <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
+            {chips.map((c) => (
+              <Chip dark key={c.key} selected onClick={() => setFilter(c.next)} className="shrink-0" aria-label={he.search.remove(c.label)}>
+                {c.label} <span aria-hidden className="ms-1 opacity-70">×</span>
+              </Chip>
+            ))}
+            <button type="button" onClick={() => { setQuery(""); go(EMPTY_FILTER, ""); }}
+              className="min-h-10 shrink-0 px-2 text-sm text-ivory/60 underline-offset-4 hover:underline">
+              {he.search.clearAll}
             </button>
-          </p>
+          </div>
         )}
-        <div className="-mx-4 mt-3">
-          <CategoryChips
-            cuts={available.filter((c) => matchesQuery(c, query, breeds, shopOf(c.butcher_id)))}
-            active={cat} onSelect={(k) => setParam("cat", k)}
-          />
-        </div>
       </header>
 
       {error && !cuts ? <ErrorState dark onRetry={reload} />
-        : !cuts ? <div className="grid grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[3/4]" />)}</div>
+        : !searching ? (
+          <>
+            <Shops butchers={butchers} />
+            <QuickFilters filter={filter} onChange={setFilter} types={categoryCounts(available).filter((t) => t.count > 0).map((t) => t.key)}
+              onMore={() => setSheet(true)} />
+          </>
+        )
+        : !cuts ? <div className="mt-2 grid grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[4/5]" />)}</div>
         : results.length === 0 ? (
-          <EmptyState text={he.market.noResults}>
-            <p className="text-sm text-stone">{he.market.noResultsHint}</p>
-            {nFilters > 0 && <Button variant="dark" onClick={() => setFilter(EMPTY_FILTER)}>{he.feed.clearFilter}</Button>}
-          </EmptyState>
+          <div className="py-14 text-center">
+            <p className="font-display text-xl font-bold text-ivory">{he.search.noResults}</p>
+            {chips.length > 0 && (
+              <>
+                <p className="mt-2 text-sm text-stone">{he.search.removeHint}</p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  {chips.map((c) => (
+                    <Chip dark key={c.key} onClick={() => setFilter(c.next)} aria-label={he.search.remove(c.label)}>
+                      {c.label} <span aria-hidden className="ms-1 opacity-70">×</span>
+                    </Chip>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         ) : (
           <>
-            <p className="mb-4 text-[13px] tracking-wide text-stone">{he.market.results(results.length)}  ·  {he.market.newestFirst}</p>
+            <p className="mb-4 text-[13px] tracking-wide text-stone">{he.search.results(results.length)}</p>
             <ul className="grid grid-cols-2 gap-x-3 gap-y-7">
-              {results.map((c) => <CutTile key={c.id} cut={c} breeds={breeds} shop={shop ? null : shopOf(c.butcher_id)} now={now} />)}
+              {results.map((c) => <CutTile key={c.id} cut={c} breeds={breeds} shop={shopOf(c.butcher_id)} />)}
             </ul>
           </>
         )}
 
-      <FilterSheet open={filterOpen} onClose={() => setFilterOpen(false)} value={filter} onApply={setFilter}
-        cuts={available.filter((c) => (!cat || c.cut_type === cat) && matchesQuery(c, query, breeds, shopOf(c.butcher_id)))} breeds={breeds} />
+      <FilterSheet open={sheet} onClose={() => setSheet(false)} value={filter} onApply={setFilter}
+        cuts={available.filter((c) => searchScore(c, urlQuery, breeds, shopOf(c.butcher_id)) > 0)} breeds={breeds} />
     </main>
   );
+}
+
+/** The shops, by logo. TODO(spec 18.4–18.5): only the shops serving the customer's area, once areas exist. */
+function Shops({ butchers }: { butchers: Butcher[] }) {
+  const active = butchers.filter((b) => b.status !== "inactive");
+  if (!active.length) return null;
+  return (
+    <section className="mt-4">
+      <h2 className="eyebrow mb-3">{he.search.shops}</h2>
+      <ul className="no-scrollbar -mx-4 flex justify-center gap-5 overflow-x-auto px-4">
+        {active.map((b) => (
+          <li key={b.id}>
+            <Link href={shopPath(b)} className="flex w-20 flex-col items-center gap-2">
+              <ShopMark shop={b} className="size-16 text-2xl" />
+              <span className="line-clamp-2 text-center text-xs leading-tight text-ivory/80">{b.name}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** The compact panel of the empty search: one tap per cut type, aging range and whole / steaks; the rest in the sheet. */
+function QuickFilters({ filter, onChange, types, onMore }: {
+  filter: FeedFilter; onChange: (f: FeedFilter) => void; types: string[]; onMore: () => void;
+}) {
+  const row = "flex flex-wrap justify-center gap-2";
+  return (
+    <section className="mt-8 flex flex-col gap-4 border-t border-ivory/10 pt-6">
+      <h2 className="eyebrow">{he.search.filters}</h2>
+      {types.length > 0 && (
+        <div className={row}>
+          {CUT_TYPES.filter((t) => types.includes(t.key)).map((t) => (
+            <Chip dark key={t.key} className="shrink-0" onClick={() => onChange({ ...filter, cutTypes: [t.key] })}>{t.label}</Chip>
+          ))}
+        </div>
+      )}
+      <div className={row}>
+        {AGING_PRESETS.map((a) => (
+          <Chip dark key={a.key} className="shrink-0" onClick={() => onChange({ ...filter, agingMin: a.min, agingMax: a.max })}>
+            {he.filter.agingPreset[a.key]}
+          </Chip>
+        ))}
+      </div>
+      <div className={row}>
+        <Chip dark className="shrink-0" onClick={() => onChange({ ...filter, canWhole: true })}>{he.filter.whole}</Chip>
+        <Chip dark className="shrink-0" onClick={() => onChange({ ...filter, canSteaks: true })}>{he.filter.steaks}</Chip>
+        <button type="button" onClick={onMore} className="min-h-10 shrink-0 px-2 text-sm text-gold underline-offset-4 hover:underline">
+          {he.filter.more}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/** Every active filter value as a chip that removes just that value. */
+function activeChips(f: FeedFilter, breeds: Breed[]): ActiveChip[] {
+  const out: ActiveChip[] = [];
+  f.cutTypes.forEach((t) => out.push({ key: `t-${t}`, label: cutTypeLabel(t), next: { ...f, cutTypes: f.cutTypes.filter((x) => x !== t) } }));
+  if (f.agingMin != null || f.agingMax != null) {
+    out.push({ key: "age", label: he.filter.agingRange(f.agingMin, f.agingMax), next: { ...f, agingMin: null, agingMax: null } });
+  }
+  if (f.canWhole) out.push({ key: "whole", label: he.filter.whole, next: { ...f, canWhole: false } });
+  if (f.canSteaks) out.push({ key: "steaks", label: he.filter.steaks, next: { ...f, canSteaks: false } });
+  if (f.priceMin != null || f.priceMax != null) {
+    const lo = (f.priceMin ?? 0) / 100;
+    const label = f.priceMax == null ? `₪${lo}+ ${he.feed.perKg}` : `₪${lo}–₪${f.priceMax / 100} ${he.feed.perKg}`;
+    out.push({ key: "price", label, next: { ...f, priceMin: null, priceMax: null } });
+  }
+  f.breeds.forEach((b) => out.push({
+    key: `br-${b}`, label: b === "other" ? he.filter.other : breeds.find((x) => x.key === b)?.label_he ?? b,
+    next: { ...f, breeds: f.breeds.filter((x) => x !== b) },
+  }));
+  f.origins.forEach((o) => out.push({
+    key: `o-${o}`, label: ORIGINS.find((x) => x.key === o)?.label ?? o, next: { ...f, origins: f.origins.filter((x) => x !== o) },
+  }));
+  return out;
 }

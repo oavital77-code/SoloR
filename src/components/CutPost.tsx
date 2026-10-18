@@ -7,6 +7,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { PostMedia } from "./PostMedia";
+import { ShopMark } from "./ShopMark";
 import { PurchaseBar } from "./PurchaseBar";
 import { BottomSheet, Button, Ltr } from "./ui";
 import { useToast } from "./Toast";
@@ -90,17 +91,6 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", gone,
         </BottomSheet>
       )}
     </article>
-  );
-}
-
-function ShopMark({ shop }: { shop: Pick<Butcher, "name" | "logo_path"> }) {
-  return shop.logo_path ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={mediaUrl(shop.logo_path)} alt="" className="size-8 shrink-0 rounded-full object-cover ring-1 ring-ivory/15" />
-  ) : (
-    <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-ink-3 font-display text-sm font-bold text-gold ring-1 ring-ivory/15">
-      {shop.name.trim().charAt(0)}
-    </span>
   );
 }
 

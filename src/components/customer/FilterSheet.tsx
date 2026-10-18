@@ -1,10 +1,10 @@
 "use client";
-// C3 — filter bottom sheet with a live "show X cuts" counter.
+// Search filters in full (customer spec §8.1) as a bottom sheet, with a live "show X cuts" counter.
 import { useEffect, useState } from "react";
-import { BottomSheet, Button, Chip, Ltr, Toggle } from "../ui";
+import { BottomSheet, Button, Chip, Ltr } from "../ui";
 import { he } from "@/lib/i18n/he";
 import { CUT_TYPES, ORIGINS } from "@/lib/labels";
-import { EMPTY_FILTER, PRICE_SLIDER, matchesFilter, type FeedFilter } from "@/lib/feed-filter";
+import { AGING_PRESETS, EMPTY_FILTER, PRICE_SLIDER, matchesFilter, type FeedFilter } from "@/lib/feed-filter";
 import type { Breed, Cut } from "@/lib/types";
 
 function toggle<T>(list: T[], v: T): T[] {
@@ -42,7 +42,17 @@ export function FilterSheet({ open, onClose, value, onApply, cuts, breeds }: {
           ))}
         </Group>
 
-        <Toggle dark label={he.filter.agedOnly} checked={f.agedOnly} onChange={(v) => setF({ ...f, agedOnly: v })} />
+        <Group title={he.filter.aging}>
+          {AGING_PRESETS.map((a) => {
+            const on = f.agingMin === a.min && f.agingMax === a.max;
+            return (
+              <Chip dark key={a.key} selected={on}
+                onClick={() => setF({ ...f, agingMin: on ? null : a.min, agingMax: on ? null : a.max })}>
+                {he.filter.agingPreset[a.key]}
+              </Chip>
+            );
+          })}
+        </Group>
 
         <section>
           <div className="mb-2 flex flex-col items-center gap-0.5">

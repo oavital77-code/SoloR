@@ -1,34 +1,44 @@
 "use client";
-// Grid tile for search results. Always says which shop the cut belongs to.
+// Search result tile (customer spec §8.2): the final photo, the cut, its price, its aging and the shop's small mark.
+// A tap opens the full post.
 import Link from "next/link";
+import { ShopMark } from "../ShopMark";
 import { Ltr } from "../ui";
 import { he } from "@/lib/i18n/he";
-import { canBuySteaks, canBuyWhole, coverOf, cutTitle, isNew, mediaUrl } from "@/lib/cut-helpers";
-import { formatAgorot, formatWeight } from "@/lib/pricing";
+import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
+import { agingMethodLabel } from "@/lib/labels";
+import { formatAgorot } from "@/lib/pricing";
 import type { Breed, Butcher, CutWithMedia } from "@/lib/types";
 
-export function CutTile({ cut, breeds, shop, now }: { cut: CutWithMedia; breeds: Breed[]; shop?: Butcher | null; now: number }) {
+export function CutTile({ cut, breeds, shop, onOpen }: {
+  cut: CutWithMedia; breeds: Breed[]; shop?: Butcher | null; onOpen?: () => void;
+}) {
   const cover = coverOf(cut.cut_media);
   const title = cutTitle(cut, breeds);
-  const stock = canBuySteaks(cut) ? he.feed.steaksLeft(cut.steaks_available) : canBuyWhole(cut) ? he.feed.wholeAvailable : "";
   return (
     <li>
-      <Link href={`/cut/${cut.code}`} className="block">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-ink-3">
+      <Link href={`/cut/${cut.code}`} onClick={onOpen} className="block text-center">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-ink-3">
           {cover && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${cut.code}`} loading="lazy" className="h-full w-full object-cover" />
           )}
-          {isNew(cut, now) && (
-            <span className="absolute top-2 start-2 bg-ink/70 px-2 py-0.5 text-[11px] tracking-wide text-ivory backdrop-blur-sm">{he.feed.newBadge}</span>
+          {shop && (
+            <span className="absolute bottom-2 start-2" title={shop.name}>
+              <ShopMark shop={shop} className="size-7 text-xs" />
+            </span>
           )}
         </div>
         <p className="mt-2 truncate font-display text-[17px] font-bold leading-tight text-ivory">{title}</p>
-        <p className="mt-0.5 text-[13px] text-stone">
-          {cut.weight_g && <Ltr>{formatWeight(cut.weight_g)}</Ltr>}
-          {cut.price_per_kg_agorot && <> · <Ltr>₪{formatAgorot(cut.price_per_kg_agorot).replace(/\.00$/, "")}</Ltr> {he.feed.perKg}</>}
+        {cut.price_per_kg_agorot ? (
+          <p className="mt-0.5 text-[15px] text-ivory/90">
+            <Ltr>₪{formatAgorot(cut.price_per_kg_agorot).replace(/\.00$/, "")}</Ltr> <span className="text-xs text-stone">{he.feed.perKg}</span>
+          </p>
+        ) : null}
+        <p className="mt-0.5 truncate text-xs text-stone">
+          {cut.is_aged && cut.aging_days ? he.cut.aged(cut.aging_days, agingMethodLabel(cut.aging_method)) : he.feed.notAged}
+          {shop ? `  ·  ${shop.name}` : ""}
         </p>
-        <p className="mt-0.5 truncate text-xs text-ivory/55">{[shop?.name, stock].filter(Boolean).join("  ·  ")}</p>
       </Link>
     </li>
   );
