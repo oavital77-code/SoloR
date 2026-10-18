@@ -57,8 +57,8 @@
 
 /* The app's class names stay; their values come from the tokens (ink = background, ivory = text in the old naming). */
 @theme inline {
-  --font-sans: var(--font-plex), "Heebo", "Rubik", system-ui, sans-serif;
-  --font-display: var(--font-frank), "David Libre", Georgia, serif;
+  --font-sans: var(--font-varela), "Heebo", "Rubik", system-ui, sans-serif;
+  --font-display: var(--font-varela), "Heebo", system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
   --color-ink: var(--ground);
   --color-ink-2: var(--surface);
@@ -96,7 +96,7 @@ body {
 }
 
 body {
-  font-family: var(--font-plex), "Heebo", system-ui, sans-serif;
+  font-family: var(--font-varela), "Heebo", system-ui, sans-serif;
   font-weight: 400;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
