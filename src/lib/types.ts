@@ -30,6 +30,16 @@ export interface Butcher {
   city: string | null;
   description: string | null;
   is_test: boolean;
+  // shop page (customer spec §7.1); unfilled fields are not shown
+  cover_path: string | null;
+  specialty: string | null;
+  opening_hours: import("./hours").OpeningHours | null;
+  suppliers: string[];
+  sources: string[];
+  pickup_enabled: boolean;
+  delivery_enabled: boolean;
+  delivery_areas: string[];
+  status: "active" | "inactive";
 }
 
 export interface Breed {

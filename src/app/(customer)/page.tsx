@@ -23,7 +23,10 @@ export default function FeedPage() {
   const butchers = useButchers();
   const now = useNow(60000);
   const { cuts, error, reload } = useCatalog();
-  const { items, pending, showNew, ready } = useLiveFeed(cuts);
+  const live = useLiveFeed(cuts);
+  const { pending, showNew, ready } = live;
+  // only shops that are active (spec §4.1); before the shop list loads, everything shows
+  const items = live.items.filter(({ cut }) => butchers.find((b) => b.id === cut.butcher_id)?.status !== "inactive");
 
   // how far the customer got is kept for the session, so "back" lands on the same post
   const [limit, setLimit] = useState(PAGE);

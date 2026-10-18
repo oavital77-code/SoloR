@@ -156,6 +156,19 @@ export const he = {
     soundOn: "הפעל קול",
   },
 
+  shop: {
+    openNow: "פתוח עכשיו",
+    closed: "סגור עכשיו",
+    hours: "שעות פעילות",
+    receive: "קבלת הזמנה",
+    pickup: "איסוף מהחנות",
+    delivery: "משלוח",
+    deliveryAreas: "אזורי משלוח",
+    suppliers: "ספקים",
+    sources: "מקורות",
+    phone: "טלפון",
+  },
+
   feed: {
     newPosts: (n: number) => (n === 1 ? "נתח חדש ↑" : `${n} נתחים חדשים ↑`),
     emptyToday: "עוד לא עלו נתחים היום",
