@@ -112,7 +112,7 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
         {shop && <ShopMark shop={shop} size="sm" />}
         <div className="min-w-0 flex-1">
           <span className="font-display text-lg font-semibold">{shop?.name}</span>
-          {many && <span className="code ms-2">#{o.order_number}</span>}
+          {many && <span className="code ms-2"> #{o.order_number}</span>}
         </div>
         <span className={clsx("text-[13px] font-semibold", tone)}>{orderStatusLabel(o.status, o.receive_method)}</span>
       </div>
