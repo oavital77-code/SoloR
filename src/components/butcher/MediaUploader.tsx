@@ -3,6 +3,7 @@
 // Camera only (founders' decision 15.10.2026): no gallery pickers, and a file must have been captured just now.
 // Per-file progress, cover selection, ordering, delete, retry.
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { clsx } from "clsx";
 import { Button, Ltr } from "../ui";
 import { IconBack, IconCamera, IconClose } from "../icons";
@@ -180,7 +181,7 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
       <input ref={camPhoto} hidden type="file" accept="image/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "photo"); e.target.value = ""; }} />
       <input ref={camVideo} hidden type="file" accept="video/*" capture="environment" onChange={(e) => { addFiles(e.target.files, "video"); e.target.value = ""; }} />
 
-      <div className="sr-shotframe">
+      <div className="sr-shotframe lg:mx-auto lg:w-full lg:max-w-[560px]">
         {cover && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={mediaUrl(cover.storage_path)} alt={he.wizard.photosTitle} />
@@ -197,7 +198,9 @@ export function MediaUploader({ cutId, butcherId, media, onChange, disabled }: {
           </button>
         </div>
       </div>
-      <p className="m-0 text-xs text-stone">{he.wizard.cameraOnly}</p>
+      <p className="m-0 text-xs text-stone">
+        {he.wizard.cameraOnly} <Link href="/butcher/photo-guide" className="font-semibold text-ivory underline underline-offset-4">{he.photoGuide.link}</Link>
+      </p>
 
       {(ordered.length > 1 || pendingPhotos > 0) && (
         <>

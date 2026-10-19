@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
+import { IconBack } from "@/components/icons";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { StatusPill } from "@/components/butcher/CutList";
 import { orderWhat } from "@/components/butcher/OrderList";
@@ -99,25 +100,25 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
 
   return (
     <main className="pb-10 lg:mx-auto lg:w-full lg:max-w-[760px]">
-      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-ink/95 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
-        <Link href="/butcher" className="flex min-h-11 items-center px-2 text-sm font-semibold text-stone">{he.app.back}</Link>
+      <header className="sticky top-0 z-30 flex items-center gap-2 bg-ink/95 px-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
+        <Link href="/butcher" aria-label={he.app.back} className="sr-backbtn !bg-transparent"><IconBack /></Link>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-extrabold">{title}</p>
-          <Ltr className="text-sm text-stone">{cut.code}</Ltr>
+          <p className="m-0 truncate font-display text-[22px] font-bold">{title}</p>
+          <span className="code">{cut.code}</span>
         </div>
         <StatusPill status={cut.status} />
       </header>
 
-      <section className="m-4 rounded-2xl bg-ink-2 p-4 shadow-sm ring-1 ring-line">
-        <h2 className="mb-2 font-extrabold">{he.cutManage.stock}</h2>
+      <section className="sr-ocard m-4 !border-s-line">
+        <h2 className="sr-clabel m-0">{he.cutManage.stock}</h2>
         <div className="flex flex-wrap gap-3 text-lg">
           {hasSteaks && (
-            <span className="rounded-xl bg-ink-3 px-3 py-2 font-bold">
+            <span className="rounded-xl bg-ink-3 px-3 py-2 text-xl font-bold">
               {he.butcher.stockSteaks(cut.steaks_available, cut.steaks_total)}
             </span>
           )}
           {cut.sale_mode !== "steaks" && (
-            <span className={clsx("rounded-xl px-3 py-2 font-bold", cut.whole_available ? "bg-emerald-100 text-emerald-900" : "bg-ink-3 text-stone")}>
+            <span className={clsx("rounded-xl px-3 py-2 font-bold", cut.whole_available ? "text-success shadow-[inset_0_0_0_2px_var(--state-success)]" : "bg-ink-3 text-stone")}>
               {cut.whole_available ? he.butcher.stockWhole : `${he.cut.whole} — ${he.feed.soldOut}`}
             </span>
           )}
@@ -126,15 +127,16 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
 
       {cut.status !== "withdrawn" && (
         <section className="mx-4 grid grid-cols-2 gap-2">
-          <Link href={`/butcher/cuts/${cut.id}/edit?step=1`} className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-ink-2 text-lg font-bold ring-1 ring-line">
+          <Link href={`/butcher/cuts/${cut.id}/edit?step=1`} className="sr-cbtn sr-cbtn--quiet !text-lg">
             {he.cutManage.edit}
           </Link>
-          <Button size="lg" variant="secondary" className="bg-ink-2" disabled={cut.status !== "published"} onClick={() => setSaleOpen(true)}>
+          <button type="button" className="sr-cbtn !text-lg" disabled={cut.status !== "published"} onClick={() => setSaleOpen(true)}>
             {he.cutManage.storeSale}
-          </Button>
-          <Button size="lg" variant="danger" className="col-span-2" disabled={activeOrders > 0} onClick={() => setConfirm("withdraw")}>
+          </button>
+          <button type="button" className="col-span-2 min-h-12 rounded-2xl font-semibold text-sold shadow-[inset_0_0_0_1px_var(--line)] disabled:opacity-40"
+            disabled={activeOrders > 0} onClick={() => setConfirm("withdraw")}>
             {he.cutManage.withdraw}
-          </Button>
+          </button>
           {activeOrders > 0 && <p className="col-span-2 text-sm text-stone">{he.errors.HAS_ACTIVE_ORDERS}</p>}
           {cut.status === "published" && !anyOrders && cut.steaks_available === cut.steaks_total && (
             <Button variant="ghost" className="col-span-2 text-stone" onClick={() => setConfirm("revert")}>
@@ -145,12 +147,12 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
       )}
 
       <section className="m-4">
-        <h2 className="mb-2 font-extrabold">{he.cutManage.orders}</h2>
+        <h2 className="sr-clabel m-0 mb-2">{he.cutManage.orders}</h2>
         {lines.length === 0 ? <p className="text-stone">{he.cutManage.noOrders}</p> : (
           <ul className="flex flex-col gap-2">
             {lines.map((l) => (
               <li key={l.id}>
-                <Link href={`/butcher/orders/${l.order_id}`} className="flex items-center justify-between gap-2 rounded-2xl bg-ink-2 p-3 ring-1 ring-line">
+                <Link href={`/butcher/orders/${l.order_id}`} className="flex items-center justify-between gap-2 rounded-2xl bg-ink-2 p-3 shadow-[var(--shadow-card)]">
                   <span className="flex flex-col">
                     <span className={l.status === "cancelled" ? "font-bold text-stone line-through" : "font-bold"}>
                       <Ltr>#{l.orders.order_number}</Ltr> · {orderWhat(l)}
@@ -165,7 +167,7 @@ export default function ManageCutPage({ params }: { params: Promise<{ id: string
         )}
       </section>
 
-      <section className="mt-6 overflow-hidden">
+      <section data-theme="customer" className="mt-6 overflow-hidden bg-ink text-ivory">
         <CutDetail cut={cut} media={media} breeds={breeds} butcher={butcher} />
       </section>
 
@@ -208,11 +210,11 @@ function StoreSaleSheet({ open, cut, onClose, onDone }: { open: boolean; cut: Cu
     <BottomSheet open={open} onClose={onClose} title={he.cutManage.storeSale}>
       <div className="flex flex-col gap-3">
         <button type="button" onClick={() => setMode("all")} aria-pressed={mode === "all"}
-          className={clsx("min-h-16 rounded-2xl px-4 text-start text-lg font-bold ring-1", mode === "all" ? "bg-brand text-white ring-brand" : "ring-line")}>
+          className={clsx("min-h-16 rounded-2xl px-4 text-start text-lg font-bold ring-1", mode === "all" ? "bg-ivory text-ink ring-ivory" : "ring-line")}>
           {he.cutManage.soldAll}
         </button>
         {hasSteaks && (
-          <div className={clsx("flex items-center justify-between rounded-2xl px-4 py-3 ring-1", mode === "steaks" ? "ring-2 ring-brand" : "ring-line")}
+          <div className={clsx("flex items-center justify-between rounded-2xl px-4 py-3 ring-1", mode === "steaks" ? "ring-2 ring-ivory" : "ring-line")}
             onClick={() => setMode("steaks")}>
             <span className="text-lg font-bold">{he.cutManage.soldSteaks}</span>
             <Stepper size="lg" value={qty} min={1} max={cut.steaks_available} onChange={(v) => { setMode("steaks"); setQty(v); }} label={he.cutManage.soldSteaks} />

@@ -17,6 +17,7 @@ import { coverOf, cutTitle, formatDateTime, mediaUrl } from "@/lib/cut-helpers";
 import { errorText } from "@/lib/errors";
 import { useBreeds, useRefetchOnFocus } from "@/lib/hooks";
 import { clsx } from "clsx";
+import { IconBack } from "@/components/icons";
 import { formatWeight, money } from "@/lib/pricing";
 import { MEDIA_BUCKET } from "@/lib/cut-helpers";
 import { prepareImage, removeStorageObjects } from "@/lib/upload";
@@ -70,15 +71,15 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
 
   return (
     <main className="flex min-h-dvh flex-col lg:mx-auto lg:w-full lg:max-w-[760px]">
-      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-ink/95 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
-        <Link href="/butcher?tab=orders" className="flex min-h-11 items-center px-2 text-sm font-semibold text-stone">{he.app.back}</Link>
+      <header className="sticky top-0 z-30 flex items-center gap-2 bg-ink/95 px-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 backdrop-blur">
+        <Link href="/butcher?tab=orders" aria-label={he.app.back} className="sr-backbtn !bg-transparent"><IconBack /></Link>
         <h1 className="flex-1 font-display text-2xl font-bold"><span className="code !text-2xl !text-ivory">#{order.order_number}</span></h1>
         <OrderStatusBadge status={order.status} method={order.receive_method} />
       </header>
 
       <div className="flex flex-1 flex-col gap-4 p-4">
         <section className="rounded-2xl bg-ink-2 p-3 shadow-[var(--shadow-card)]">
-          <h2 className="mb-2 px-1 font-extrabold">{he.butcherOrders.items} · {he.butcherOrders.itemsCount(items.filter((i) => i.status === "active").length)}</h2>
+          <h2 className="sr-clabel m-0 mb-2 px-1">{he.butcherOrders.items} · {he.butcherOrders.itemsCount(items.filter((i) => i.status === "active").length)}</h2>
           <ul className="flex flex-col divide-y divide-line">
             {items.map((i) => (
               <ItemRow key={i.id} item={i} title={cutTitle(i.cuts, breeds)}
@@ -92,8 +93,8 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
           <p className="text-2xl font-extrabold"><Ltr>{money(order.total_agorot)}</Ltr></p>
           <p className="mt-1 text-sm text-stone">{formatDateTime(order.created_at)}</p>
           {order.customer_note && (
-            <div className="mt-3 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200">
-              <p className="text-sm font-bold text-amber-900">{he.butcherOrders.note}</p>
+            <div className="mt-3 rounded-xl bg-gold-soft p-3">
+              <p className="m-0 text-sm font-bold">{he.butcherOrders.note}</p>
               <p className="whitespace-pre-line">{order.customer_note}</p>
             </div>
           )}
@@ -130,7 +131,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
         )}
 
         <section className="rounded-2xl bg-ink-2 p-4 shadow-[var(--shadow-card)]">
-          <h2 className="mb-3 font-extrabold">{he.orders.timeline}</h2>
+          <h2 className="sr-clabel m-0 mb-3">{he.orders.timeline}</h2>
           <OrderTimeline status={order.status} events={events} method={order.receive_method} />
         </section>
       </div>
@@ -146,7 +147,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
             </button>
           )}
           {canCancel && (
-            <Button variant="ghost" className="text-red-700" onClick={() => setCancel({})}>{he.butcherOrders.cancel}</Button>
+            <Button variant="ghost" className="text-sold" onClick={() => setCancel({})}>{he.butcherOrders.cancel}</Button>
           )}
         </footer>
       )}
@@ -172,15 +173,15 @@ function ItemRow({ item: i, title, onCancel, canWeigh, onWeighed }: {
         <p className={clsx("text-lg font-extrabold leading-tight", cancelled && "text-stone line-through")}>{orderWhat(i)}</p>
         <p className="text-sm text-stone">{title} · <Ltr>{i.cuts.code}</Ltr> · <Ltr>{money(i.total_agorot)}</Ltr></p>
         {cancelled && (
-          <p className="text-sm font-semibold text-red-700">
+          <p className="text-sm font-semibold text-sold">
             {he.butcherOrders.lineCancelled}{i.cancel_reason && ` · ${i.cancel_reason}`}
           </p>
         )}
-        {i.refund_agorot ? <p className="text-sm font-semibold text-amber-800">{he.butcherOrders.refundDue(money(i.refund_agorot))}</p> : null}
+        {i.refund_agorot ? <p className="text-sm font-semibold text-gold">{he.butcherOrders.refundDue(money(i.refund_agorot))}</p> : null}
         {canWeigh && <WeightInput item={i} onDone={onWeighed} />}
       </div>
       {onCancel && (
-        <button type="button" onClick={onCancel} className="min-h-11 shrink-0 self-center px-1 text-sm font-semibold text-red-700">
+        <button type="button" onClick={onCancel} className="min-h-11 shrink-0 self-center px-1 text-sm font-semibold text-sold">
           {he.butcherOrders.cancelItem}
         </button>
       )}

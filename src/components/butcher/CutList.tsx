@@ -133,7 +133,7 @@ function CutRow({ cut, title, onRemove }: { cut: Row; title: string; onRemove: (
       {/* live cuts are taken off sale first ("הסר מהפרסום"), then they can be removed here */}
       {cut.status !== "published" && (
         <button type="button" onClick={onRemove}
-          className="absolute bottom-2 end-2 min-h-10 rounded-full px-3 text-sm font-semibold text-red-700 active:bg-red-50">
+          className="absolute bottom-2 end-2 min-h-10 rounded-full px-3 text-sm font-semibold text-sold active:bg-red-50">
           {he.butcher.remove}
         </button>
       )}
@@ -143,11 +143,12 @@ function CutRow({ cut, title, onRemove }: { cut: Row; title: string; onRemove: (
 
 export function StatusPill({ status }: { status: CutStatus }) {
   return (
-    <span className={clsx("rounded-full px-2.5 py-0.5 text-xs font-bold",
-      status === "published" && "bg-emerald-100 text-emerald-800",
-      status === "draft" && "bg-amber-100 text-amber-900",
-      status === "sold_out" && "bg-ink-3 text-ivory",
-      status === "withdrawn" && "bg-red-100 text-red-800")}>
+    // the counter's status chips (design: Counter): green live, amber draft, quiet sold out, struck-through withdrawn
+    <span className={clsx("sr-status shrink-0 !h-6 !px-2.5 !text-xs",
+      status === "published" && "sr-status--ready",
+      status === "draft" && "sr-status--prep",
+      status === "sold_out" && "sr-status--done",
+      status === "withdrawn" && "sr-status--cancelled")}>
       {CUT_STATUS_LABEL[status]}
     </span>
   );

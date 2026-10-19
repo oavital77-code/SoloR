@@ -248,12 +248,12 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
   if (state === "idle") return null;
   if (state === "error") {
     return (
-      <button type="button" onClick={onRetry} className="flex min-h-11 items-center gap-1 text-sm font-bold text-red-700">
+      <button type="button" onClick={onRetry} className="flex min-h-11 items-center gap-1 text-sm font-bold text-sold">
         {he.wizard.saveError}
       </button>
     );
   }
-  if (state === "saved") return <span className="text-sm font-semibold text-emerald-700" role="status">{he.wizard.saved}</span>;
+  if (state === "saved") return <span className="text-sm font-semibold text-success" role="status">{he.wizard.saved}</span>;
   return <span className="text-sm text-stone" role="status">{he.wizard.saving}…</span>;
 }
 

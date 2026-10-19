@@ -36,7 +36,10 @@ function ButcherHome() {
         >
           {he.butcher.newCut}
         </Link>
-        <nav className="sr-ctabs mt-3 lg:mx-auto lg:max-w-[480px]" role="tablist">
+        <Link href="/butcher/photo-guide" className="mt-2 flex min-h-11 items-center justify-center text-sm font-semibold text-stone underline underline-offset-4">
+          {he.photoGuide.title}
+        </Link>
+        <nav className="sr-ctabs mt-1 lg:mx-auto lg:max-w-[480px]" role="tablist">
           {(["cuts", "orders"] as const).map((t) => (
             <button
               key={t} role="tab" aria-selected={tab === t}
