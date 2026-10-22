@@ -1,7 +1,8 @@
 "use client";
 // The parent cut's page (BUTCHER_FLOW_v2 §5): one page per cut taken out of the counter, addressed by its id (clip
 // numbers come back). The cutting video and the cut's photos, the details entered once by the butcher, then what can
-// be bought of it: the trays, each at its own weight and price, and the block by weight — all of it, or "פרוס לי".
+// be bought of it (founders' pick of the sketches, 22.10.2026): the block first, as the mother card — all of it, or
+// "פרוס לי" — and the trays cut from it hanging off it, each at its own weight and price.
 // Sold items stay, grey, without a button. Opened from a post it scrolls to that item (#i-15-09). Old links by
 // number (/cut/523, /cut/SOL-523-1) open the latest cut with that number.
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -170,18 +171,20 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
             )}
             {parent.butcher_marbling ? <Marbling n={parent.butcher_marbling} /> : null}
 
-            {units.length > 0 && (
-              <section className="flex flex-col gap-2.5" aria-label={he.item.readyUnits}>
-                <h2 className="sr-eyebrow m-0 mt-2">{he.item.readyUnits}</h2>
-                <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                  {units.map((u) => <UnitRow key={u.id} item={u} reserved={isReserved(u, held.get(u.id))} focus={focus === u.label} onShow={showPhoto} />)}
-                </ul>
-              </section>
-            )}
-
-            {remainder && (
-              <RemainderSection item={remainder} held={held.get(remainder.id)} focus={focus === remainder.label} onShow={showPhoto} />
-            )}
+            <section aria-label={he.item.family(clipNo(parent.code))}
+              className="mt-2 flex flex-col rounded-2xl border-2 border-ivory bg-ink-2 p-3 lg:border-0 lg:bg-transparent lg:p-0">
+              {remainder
+                ? <RemainderSection item={remainder} held={held.get(remainder.id)} focus={focus === remainder.label} onShow={showPhoto} />
+                : <ParentHead parent={parent} onShow={showPhoto} />}
+              {units.length > 0 && (
+                <div className="mt-3 flex flex-col gap-2 border-t border-dashed border-stone/40 pt-3 lg:ms-11 lg:mt-2 lg:border-s-2 lg:border-t-0 lg:ps-4 lg:pt-2">
+                  <h2 className="sr-eyebrow m-0">{he.item.cutFrom(units.length)}</h2>
+                  <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                    {units.map((u) => <UnitRow key={u.id} item={u} reserved={isReserved(u, held.get(u.id))} focus={focus === u.label} onShow={showPhoto} />)}
+                  </ul>
+                </div>
+              )}
+            </section>
 
             <Certificate parent={parent} items={items} breeds={breeds} />
 
@@ -261,9 +264,9 @@ function UnitRow({ item, reserved, focus, onShow }: { item: SaleItem; reserved: 
   const sold = !isAvailable(item);
   const price = linePrice(item, "unit");
   return (
-    <li id={`i-${item.label}`} className={clsx("flex scroll-mt-24 items-center gap-3 rounded-2xl bg-ink-2 p-2 pe-3 transition-shadow",
-      sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
-      <ThumbButton cover={cover} label={item.code} onShow={onShow} />
+    <li id={`i-${item.label}`} className={clsx("flex scroll-mt-24 items-center gap-3 border-s-2 border-stone/40 py-1 ps-3 transition-shadow",
+      "lg:rounded-2xl lg:border-s-0 lg:bg-ink-2 lg:p-2 lg:pe-3", sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
+      <ThumbButton cover={cover} label={item.code} onShow={onShow} small />
       <span className="min-w-0 flex-1 text-[15px] leading-5">
         <span className="block font-bold"><span className="code !text-[14px]">{item.label}</span>{item.steak_count ? <> · {he.item.steaks(item.steak_count)}</> : null}</span>
         <span className="text-stone"><Ltr>{formatWeight(item.weight_g ?? 0)}</Ltr> · <Ltr className="font-bold text-ivory">{money(price)}</Ltr></span>
@@ -281,7 +284,8 @@ function UnitRow({ item, reserved, focus, onShow }: { item: SaleItem; reserved: 
   );
 }
 
-/** The remainder (or the whole cut when it was not split): its photo and balance, all of it or a slice. */
+/** The block — the mother card (sketches 1 and 5): the cut itself by weight, all of it or a slice. On a computer it is
+ * a card of its own; on a phone the family section around it is the card. */
 function RemainderSection({ item, held, focus, onShow }: {
   item: SaleItem; held?: import("@/lib/items").Held; focus: boolean; onShow: (m: CutMedia | undefined) => void;
 }) {
@@ -290,12 +294,14 @@ function RemainderSection({ item, held, focus, onShow }: {
   const cover = coverOf(item.cut_media);
   const sold = !isAvailable(item);
   return (
-    <section id={`i-${item.label}`} aria-label={item.split ? he.item.fromRemainder : he.item.wholeByWeight}
-      className={clsx("flex scroll-mt-24 flex-col gap-3 rounded-2xl bg-ink-2 p-3", sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
+    <div id={`i-${item.label}`} aria-label={item.split ? he.item.fromRemainder : he.item.wholeByWeight}
+      className={clsx("flex scroll-mt-24 flex-col gap-3 rounded-2xl", "lg:border-2 lg:border-ivory lg:bg-ink-2 lg:p-4",
+        sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
       <div className="flex items-center gap-3">
         <ThumbButton cover={cover} label={item.code} onShow={onShow} />
         <span className="min-w-0 text-[15px] leading-5">
-          <span className="block font-bold">{item.split ? he.item.fromRemainder : he.item.wholeByWeight} <span className="code !text-[14px] text-stone">{item.label}</span></span>
+          <span className="sr-eyebrow block">{he.item.theCut}</span>
+          <span className="block text-[17px] font-bold">{he.item.blockLine(item.label, !!item.split)}</span>
           <span className="text-stone">
             {sold ? he.item.soldOut : <><Ltr>{formatWeight(item.weight_g ?? 0)}</Ltr> · <Ltr>{money(item.price_per_kg_agorot ?? 0)}</Ltr> {he.item.perKg}</>}
           </span>
@@ -306,15 +312,34 @@ function RemainderSection({ item, held, focus, onShow }: {
           key={line ? `${line.mode}-${line.grams}` : "new"}
           onOrder={(...a) => add(item, ...a)} />
       )}
-    </section>
+    </div>
+  );
+}
+
+/** No block (all of it went into trays): the cut itself heads its trays — its photo and number, nothing to buy. */
+function ParentHead({ parent, onShow }: { parent: Parent & { cut_media?: CutMedia[] }; onShow: (m: CutMedia | undefined) => void }) {
+  const code = clipNo(parent.code);
+  return (
+    <div className="flex items-center gap-3 rounded-2xl lg:border-2 lg:border-ivory lg:bg-ink-2 lg:p-4">
+      <ThumbButton cover={coverOf(parent.cut_media ?? [])} label={displayCode(code)} onShow={onShow} />
+      <span className="min-w-0 text-[15px] leading-5">
+        <span className="sr-eyebrow block">{he.item.theCut}</span>
+        <span className="block text-[17px] font-bold">{he.item.allTrays(code)}</span>
+        {parent.weight_g ? <span className="text-stone"><Ltr>{formatWeight(parent.weight_g)}</Ltr></span> : null}
+      </span>
+    </div>
   );
 }
 
 /** A tray's (or the block's) photo: a tap shows it in the big frame. */
-function ThumbButton({ cover, label, onShow }: { cover: CutMedia | undefined; label: string; onShow: (m: CutMedia | undefined) => void }) {
+function ThumbButton({ cover, label, onShow, small }: {
+  cover: CutMedia | undefined; label: string; onShow: (m: CutMedia | undefined) => void;
+  /** a tray's: smaller on a phone */
+  small?: boolean;
+}) {
   return (
     <button type="button" onClick={() => onShow(cover)} aria-label={he.cut.showPhoto(label)}
-      className="block size-[72px] shrink-0 overflow-hidden rounded-xl bg-ink-3 transition-transform active:scale-95">
+      className={clsx("block shrink-0 overflow-hidden rounded-xl bg-ink-3 transition-transform active:scale-95", small ? "size-14 lg:size-[72px]" : "size-[72px]")}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
     </button>

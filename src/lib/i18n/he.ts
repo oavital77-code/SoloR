@@ -335,6 +335,11 @@ export const he = {
     tooLittle: "נשאר מעט מדי לפריסה — אפשר לקנות את כל הגוש",
     toPage: "לכל מה שיש מהנתח",
     alsoFrom: "עוד מהנתח הזה",
+    family: (code: string) => `נתח ${code} וחלקיו`,
+    theCut: "הנתח",
+    blockLine: (label: string, hasTrays: boolean) => `נתח ${label} · ${hasTrays ? "הגוש לפי משקל" : "שלם, לפי משקל"}`,
+    allTrays: (code: string) => `נתח ${code} · נחתך כולו למגשים`,
+    cutFrom: (n: number) => `נחתכו מהנתח הזה · ${n === 1 ? "מגש אחד" : `${n} מגשים`}`,
     fromParent: (code: string) => `מנתח ${code}`,
   },
 
