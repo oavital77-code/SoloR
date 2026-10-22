@@ -68,7 +68,7 @@ export default function ClipPage({ params }: { params: Promise<{ id: string }> }
   }
   if (state !== "ok" || !parent || value == null) return <FlowLoading state={state === "ok" ? "loading" : state} onRetry={reload} />;
   return (
-    <FlowScreen title={he.flow.clipTitle} sub={he.flow.clipHint} back={`/butcher/parent/${id}/photos`}
+    <FlowScreen parent={parent} title={he.flow.clipTitle} sub={he.flow.clipHint} back={`/butcher/parent/${id}/photos`}
       footer={<button type="button" className="sr-cbtn sr-cbtn--new" disabled={!value || busy} onClick={confirm}>{he.flow.clipConfirm}</button>}>
       <div className="grid place-items-center rounded-3xl bg-ink-2 py-6 shadow-[var(--shadow-card)]">
         <span className="ltr font-[family-name:var(--font-plex-mono)] text-[96px] leading-none font-bold" aria-live="polite">{value || "—"}</span>

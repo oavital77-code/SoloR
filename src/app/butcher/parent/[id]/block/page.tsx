@@ -54,7 +54,7 @@ export default function BlockPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <FlowScreen title={whole ? he.flow.blockTitle(parent.code ?? "") : he.flow.doneCutting} sub={whole ? undefined : he.flow.leftHint}
+    <FlowScreen parent={parent} title={whole ? he.flow.blockTitle(parent.code ?? "") : he.flow.doneCutting} sub={whole ? undefined : he.flow.leftHint}
       back={whole ? `/butcher/parent/${id}/details` : `/butcher/parent/${id}/units`}
       footer={
         <>

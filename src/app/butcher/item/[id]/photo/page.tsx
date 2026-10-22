@@ -59,7 +59,7 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <FlowScreen title={<span className="ltr font-[family-name:var(--font-plex-mono)] text-[28px]">{title}</span>} back={`/butcher/item/${id}/weigh`}
+    <FlowScreen parent={parent} title={<span className="ltr font-[family-name:var(--font-plex-mono)] text-[28px]">{title}</span>} back={`/butcher/item/${id}/weigh`}
       footer={
         <>
           {missing.length > 0 && photos.length > 0 && (

@@ -53,7 +53,7 @@ function UnitsBoard({ id }: { id: string }) {
   const remainder = items.find((i) => i.kind === "remainder");
   const done = parent.sale_mode === "both" ? `/butcher/parent/${id}/block` : `/butcher/parent/${id}/summary`;
   return (
-    <FlowScreen title={`${he.flow.cutNo(parent.code ?? "")} · ${cutTitle(parent, breeds) || he.flow.noTitle}`}
+    <FlowScreen parent={parent} title={`${he.flow.cutNo(parent.code ?? "")} · ${cutTitle(parent, breeds) || he.flow.noTitle}`}
       sub={<Link href={`/butcher/parent/${id}/details`} className="underline">{he.flow.editDetails}</Link>}
       footer={
         <>

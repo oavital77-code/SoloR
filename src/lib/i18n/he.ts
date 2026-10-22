@@ -587,6 +587,11 @@ export const he = {
     pauseAndNew: "השהה ופתח חדש",
     backToIt: "המשך בנתח הקיים",
     discard: "בטל את הנתח",
+    removeCut: "מחק נתח",
+    removeCutConfirm: (code: number | string | null) =>
+      `למחוק את ${code != null ? `נתח ${code}` : "הנתח"}? טיוטות ותמונות שלא עלו נמחקות, ומה שבאוויר יורד מהוויטרינה. אי אפשר לבטל.`,
+    removedCut: "הנתח נמחק",
+    removeHasOrders: "יש הזמנה פתוחה על הנתח — קודם מסיימים או מבטלים אותה בהזמנות",
     videoUploading: (pct: number) => `הסרטון עולה ברקע · ${pct}%`,
     videoUploaded: "הסרטון עלה",
     videoFailed: "העלאת הסרטון נכשלה",

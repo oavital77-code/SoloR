@@ -56,7 +56,7 @@ export default function WeighPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <FlowScreen title={he.flow.unitTitle(item.label)} sub={he.flow.cutNo(parent.code ?? "")} back={back}
+    <FlowScreen parent={parent} title={he.flow.unitTitle(item.label)} sub={he.flow.cutNo(parent.code ?? "")} back={back}
       footer={
         <>
           <div className="flex items-baseline justify-between text-[17px]" aria-live="polite">

@@ -1,6 +1,6 @@
 "use client";
 // S0 — the butcher's home (BUTCHER_FLOW §5): "נתח חדש — התחל הקלטה", the cut in work (R16: everything is kept,
-// "המשך" returns to exactly where it was), "סרוק פתק" for a sale at the counter (S9), and two tabs: what is in the
+// "המשך" returns to exactly where it was; 🗑 deletes it), "סרוק פתק" for a sale at the counter (S9), and two tabs: what is in the
 // showcase and the orders. ("סרוק פתק" is a typed number for now: no scanning, 22.10.2026.)
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { useButcher } from "@/components/butcher/ButcherShell";
 import { OrderList } from "@/components/butcher/OrderList";
 import { Showcase } from "@/components/butcher/Showcase";
 import { parentStep } from "@/components/butcher/flow/FlowScreen";
+import { RemoveParent } from "@/components/butcher/flow/RemoveParent";
 import { Toggle } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { cutTitle } from "@/lib/cut-helpers";
@@ -51,16 +52,19 @@ function ButcherHome() {
         <div className="mt-2 flex flex-col gap-2 lg:mx-auto lg:max-w-[560px]">
           <Link href="/butcher/parent/new" className="sr-cbtn sr-cbtn--new active:scale-[0.99]">{he.flow.newCut}</Link>
           {open.map((p) => (
-            <Link key={p.id} href={parentStep(p)}
-              className="flex min-h-16 items-center gap-3 rounded-2xl border-2 border-dashed border-[var(--status-prep)] bg-ink-2 px-4">
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs font-bold text-[var(--status-prep)]">{p.paused_at ? he.flow.paused : he.flow.inWork}</span>
-                <span className="block truncate text-[17px] font-bold">
-                  {p.code != null ? `${p.code} · ` : ""}{he.flow.inWorkLine(cutTitle(p, breeds) || he.flow.noTitle, p.items.filter((i) => i.kind === "unit").length)}
+            <div key={p.id} className="flex items-center gap-2">
+              <Link href={parentStep(p)}
+                className="flex min-h-16 min-w-0 flex-1 items-center gap-3 rounded-2xl border-2 border-dashed border-[var(--status-prep)] bg-ink-2 px-4">
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold text-[var(--status-prep)]">{p.paused_at ? he.flow.paused : he.flow.inWork}</span>
+                  <span className="block truncate text-[17px] font-bold">
+                    {p.code != null ? `${p.code} · ` : ""}{he.flow.inWorkLine(cutTitle(p, breeds) || he.flow.noTitle, p.items.filter((i) => i.kind === "unit").length)}
+                  </span>
                 </span>
-              </span>
-              <span className="sr-cchip !min-h-11 shrink-0">{he.flow.resume}</span>
-            </Link>
+                <span className="sr-cchip !min-h-11 shrink-0">{he.flow.resume}</span>
+              </Link>
+              <RemoveParent parentId={p.id} code={p.code} onRemoved={load} className="!size-16 !rounded-2xl" />
+            </div>
           ))}
           <Link href="/butcher/scan" className="sr-cbtn sr-cbtn--quiet">{he.flow.storeSale}</Link>
         </div>

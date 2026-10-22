@@ -313,6 +313,40 @@ select discard_parent(current_setting('t.p4')::uuid);
 select pg_temp.expect_error(format('select set_parent_code(%L, 99)', current_setting('t.p')), 'CODE_LOCKED');
 \echo 'Q1: a clip is free once its cut is sold or withdrawn; a sold cut keeps its number'
 
+-- "🗑 מחק נתח": a cut in the middle of the work, with a draft, goes entirely; one with something live comes off the
+-- showcase and closes (its clip free); not while an order on it is open
+select set_config('t.x', (select id::text from start_parent()), false);
+select stop_recording(current_setting('t.x')::uuid);
+select set_parent_code(current_setting('t.x')::uuid, 40);
+update parents set cut_type = 'denver', breed_key = 'black_angus', origin_country = 'AR', is_aged = false, price_per_kg_agorot = 15000
+where id = current_setting('t.x')::uuid;
+select set_sale_mode(current_setting('t.x')::uuid, 'steaks');
+select new_unit(current_setting('t.x')::uuid);
+select pg_temp.check(remove_parent(current_setting('t.x')::uuid) = 'discarded', 'a cut with only drafts is thrown away');
+select pg_temp.check((select count(*) from parents where id = current_setting('t.x')::uuid) = 0, '… with its drafts');
+select set_config('t.x', (select id::text from start_parent()), false);
+select stop_recording(current_setting('t.x')::uuid);
+select set_parent_code(current_setting('t.x')::uuid, 40);
+update parents set cut_type = 'denver', breed_key = 'black_angus', origin_country = 'AR', is_aged = false, price_per_kg_agorot = 15000
+where id = current_setting('t.x')::uuid;
+select set_sale_mode(current_setting('t.x')::uuid, 'steaks');
+select set_config('t.xu', (select id::text from new_unit(current_setting('t.x')::uuid)), false);
+update items set weight_g = 500, steak_count = 2 where id = current_setting('t.xu')::uuid;
+insert into cut_media (item_id, type, storage_path) values (current_setting('t.xu')::uuid, 'photo', 'x/x/1.jpg');
+select publish_item(current_setting('t.xu')::uuid);
+select new_unit(current_setting('t.x')::uuid);
+select pg_temp.check(remove_parent(current_setting('t.x')::uuid) = 'closed', 'a cut with a live tray is closed');
+select pg_temp.check((select status from items where id = current_setting('t.xu')::uuid) = 'withdrawn'
+                 and (select count(*) from items where parent_id = current_setting('t.x')::uuid and status = 'draft') = 0
+                 and (select status from parents where id = current_setting('t.x')::uuid) = 'closed',
+                     'a cut with a live tray: off the showcase, its drafts gone, closed');
+select set_config('t.y', (select id::text from start_parent()), false);
+select stop_recording(current_setting('t.y')::uuid);
+select set_parent_code(current_setting('t.y')::uuid, 40);          -- its clip is free
+select discard_parent(current_setting('t.y')::uuid);
+select pg_temp.expect_error(format('select remove_parent(%L)', current_setting('t.p')), 'HAS_ACTIVE_ORDERS');   -- 15-01 is ordered
+
+
 \echo 'Butcher flow tests passed'
 
 -- ═════════ cart across two shops, all or nothing, line cancellations ═════════

@@ -98,7 +98,7 @@ export default function DetailsPage({ params }: { params: Promise<{ id: string }
       ["both", he.flow.modeBoth, he.flow.modeBothHint],
     ];
     return (
-      <FlowScreen title={title} sub={he.flow.saleModeTitle} back={null}>
+      <FlowScreen parent={parent} title={title} sub={he.flow.saleModeTitle} back={null}>
         <h2 className="m-0 mt-4 text-center text-[34px] font-black">{he.flow.saleModeTitle}</h2>
         {modes.map(([m, label, hint]) => (
           <button key={m} type="button" disabled={busy} onClick={() => mode(m)}
@@ -116,7 +116,7 @@ export default function DetailsPage({ params }: { params: Promise<{ id: string }
   const missing = parentMissing(d);
   const breedList = breeds.filter((b) => !d.cut_type || !b.applies_to.length || b.applies_to.includes(d.cut_type));
   return (
-    <FlowScreen title={title} sub={he.flow.detailsHint}
+    <FlowScreen parent={parent} title={title} sub={he.flow.detailsHint}
       footer={
         <>
           {missing.length > 0 && <p className="m-0 text-center text-sm text-stone">{he.flow.missingNote}</p>}

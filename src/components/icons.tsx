@@ -45,6 +45,9 @@ export const IconStore = ({ className }: IconProps) => (
 export const IconTruck = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" className={base(className)} {...line} aria-hidden><path d="M3 6.5h11v10H3zM14 10h3.5l3 3.5v3H14" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></svg>
 );
+export const IconTrash = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={base(className)} {...line} aria-hidden><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5M10 10.5v6M14 10.5v6" /></svg>
+);
 export const IconCamera = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" className={base(className)} {...line} aria-hidden><path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z" /><circle cx="12" cy="13.2" r="3.4" /></svg>
 );

@@ -21,7 +21,7 @@ export default function ParentPhotosPage({ params }: { params: Promise<{ id: str
   if (state !== "ok" || !parent) return <FlowLoading state={state === "ok" ? "loading" : state} onRetry={reload} />;
   const next = parent.code == null ? `/butcher/parent/${id}/code` : `/butcher/parent/${id}/details`;
   return (
-    <FlowScreen title={he.flow.parentPhotosTitle} sub={he.flow.parentPhotosHint} back={parent.code == null ? null : `/butcher/parent/${id}/details`}
+    <FlowScreen parent={parent} title={he.flow.parentPhotosTitle} sub={he.flow.parentPhotosHint} back={parent.code == null ? null : `/butcher/parent/${id}/details`}
       footer={photos.length === 0
         ? <button type="button" className="sr-cbtn sr-cbtn--new" disabled={uploading > 0} onClick={() => take(false)}>{uploading ? <Spinner /> : he.flow.shoot}</button>
         : <button type="button" className="sr-cbtn sr-cbtn--new" disabled={uploading > 0} onClick={() => router.push(next)}>{he.flow.next}</button>}>

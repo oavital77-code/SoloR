@@ -5,11 +5,14 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { IconBack } from "../../icons";
 import { Spinner } from "../../ui";
+import { RemoveParent } from "./RemoveParent";
 import { he } from "@/lib/i18n/he";
 import { retryVideoUpload, useVideoUpload } from "@/lib/video-upload";
 
-export function FlowScreen({ title, sub, back = "/butcher", children, footer, wide }: {
+export function FlowScreen({ title, sub, back = "/butcher", children, footer, wide, parent }: {
   title: React.ReactNode; sub?: React.ReactNode; back?: string | null; children: React.ReactNode;
+  /** the cut this screen works on: "🗑 מחק נתח" in the header, at any step */
+  parent?: { id: string; code: number | null } | null;
   /** the primary action(s), pinned at the bottom */
   footer?: React.ReactNode;
   wide?: boolean;
@@ -22,10 +25,11 @@ export function FlowScreen({ title, sub, back = "/butcher", children, footer, wi
             <IconBack />
           </Link>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="m-0 truncate text-[22px] font-black leading-7">{title}</h1>
           {sub && <p className="m-0 truncate text-sm text-stone">{sub}</p>}
         </div>
+        {parent && <RemoveParent parentId={parent.id} code={parent.code} />}
       </header>
       <UploadBar />
       <div className={clsx("flex flex-1 flex-col gap-4 px-4 pt-2 pb-6", wide ? "lg:px-8" : "lg:mx-auto lg:w-full lg:max-w-[560px]")}>{children}</div>

@@ -54,7 +54,7 @@ export default function SummaryPage({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <FlowScreen title={he.flow.summaryTitle(parent.code ?? "")} sub={cutTitle(parent, breeds) || he.flow.noTitle} back="/butcher"
+    <FlowScreen parent={parent} title={he.flow.summaryTitle(parent.code ?? "")} sub={cutTitle(parent, breeds) || he.flow.noTitle} back="/butcher"
       footer={
         <>
           {drafts.length > 0 && <p className="m-0 text-sm font-semibold text-sold">{he.flow.hasDrafts(drafts.length)}</p>}
