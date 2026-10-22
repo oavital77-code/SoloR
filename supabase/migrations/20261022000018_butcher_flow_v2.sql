@@ -279,6 +279,13 @@ end $$;
 drop function if exists set_split(uuid, boolean);
 drop function if exists create_remainder(uuid);
 
+-- trays already numbered keep their number, written the v2 way ("9-1" → "9-01", what the butcher types at the counter)
+select set_config('solor.rpc', 'on', true);
+update items i set label = unit_label(p.code, i.unit_no) from parents p
+where p.id = i.parent_id and i.kind = 'unit' and i.unit_no is not null and p.code is not null
+  and i.label is distinct from unit_label(p.code, i.unit_no);
+select set_config('solor.rpc', 'off', true);
+
 -- ───────── RLS + grants ─────────
 grant update (weight_g) on parents to authenticated;
 grant insert (parent_id) on cut_media to authenticated;

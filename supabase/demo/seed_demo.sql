@@ -30,7 +30,8 @@ with ins as (
   insert into parents (code, butcher_id, status, split, sale_mode, weight_g, cut_type, breed_key, breed_other, origin_country, is_aged, aging_days,
                        aging_method, butcher_marbling, description, price_per_kg_agorot, video_path, video_poster_path,
                        next_unit_no, created_at, closed_at)
-  select d.clip, b.id, 'closed', d.units <> '',
+  select case when (parent_code_holder(b.id, d.clip, null)).id is null then d.clip else d.clip + 100 end,   -- a real cut holds it: another clip
+         b.id, 'closed', d.units <> '',
          case when d.units = '' then 'block' when d.remainder_g is null then 'steaks' else 'both' end,
          (select coalesce(sum(split_part(x, ':', 2)::int), 0) from unnest(string_to_array(nullif(d.units, ''), ',')) x)
            + coalesce(d.remainder_g, 0) + 150,
