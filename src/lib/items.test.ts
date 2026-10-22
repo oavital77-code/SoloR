@@ -43,7 +43,7 @@ const it_ = (id: string, parent_id: string, o: Partial<SaleItem> = {}): SaleItem
   ({ id, parent_id, kind: "unit", unit_no: 1, status: "published", weight_g: 500, ...o } as SaleItem);
 
 describe("onePerParent", () => {
-  it("leads with the first of each parent on sale and carries the rest as trays, the block first", () => {
+  it("leads with the block when on sale, else the first on sale; carries every tray on sale", () => {
     const list = [
       { cut: it_("t2", "p15", { unit_no: 2 }) },
       { cut: it_("x", "p7", { kind: "remainder", unit_no: null }) },
@@ -52,12 +52,12 @@ describe("onePerParent", () => {
       { cut: it_("t3", "p15", { unit_no: 3, status: "sold_out", weight_g: 0 }) },
     ];
     const posts = onePerParent(list);
-    expect(posts.map((p) => p.cut.id)).toEqual(["t2", "x"]);
-    expect(posts[0].trays.map((t) => t.id)).toEqual(["b", "t1"]);
+    expect(posts.map((p) => p.cut.id)).toEqual(["b", "x"]);
+    expect(posts[0].trays.map((t) => t.id)).toEqual(["t1", "t2"]);
   });
   it("does not lead with an item that sold while on screen when another is on sale", () => {
     const posts = onePerParent([{ cut: it_("a", "p1"), gone: true }, { cut: it_("b", "p1", { unit_no: 2 }) }]);
     expect(posts.map((p) => p.cut.id)).toEqual(["b"]);
-    expect(posts[0].trays).toEqual([]);
+    expect(posts[0].trays.map((t) => t.id)).toEqual(["b"]);
   });
 });

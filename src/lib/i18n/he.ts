@@ -161,6 +161,7 @@ export const he = {
 
   // the post (customer spec §5) and the live feed around it (§4)
   post: {
+    traysShort: "מגשים",
     prevSlide: "לתמונה הקודמת",
     notAged: "ללא",
     days: (n: number) => `${n} יום`,

@@ -149,6 +149,8 @@ export interface SaleItem extends Omit<Item, "updated_at" | "label"> {
   description: string | null;
   video_published: boolean;
   cut_media: CutMedia[];
+  /** the cut's own photos (the block shows them; a post of trays leads with them) */
+  parent_media?: CutMedia[];
 }
 
 /** One purchase by a customer: one (simulated) payment for the whole cart. */

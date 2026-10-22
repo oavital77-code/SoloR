@@ -73,12 +73,14 @@ export function toSaleItem(row: ItemRow, video: "feed" | "always" = "feed"): Sal
     description: p.description,
     video_published: p.video_published,
     cut_media: media,
+    parent_media: p.cut_media ?? [],
   };
 }
 
 /**
- * One post per parent (v2 Q6): the first of each parent in the list's order leads (the newest, so in "גם וגם" the
- * block, which goes live last), preferring one still on sale; the rest of that parent's items on sale go with it.
+ * One post per parent (v2 Q6), in the list's order (where its newest item stands): the block leads when it is on sale
+ * (the cut itself, founders 22.10.2026), else the newest item still on sale; `trays` are all the parent's trays on
+ * sale, by their number — the lead too when it is one.
  */
 export function onePerParent<T extends { cut: SaleItem; gone?: boolean }>(list: T[]): (T & { trays: SaleItem[] })[] {
   const byParent = new Map<string, T[]>();
@@ -89,9 +91,9 @@ export function onePerParent<T extends { cut: SaleItem; gone?: boolean }>(list: 
     if (seen.has(x.cut.parent_id)) continue;
     seen.add(x.cut.parent_id);
     const all = byParent.get(x.cut.parent_id)!;
-    const lead = all.find((y) => !y.gone && isAvailable(y.cut)) ?? x;
-    const trays = all.filter((y) => y !== lead && !y.gone && isAvailable(y.cut)).map((y) => y.cut)
-      .sort((a, b) => Number(a.kind === "unit") - Number(b.kind === "unit") || (a.unit_no ?? 0) - (b.unit_no ?? 0));
+    const onSale = all.filter((y) => !y.gone && isAvailable(y.cut));
+    const lead = onSale.find((y) => y.cut.kind === "remainder") ?? onSale[0] ?? x;
+    const trays = onSale.filter((y) => y.cut.kind === "unit").map((y) => y.cut).sort((a, b) => (a.unit_no ?? 0) - (b.unit_no ?? 0));
     out.push({ ...lead, trays });
   }
   return out;

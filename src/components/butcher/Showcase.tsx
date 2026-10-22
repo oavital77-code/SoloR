@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useButcher } from "./ButcherShell";
 import { ConfirmDialog, EmptyState, ErrorState, Ltr, Skeleton } from "../ui";
 import { useToast } from "../Toast";
+import { IconTrash } from "../icons";
 import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
 import { errorText } from "@/lib/errors";
@@ -60,7 +61,7 @@ export function Showcase() {
 
   return (
     <>
-      <ul className="m-0 grid list-none gap-2.5 px-4 pt-3 pb-4 lg:grid-cols-2">
+      <ul className="m-0 grid list-none grid-cols-1 gap-2.5 px-4 pt-3 pb-4 lg:grid-cols-2">
         {rows.map((r) => {
           const cover = coverOf(r.cut_media) ?? coverOf(r.parent.cut_media ?? []);
           const ppk = r.price_per_kg_agorot ?? r.parent.price_per_kg_agorot;
@@ -80,7 +81,8 @@ export function Showcase() {
                   </span>
                 </span>
               </Link>
-              <button type="button" className="min-h-11 shrink-0 px-2 text-sm font-semibold text-stone" onClick={() => setRemoving(r)}>{he.flow.withdraw}</button>
+              <button type="button" aria-label={he.flow.withdraw} title={he.flow.withdraw} onClick={() => setRemoving(r)}
+                className="grid size-11 shrink-0 place-items-center rounded-full text-sold"><IconTrash /></button>
             </li>
           );
         })}

@@ -1,10 +1,11 @@
 "use client";
-// One post = one parent cut (BUTCHER_FLOW_v2 Q6), led by one of its sale items — the block, or a tray — with the
-// parent's other trays on sale in a strip under it ("עוד מהנתח הזה"). It is a social post (design: V3, 22.10.2026): the shop and "חי מהדלפק", the cut, which part of it this is and the
+// One post = one parent cut (BUTCHER_FLOW_v2 Q6), built like its page (founders 22.10.2026): the cut first — the
+// block when it is on sale, else the cut itself — and the trays cut from it hanging off it on a rail
+// ("נחתכו מהנתח הזה"), each with its photo (a tap shows it in the big frame) and its own add. It is a social post (design: V3, 22.10.2026): the shop and "חי מהדלפק", the cut, which part of it this is and the
 // butcher's word, the cutting video leading a landscape carousel, four facts, the price with "הוסף לסל", and more
 // from the same counter. Tapping it opens the parent's page at this item. With `preview` it is the butcher's
 // ItemPreviewCard (§9.4): exactly what the customer will see, nothing acts.
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { PostMedia } from "./PostMedia";
@@ -19,11 +20,11 @@ import { useToast } from "./Toast";
 import { he } from "@/lib/i18n/he";
 import { cart, useCart } from "@/lib/cart";
 import { coverOf, cutTitle, mediaUrl, timeAgo } from "@/lib/cut-helpers";
-import { isAvailable, linePrice, parentPath, type Held } from "@/lib/items";
+import { clipNo, displayCode, isAvailable, linePrice, parentPath, type Held } from "@/lib/items";
 import { agingMethodLabel } from "@/lib/labels";
 import { shopPath } from "@/lib/market";
 import { formatWeight, money } from "@/lib/pricing";
-import type { Breed, Butcher, SaleItem } from "@/lib/types";
+import type { Breed, Butcher, CutMedia, SaleItem } from "@/lib/types";
 
 export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserved, held, eager, related, trays, preview, onPriceTap }: {
   cut: SaleItem; breeds: Breed[]; shop?: Pick<Butcher, "name" | "slug" | "logo_path"> | null; now: number;
@@ -49,6 +50,12 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
   const href = parentPath(cut.parent_id, cut.label);
   const soldOut = !preview && (gone || !isAvailable(cut));
   const [open, setOpen] = useState(false);
+  // the trays hang off the post; with no block on sale the cut itself leads (nothing to buy of it but its trays)
+  const family = !preview && !!trays && trays.length > 0;
+  const headless = family && cut.kind === "unit";
+  const media = useMemo(() => (family ? familyMedia(cut, trays!) : cut.cut_media), [family, cut, trays]);
+  const [show, setShow] = useState<{ path: string; n: number } | null>(null);
+  const showPhoto = (m: CutMedia | undefined) => { if (m) setShow((x) => ({ path: m.storage_path, n: (x?.n ?? 0) + 1 })); };
   const { ref, visible } = usePostView<HTMLElement>(cut.id, { butcherId: cut.butcher_id, source });
   // the one-time sold-out notice counts as given once the stamped post was actually in view
   useEffect(() => { if (gone && visible) markSoldNotice(cut.id); }, [gone, visible, cut.id]);
@@ -57,16 +64,17 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
   const [kind, breed] = splitTitle(title);
   const state = soldOut ? "sold" : reserved ? "reserved" : null;
   const overlay = soldOut ? <SoldStamp code={cut.code} at={cut.sold_out_at} /> : reserved ? <ReservedBadge /> : null;
-  const part = cut.kind === "unit"
-    ? `${he.item.unit(cut.label)}${cut.steak_count ? ` · ${he.item.steaks(cut.steak_count)}` : ""}`
+  const part = headless ? he.item.allTrays(clipNo(cut.parent_code))
+    : cut.kind === "unit" ? `${he.item.unit(cut.label)}${cut.steak_count ? ` · ${he.item.steaks(cut.steak_count)}` : ""}`
     : cut.split ? `${he.item.remainder} · ${he.item.canSlice}` : he.item.wholeByWeight;
   const Wrap = preview ? "span" : Link;
 
   const factCells = [
     { k: he.cut.aging, v: cut.is_aged && cut.aging_days ? `${he.post.days(cut.aging_days)}${method ? ` · ${method}` : ""}` : he.post.notAged },
-    { k: cut.kind === "remainder" ? he.post.leftShort : he.post.weightShort, v: cut.weight_g ? formatWeight(cut.weight_g) : "—" },
+    headless ? { k: he.post.traysShort, v: String(trays!.length) }
+      : { k: cut.kind === "remainder" ? he.post.leftShort : he.post.weightShort, v: cut.weight_g ? formatWeight(cut.weight_g) : "—" },
     { k: he.cut.pricePerKg, v: cut.price_per_kg_agorot ? money(cut.price_per_kg_agorot) : "—" },
-    { k: he.post.codeShort, v: <span className="code !text-[12px] whitespace-nowrap">{cut.code}</span> },
+    { k: he.post.codeShort, v: <span className="code !text-[12px] whitespace-nowrap">{headless ? displayCode(clipNo(cut.parent_code)) : cut.code}</span> },
   ];
   return (
     <article ref={ref} id={`post-${cut.id}`} className="overflow-hidden rounded-[22px] bg-ink-2 text-start shadow-[var(--shadow-card)]">
@@ -88,7 +96,8 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
         </p>
       </div>
 
-      <PostMedia media={cut.cut_media} title={title} code={cut.code} href={preview ? undefined : href} eager={eager} state={state} videoFirst wide>{overlay}</PostMedia>
+      <PostMedia media={media} title={title} code={cut.code} href={preview ? undefined : href} eager={eager} state={headless ? null : state}
+        videoFirst wide show={show}>{headless ? null : overlay}</PostMedia>
 
       <dl className="m-0 grid grid-cols-4 border-b border-line">
         {factCells.map((f) => (
@@ -99,7 +108,7 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
         ))}
       </dl>
 
-      <div className="flex items-center gap-3 px-4 py-2.5 lg:px-[18px]">
+      {!headless && <div className="flex items-center gap-3 px-4 py-2.5 lg:px-[18px]">
         {onPriceTap
           ? <button type="button" onClick={onPriceTap} className="rounded-lg underline decoration-dashed underline-offset-4"><Price cut={cut} /></button>
           : <Price cut={cut} muted={soldOut} />}
@@ -107,13 +116,13 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
         <div className={clsx((!shop || preview) && "ms-auto", "max-sm:ms-auto")}>
           <AddPill cut={cut} soldOut={soldOut} reserved={!!reserved} preview={preview} onChoose={() => setOpen(true)} />
         </div>
-      </div>
+      </div>}
 
-      {trays && trays.length > 0 && (
-        <div className="flex flex-col gap-2.5 border-t border-line px-4 pt-3 pb-4 lg:px-[18px]">
-          <span className="text-[13px] font-bold">{he.item.alsoFrom}</span>
-          <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2.5 overflow-x-auto px-4 lg:-mx-[18px] lg:px-[18px]">
-            {trays.map((r) => <TrayCard key={r.id} cut={r} />)}
+      {family && (
+        <div className={clsx("flex flex-col gap-2 px-4 pb-3.5 lg:px-[18px]", headless ? "pt-3" : "border-t border-dashed border-stone/40 pt-3")}>
+          <span className="sr-eyebrow">{he.item.cutFrom(trays!.length)}</span>
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {trays!.map((t) => <TrayRow key={t.id} cut={t} onShow={showPhoto} />)}
           </ul>
         </div>
       )}
@@ -237,26 +246,46 @@ function RelatedCut({ cut, breeds }: { cut: SaleItem; breeds: Breed[] }) {
   );
 }
 
-/** A tray (or the block) of the same parent: its photo, number, steaks and price, opening the parent's page at it. */
-function TrayCard({ cut }: { cut: SaleItem }) {
+/** A tray hanging off the post: its photo (a tap shows it in the big frame), number, steaks, weight, price, and its add. */
+function TrayRow({ cut, onShow }: { cut: SaleItem; onShow: (m: CutMedia | undefined) => void }) {
+  const inCart = useCart().some((l) => l.itemId === cut.id);
+  const add = useAddToCart("feed");
   const cover = coverOf(cut.cut_media);
-  const unit = cut.kind === "unit";
+  const price = linePrice(cut, "unit");
   return (
-    <li className="shrink-0">
-      <Link href={parentPath(cut.parent_id, cut.label)} className="flex w-[180px] items-center gap-2.5 rounded-[14px] bg-ink-3 p-1.5">
-        <span className="block size-12 shrink-0 overflow-hidden rounded-[10px] bg-ink">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
-        </span>
-        <span className="min-w-0 text-[13px] leading-[17px]">
-          <span className="block truncate font-medium">
-            {unit ? <><span className="code !text-[12px]">{cut.label}</span>{cut.steak_count ? ` · ${he.item.steaks(cut.steak_count)}` : ""}</> : he.item.remainder}
-          </span>
-          <span className="text-brand"><UnitPrice cut={cut} /></span>
-        </span>
+    <li className="flex items-center gap-3 border-s-2 border-stone/40 ps-3">
+      <button type="button" onClick={() => onShow(cover)} aria-label={he.cut.showPhoto(cut.code)}
+        className="block size-12 shrink-0 overflow-hidden rounded-[10px] bg-ink-3 transition-transform active:scale-95">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
+      </button>
+      <Link href={parentPath(cut.parent_id, cut.label)} className="min-w-0 flex-1 text-[14px] leading-[18px]">
+        <span className="block truncate font-bold"><span className="code !text-[13px]">{cut.label}</span>{cut.steak_count ? ` · ${he.item.steaks(cut.steak_count)}` : ""}</span>
+        <span className="text-stone">{cut.weight_g ? <Ltr>{formatWeight(cut.weight_g)}</Ltr> : null} · <Ltr className="font-bold text-ivory">{money(price)}</Ltr></span>
       </Link>
+      {inCart
+        ? <span className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-success"><IconCheck className="size-4" />{he.post.inCart}</span>
+        : <button type="button" className="sr-btn !min-h-11 shrink-0 !px-4 !text-[14px] !font-bold" onClick={() => add(cut, "unit", null, null, price)}>{he.cart.add}</button>}
     </li>
   );
+}
+
+/** The post's frame for a cut with trays: the cutting video, the cut's own photos (the cover first), then each tray's. */
+function familyMedia(cut: SaleItem, trays: SaleItem[]): CutMedia[] {
+  const out: CutMedia[] = [];
+  const seen = new Set<string>();
+  const video = cut.cut_media.find((m) => m.type === "video");
+  if (video) out.push(video);
+  const photos = (list: CutMedia[]) => list.filter((m) => m.type === "photo")
+    .sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order);
+  const add = (m: CutMedia | undefined) => {
+    if (!m || seen.has(m.storage_path)) return;
+    seen.add(m.storage_path);
+    out.push({ ...m, is_cover: seen.size === 1, sort_order: out.length });
+  };
+  photos(cut.parent_media?.length ? cut.parent_media : cut.cut_media).forEach(add);
+  for (const t of trays) add(photos(t.cut_media)[0]);
+  return out;
 }
 
 function UnitPrice({ cut }: { cut: SaleItem }) {

@@ -49,9 +49,14 @@ function ButcherHome() {
             </form>
           </div>
         </div>
+      </header>
+      <div className="px-4 pt-1">
         <Toggle label={he.butcher.soundAlerts} checked={sound} onChange={setSound} />
         <div className="mt-2 flex flex-col gap-2 lg:mx-auto lg:max-w-[560px]">
-          <Link href="/butcher/parent/new" className="sr-cbtn sr-cbtn--new active:scale-[0.99]">{he.flow.newCut}</Link>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link href="/butcher/parent/new" className="sr-cbtn sr-cbtn--new !min-h-14 min-w-0 !text-[18px] active:scale-[0.99] sm:flex-[2]">{he.flow.newCut}</Link>
+            <Link href="/butcher/scan" className="sr-cbtn sr-cbtn--quiet !min-h-14 min-w-0 !text-[17px] sm:flex-1">{he.flow.storeSale}</Link>
+          </div>
           {open.map((p) => (
             <div key={p.id} className="flex items-center gap-2">
               <Link href={parentStep(p)}
@@ -67,7 +72,6 @@ function ButcherHome() {
               <RemoveParent parentId={p.id} code={p.code} onRemoved={load} className="!size-16 !rounded-2xl" />
             </div>
           ))}
-          <Link href="/butcher/scan" className="sr-cbtn sr-cbtn--quiet">{he.flow.storeSale}</Link>
         </div>
         <Link href="/butcher/photo-guide" className="mt-1 flex min-h-11 items-center justify-center text-sm font-semibold text-stone underline underline-offset-4">
           {he.photoGuide.title}
@@ -82,7 +86,7 @@ function ButcherHome() {
             </button>
           ))}
         </nav>
-      </header>
+      </div>
       {tab === "showcase" ? <Showcase /> : <OrderList />}
     </main>
   );
