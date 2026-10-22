@@ -7,13 +7,18 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { PhotoViewer } from "./PhotoViewer";
+import { IconBack } from "./icons";
 import { he } from "@/lib/i18n/he";
 import { mediaUrl, photosOf, videoOf } from "@/lib/cut-helpers";
 import type { CutMedia } from "@/lib/types";
 import { track as logEvent } from "@/lib/track";
 
-export function PostMedia({ media, title, code, href, eager, state, children }: {
+export function PostMedia({ media, title, code, href, eager, state, children, videoFirst, wide }: {
   media: CutMedia[]; title: string; code: string;
+  /** the feed post (design: V3): the work video leads, playing muted, the photos follow */
+  videoFirst?: boolean;
+  /** a landscape 16:10 frame instead of the square */
+  wide?: boolean;
   /** feed: a tap on a photo opens this post; full post: undefined → full-screen viewer */
   href?: string; eager?: boolean; children?: React.ReactNode;
   /** sold: the photos lose their colour under the stamp; reserved: they dim (design system: PostStates) */
@@ -21,7 +26,7 @@ export function PostMedia({ media, title, code, href, eager, state, children }: 
 }) {
   const photos = photosOf(media);
   const video = videoOf(media);
-  const slides: CutMedia[] = [...photos, ...(video ? [video] : [])];
+  const slides: CutMedia[] = videoFirst && video ? [video, ...photos] : [...photos, ...(video ? [video] : [])];
   const [active, setActive] = useState(0);
   const [onScreen, setOnScreen] = useState(false);
   const [sound, setSound] = useState(false);
@@ -29,7 +34,9 @@ export function PostMedia({ media, title, code, href, eager, state, children }: 
   const box = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const videoEl = useRef<HTMLVideoElement>(null);
-  const videoIndex = video ? slides.length - 1 : -1;
+  const videoIndex = video ? (videoFirst ? 0 : slides.length - 1) : -1;
+  // arrows for a mouse (a phone swipes): one slide at a time; in right-to-left the next slide is to the left
+  const go = (dir: 1 | -1) => { const t = track.current; if (t) t.scrollBy({ left: -dir * t.clientWidth, behavior: "smooth" }); };
 
   // slide index from the scroll position (RTL-safe: scrollLeft is negative in right-to-left containers)
   const onScroll = () => {
@@ -71,12 +78,12 @@ export function PostMedia({ media, title, code, href, eager, state, children }: 
     else v.pause();
   }, [playing]);
 
-  if (slides.length === 0) return <div ref={box} className="relative aspect-square w-full bg-ink-3">{children}</div>;
+  if (slides.length === 0) return <div ref={box} className={clsx("relative w-full bg-ink-3", wide ? "aspect-[16/10]" : "aspect-square")}>{children}</div>;
 
   return (
     <div ref={box} className="relative overflow-hidden bg-ink-3">
       {/* horizontal-only strip in a fixed-ratio box: a vertical swipe always scrolls the page (iOS) */}
-      <div className="relative aspect-square w-full">
+      <div className={clsx("relative w-full", wide ? "aspect-[16/10]" : "aspect-square")}>
         <div ref={track} onScroll={onScroll} className={clsx("no-scrollbar absolute inset-0 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden transition-[filter] duration-[600ms]",
           state === "sold" && "grayscale brightness-[.55]", state === "reserved" && "brightness-[.8]")}>
           {slides.map((m, i) => (
@@ -87,7 +94,7 @@ export function PostMedia({ media, title, code, href, eager, state, children }: 
                   <button type="button" className="h-full w-full" aria-label={sound ? he.post.video : he.post.soundOn}
                     onClick={() => { const v = videoEl.current; if (v) { v.muted = false; setSound(true); v.play().catch(() => {}); } }}>
                     <video ref={videoEl} src={mediaUrl(m.storage_path)} poster={mediaUrl(m.poster_path ?? photos[0]?.storage_path)}
-                      muted={!sound} playsInline loop preload="metadata" className="h-full w-full object-contain" aria-label={he.post.video} />
+                      muted={!sound} playsInline loop preload="metadata" className={clsx("h-full w-full", videoFirst ? "object-cover" : "object-contain")} aria-label={he.post.video} />
                     {!sound && (
                       <span className="pointer-events-none absolute bottom-10 start-3 rounded-full bg-ink/60 px-3 py-1 text-xs text-ivory backdrop-blur-sm">
                         {he.post.soundOn}
@@ -111,6 +118,18 @@ export function PostMedia({ media, title, code, href, eager, state, children }: 
 
       {slides.length > 1 && (
         <>
+          {active > 0 && (
+            <button type="button" onClick={() => go(-1)} aria-label={he.post.prevSlide}
+              className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-ink-2/95 text-ivory shadow lg:grid">
+              <IconBack />
+            </button>
+          )}
+          {active < slides.length - 1 && (
+            <button type="button" onClick={() => go(1)} aria-label={he.post.nextSlide}
+              className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-ink-2/95 text-ivory shadow lg:grid">
+              <IconBack className="rotate-180" />
+            </button>
+          )}
           <span className="pointer-events-none absolute bottom-3 end-3 rounded-full bg-scrim px-2.5 py-0.5 text-xs text-ivory" dir="ltr">
             {he.post.counter(active + 1, slides.length)}
           </span>

@@ -12,13 +12,17 @@ import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { isReserved } from "@/lib/feed";
-import { israelClock } from "@/lib/hours";
+import { clsx } from "clsx";
+import { ShopMark } from "@/components/ShopMark";
+import { Ltr } from "@/components/ui";
+import { closesAt, isOpenNow, israelClock } from "@/lib/hours";
+import { liveEvents, type LiveEvent } from "@/lib/live";
 import { useBreeds, useButchers, useNow, useSession } from "@/lib/hooks";
-import { shopPath } from "@/lib/market";
+import { isAvailable, shopPath } from "@/lib/market";
 import { coverOf, mediaUrl } from "@/lib/cut-helpers";
 import { useScrollMemory } from "@/lib/scroll";
 import { track } from "@/lib/track";
-import type { Butcher } from "@/lib/types";
+import type { Butcher, CutWithMedia } from "@/lib/types";
 
 const PAGE = 8;
 const LIMIT_KEY = "solor.feed.limit";
@@ -71,16 +75,22 @@ export default function FeedPage() {
 
   if (error && !cuts) return <main className="min-h-dvh pt-10"><ErrorState dark onRetry={reload} /></main>;
 
+  const events = liveEvents(cuts ?? [], butchers, breeds);
+  // more from the same counter, under each post: what that shop still has, newest first
+  const relatedOf = (cut: CutWithMedia) => items
+    .filter((i) => !i.gone && i.cut.butcher_id === cut.butcher_id && i.cut.id !== cut.id && isAvailable(i.cut))
+    .slice(0, 4).map((i) => i.cut);
+
   return (
-    <main className="relative min-h-dvh pt-2 pb-28">
+    <main className="relative min-h-dvh pb-28">
       {pull > 0 && (
-        <p className="pb-2 text-center text-xs text-stone" style={{ opacity: Math.min(1, pull / PULL) }} aria-live="polite">
+        <p className="pt-2 text-center text-xs text-stone" style={{ opacity: Math.min(1, pull / PULL) }} aria-live="polite">
           {pull >= PULL ? he.feed.refreshing : he.feed.pullToRefresh}
         </p>
       )}
 
       {pending > 0 && (
-        // design system: NewCutsPill — ivory, the new cuts' photos, waits until tapped; the feed never moves by itself
+        // design system: NewCutsPill — the new cuts' photos, waits until tapped; the feed never moves by itself
         <button type="button" onClick={takeNew}
           className="sr-newpill animate-toast-in fixed top-[calc(4.25rem+env(safe-area-inset-top))] left-1/2 z-30 -translate-x-1/2">
           <span className="sr-newpill__dots">
@@ -94,37 +104,103 @@ export default function FeedPage() {
         </button>
       )}
 
-      <div className="wash pointer-events-none absolute inset-x-0 top-0 h-[360px]" aria-hidden />
-      <header className="relative px-4 pt-2 pb-5 text-start lg:px-8 lg:pt-6">
-        <p className="sr-eyebrow">
-          {he.feed.greeting(Math.floor(israelClock(new Date(now)).minutes / 60))}{firstName ? `, ${firstName}` : ""}
-        </p>
-        <h1 className="mt-1 font-display text-[26px] font-bold leading-8 text-ivory">
-          {today.cuts > 0 ? he.feed.todaySummary(today.cuts, today.shops) : he.feed.greetingSub}
-        </h1>
-      </header>
+      <LiveTicker events={events} />
 
-      {!ready ? (
-        <div className="relative grid gap-6 px-4 lg:grid-cols-3 lg:px-8">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-[520px] rounded-3xl" />)}</div>
-      ) : items.length === 0 ? (
-        <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
-      ) : (
-        <>
-          <ul className="relative grid items-start gap-6 px-4 lg:grid-cols-3 lg:px-8">
-            {items.slice(0, limit).map(({ cut, gone }, i) => (
-              <li key={cut.id}>
-                <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}
-                  reserved={!gone && isReserved(cut, held.get(cut.id))} eager={i === 0} />
-              </li>
-            ))}
-          </ul>
-          {items.length > limit ? <div ref={sentinel} className="h-10" aria-hidden />
-            : <FeedEnd title={he.feed.end} hint={he.feed.endHint} butchers={butchers} />}
-        </>
-      )}
+      <div className="lg:grid lg:grid-cols-[270px_minmax(0,660px)_290px] lg:justify-center lg:gap-8 lg:px-8 lg:pt-7">
+        <ShopsAside butchers={butchers} now={now} />
+
+        <div className="min-w-0">
+          <header className="px-4 pt-5 pb-4 text-start lg:px-0 lg:pt-0">
+            <p className="sr-eyebrow">
+              {he.feed.greeting(Math.floor(israelClock(new Date(now)).minutes / 60))}{firstName ? `, ${firstName}` : ""}
+            </p>
+            <h1 className="m-0 mt-1 text-[28px] font-black leading-9 lg:text-[34px] lg:leading-10">
+              {today.cuts > 0 ? he.feed.todaySummary(today.cuts, today.shops) : he.feed.onCounter}
+            </h1>
+          </header>
+
+          {!ready ? (
+            <div className="flex flex-col gap-5 px-4 lg:px-0">{[0, 1].map((i) => <Skeleton key={i} className="h-[560px] rounded-[22px]" />)}</div>
+          ) : items.length === 0 ? (
+            <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
+          ) : (
+            <>
+              <ul className="m-0 flex list-none flex-col gap-5 p-0 px-3 lg:px-0">
+                {items.slice(0, limit).map(({ cut, gone }, i) => (
+                  <li key={cut.id}>
+                    <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}
+                      reserved={!gone && isReserved(cut, held.get(cut.id))} eager={i === 0} related={relatedOf(cut)} />
+                  </li>
+                ))}
+              </ul>
+              {items.length > limit ? <div ref={sentinel} className="h-10" aria-hidden />
+                : <FeedEnd title={he.feed.end} hint={he.feed.endHint} butchers={butchers} />}
+            </>
+          )}
+        </div>
+
+        <LiveLog events={events} />
+      </div>
     </main>
   );
 }
+
+/** The red "עכשיו" strip under the header (design: V3): the latest few things that happened at the counters. */
+function LiveTicker({ events }: { events: LiveEvent[] }) {
+  if (!events.length) return null;
+  return (
+    <div className="no-scrollbar flex h-10 items-center gap-6 overflow-x-auto bg-brand px-4 text-sm whitespace-nowrap text-on-brand lg:px-10" role="status" aria-live="polite">
+      <b>{he.live.ticker}</b>
+      {events.slice(0, 4).map((e, i) => (
+        <span key={e.id} className="flex items-center gap-6">{i > 0 && <span aria-hidden className="opacity-60">|</span>}{e.text}</span>
+      ))}
+    </div>
+  );
+}
+
+/** The shops, beside the feed on a wide screen (design: V3): mark, name, open until when. */
+function ShopsAside({ butchers, now }: { butchers: Butcher[]; now: number }) {
+  const shops = butchers.filter((b) => b.status !== "inactive");
+  return (
+    <aside aria-label={he.live.shops} className="hidden flex-col gap-3 text-start lg:flex">
+      <h2 className="m-0 text-lg font-bold">{he.live.shops}</h2>
+      {shops.map((b) => {
+        const open = isOpenNow(b.opening_hours, new Date(now));
+        const until = open ? closesAt(b.opening_hours, new Date(now)) : null;
+        return (
+          <Link key={b.id} href={shopPath(b)} className="flex items-center gap-2.5 rounded-2xl bg-ink-2 px-3 py-2.5">
+            <ShopMark shop={b} />
+            <span className="min-w-0">
+              <span className="block truncate text-[15px] font-medium">{b.name}</span>
+              <span className={clsx("text-xs", open ? "text-success" : "text-stone")}>
+                {open ? <>● {he.live.openUntil} {until && <Ltr>{until}</Ltr>}</> : he.live.closed}
+              </span>
+            </span>
+          </Link>
+        );
+      })}
+    </aside>
+  );
+}
+
+/** "מה קורה בדלפקים" (design: V3): the dark live panel beside the feed, with the time of each thing. */
+function LiveLog({ events }: { events: LiveEvent[] }) {
+  return (
+    <aside aria-label={he.live.log} className="hidden lg:block">
+      <div data-theme="night" className="sticky top-24 flex flex-col gap-3 rounded-[20px] bg-ink p-[18px] text-start text-ivory">
+        <h2 className="m-0 flex items-center gap-2 text-[17px] font-bold"><span className="live-dot" aria-hidden />{he.live.log}</h2>
+        {events.length === 0 ? <p className="m-0 text-sm text-stone">{he.feed.emptyToday}</p> : events.map((e) => (
+          <Link key={e.id} href={`/cut/${e.code}`} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 text-[13px] leading-[19px]">
+            <span className={clsx(e.kind === "sold" ? "text-stone" : "text-brand")}><Ltr>{clock(e.at)}</Ltr></span>
+            <span>{e.text}</span>
+          </Link>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+const clock = (iso: string) => new Date(iso).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
 
 /** End of the feed (and the empty feed): say so, and offer the shops' pages (spec §2.2, §4.4). */
 function FeedEnd({ title, hint, butchers }: { title: string; hint?: string; butchers: Butcher[] }) {

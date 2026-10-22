@@ -31,7 +31,7 @@ export function BottomNav() {
     { href: searchHref, label: he.nav.search, Mark: IconSearch, active: path === "/search" },
   ];
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t lg:hidden border-line bg-ink/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+    <nav data-theme="night" className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t lg:hidden border-line bg-ink/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
       <ul className="grid h-16 grid-cols-2">
         {items.map(({ href, label, Mark, active }) => (
           <li key={href}>

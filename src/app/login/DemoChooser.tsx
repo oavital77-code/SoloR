@@ -14,7 +14,7 @@ export function DemoChooser({ shops, next, failed }: { shops: Shop[]; next: stri
   const [busy, setBusy] = useState(false);
 
   return (
-    <main className="relative mx-auto flex min-h-dvh max-w-[480px] flex-col overflow-hidden bg-ink px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] text-center text-ivory">
+    <main data-theme="night" className="relative mx-auto flex min-h-dvh max-w-[480px] flex-col overflow-hidden bg-ink px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] text-center text-ivory">
       <div className="absolute inset-0 [background:radial-gradient(90%_55%_at_50%_0%,rgb(163_18_42/0.38),transparent_70%)]" aria-hidden />
       <div className="relative flex flex-1 flex-col items-center justify-center gap-7 py-10">
         {/* eslint-disable-next-line @next/next/no-img-element */}

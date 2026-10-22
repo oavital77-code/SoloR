@@ -26,7 +26,7 @@ export function Splash() {
 
   if (phase === "off") return null;
   return (
-    <div aria-hidden className={clsx("fixed inset-0 z-[200] grid place-items-center bg-ink text-ivory transition-opacity duration-400",
+    <div aria-hidden data-theme="night" className={clsx("fixed inset-0 z-[200] grid place-items-center bg-ink text-ivory transition-opacity duration-400",
       phase === "fading" && "opacity-0")}>
       <div className="wash absolute inset-0" />
       {/* the symbol at the centre on ground, a soft bordeaux glow above (design system: Logos) */}

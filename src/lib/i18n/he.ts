@@ -72,6 +72,22 @@ export const he = {
     logout: "התנתק",
   },
 
+  live: {
+    now: "חי",
+    openCounters: (n: number) => (n === 0 ? "כל הדלפקים סגורים עכשיו" : n === 1 ? "דלפק אחד פתוח" : `${n} דלפקים פתוחים`),
+    ticker: "עכשיו",
+    fromCounter: "חי מהדלפק",
+    video: "וידאו מהדלפק",
+    log: "מה קורה בדלפקים",
+    posted: (shop: string, cut: string) => `${shop} העלו ${cut}`,
+    sold: (cut: string, shop: string) => `${cut} נמכר ב${shop}`,
+    shops: "הקצביות",
+    openUntil: "פתוח עד",
+    closed: "סגור עכשיו",
+    more: (shop: string) => `עוד מהדלפק של ${shop}`,
+    toShop: "לדף הקצבייה",
+  },
+
   nav: {
     main: "ניווט ראשי",
     home: "פיד",
@@ -142,6 +158,13 @@ export const he = {
 
   // the post (customer spec §5) and the live feed around it (§4)
   post: {
+    prevSlide: "לתמונה הקודמת",
+    notAged: "ללא",
+    leftShort: "נותרו",
+    codeShort: "קוד",
+    weightShort: "משקל",
+    leftOf: (n: number, t: number) => `${n} מתוך ${t}`,
+    nextSlide: "לתמונה הבאה",
     more: "עוד",
     less: "פחות",
     certificate: "לפרטים ולתעודת הבשר",
@@ -204,6 +227,7 @@ export const he = {
   },
 
   feed: {
+    onCounter: "מה עלה לדלפק",
     newPosts: (n: number) => (n === 1 ? "נתח חדש ↑" : `${n} נתחים חדשים ↑`),
     todaySummary: (n: number, shops: number) =>
       `${n === 1 ? "נתח אחד עלה" : `${n} נתחים עלו`} היום, ${shops === 1 ? "מקצבייה אחת" : shops === 2 ? "משתי קצביות" : `מ־${shops} קצביות`}`,
@@ -311,6 +335,7 @@ export const he = {
   cart: {
     title: "הסל שלי",
     yours: "הסל שלך",
+    pill: (n: number, sum: string) => `סל · ${n} · ${sum}`,
     add: "הוסף לסל",
     update: "עדכן בסל",
     added: "נוסף לסל",

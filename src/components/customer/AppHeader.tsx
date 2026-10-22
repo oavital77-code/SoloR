@@ -9,7 +9,9 @@ import { IconBag, IconHome, IconSearch, IconUser } from "../icons";
 import { Ltr } from "../ui";
 import { he } from "@/lib/i18n/he";
 import { useCart } from "@/lib/cart";
-import { useSession } from "@/lib/hooks";
+import { isOpenNow } from "@/lib/hours";
+import { money } from "@/lib/pricing";
+import { useButchers, useNow, useSession } from "@/lib/hooks";
 import { forgetScroll } from "@/lib/scroll";
 
 export function AppHeader() {
@@ -28,13 +30,19 @@ export function AppHeader() {
 
   return (
     <>
-      <header className={clsx("sticky top-0 z-40 bg-ink/90 pt-[env(safe-area-inset-top)] backdrop-blur-md", onCut && "hidden lg:block")}>
+      <header data-theme="night" className={clsx("sticky top-0 z-40 bg-ink pt-[env(safe-area-inset-top)] text-ivory", onCut && "hidden lg:block")}>
         <div className="sr-header">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <Link href="/" onClick={toTop} aria-label="SoloR"><img src="/brand/wordmark-on-dark.svg" alt="SoloR" className="sr-header__logo" /></Link>
           <DesktopNav path={path} />
+          <LiveNow />
           <div className="sr-header__actions">
-            <Link href="/cart" aria-label={he.nav.cart(lines.length)} className="sr-iconbtn">
+            {lines.length > 0 && (
+              <Link href="/cart" className="hidden min-h-11 items-center rounded-full bg-brand px-5 text-[15px] font-bold text-on-brand lg:flex">
+                {he.cart.pill(lines.length, money(lines.reduce((t, l) => t + l.estAgorot, 0)))}
+              </Link>
+            )}
+            <Link href="/cart" aria-label={he.nav.cart(lines.length)} className={clsx("sr-iconbtn", lines.length > 0 && "lg:hidden")}>
               <IconBag />
               {lines.length > 0 && <span className="sr-iconbtn__count"><Ltr>{lines.length}</Ltr></span>}
             </Link>
@@ -93,10 +101,24 @@ function DesktopNav({ path }: { path: string }) {
       {items.map(({ href, label, Mark, active }) => (
         <Link key={href} href={href} aria-current={active ? "page" : undefined}
           className={clsx("flex min-h-11 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors",
-            active ? "bg-ink-3 text-ivory" : "text-stone hover:text-ivory")}>
+            active ? "bg-ivory text-ink" : "text-ivory/80 hover:text-ivory")}>
           <Mark />{label}
         </Link>
       ))}
     </nav>
+  );
+}
+
+/** The live dot (design: Meat2Me-style band): how many counters are open right now — the page is alive. */
+function LiveNow() {
+  const butchers = useButchers();
+  const now = useNow(60000);
+  const open = butchers.filter((b) => b.status !== "inactive" && isOpenNow(b.opening_hours, new Date(now))).length;
+  return (
+    <span className="ms-auto me-4 hidden items-center gap-2.5 text-sm lg:flex">
+      <span className="live-dot" aria-hidden />
+      <b>{he.live.now}</b>
+      <span className="text-stone">· {he.live.openCounters(open)}</span>
+    </span>
   );
 }

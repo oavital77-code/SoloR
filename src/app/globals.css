@@ -1,11 +1,42 @@
 @import "tailwindcss";
 @import "./solor.css";
 
-/* SoloR design system tokens (claude.ai/artifact/Dpfbs9fZrgrUwDA7oK2DXW, tokens.json). Two themes of the same
-   tokens: "customer" (dark, quiet) everywhere, "counter" (light, loud) for the butcher's screens. */
+/* SoloR design tokens. Three themes of the same tokens: "customer" (light butcher paper, the default), "night"
+   (the dark band: header, tab bar, entry screens) and "counter" (light, loud) for the butcher's screens. */
 :root,
 [data-theme="customer"] {
-  --ground: #0f0b09;          /* page background: warm near-black so the meat carries the colour */
+  /* customer (light, after Meat2Me): butcher-paper ground, cream cards, one strong red, near-black type */
+  --ground: #ebddc6;          /* page background: butcher paper */
+  --surface: #fbf7f0;         /* post cards, sheets, cart rows */
+  --surface-raised: #efe6d8;  /* image placeholder, chips, inputs */
+  --line: #e0d3bf;            /* hairlines */
+  --line-gold: #d8c7ad;       /* the thin frame of a card */
+  --ink: #161312;             /* text */
+  --ink-muted: #6e625a;       /* secondary text */
+  --gold: #9c5f12;            /* small accents: eyebrows, the aging chip, links */
+  --gold-soft: #9c5f121a;
+  --bordeaux: #e3262e;        /* the one action colour: strong red */
+  --bordeaux-press: #b81d24;
+  --bordeaux-glow: #e3262e;
+  --on-bordeaux: #ffffff;
+  --state-new: #161312;
+  --on-state-new: #ffffff;
+  --state-partial: #e3262e;
+  --state-reserved: #9c5f12;
+  --on-state-reserved: #ffffff;
+  --state-sold: #c4222b;
+  --state-error: #c4222b;
+  --state-success: #2e7d4f;
+  --status-new: #e3262e;
+  --status-prep: #9a6400;
+  --status-ready: #2e7d4f;
+  --scrim: #16131299;
+  --shadow-card: 0 2px 10px rgba(22, 19, 18, 0.08);
+  --shadow-action: 0 6px 16px -6px rgba(227, 38, 46, 0.6);
+}
+/* the dark band: header, tab bar, live panel, and the entry screens (design: Meat2Me's dark hero) */
+[data-theme="night"] {
+  --ground: #161312;
   --surface: #1a1411;         /* post cards, sheets, cart rows */
   --surface-raised: #2a211c;  /* image placeholder, shop-mark disc, inputs */
   --line: #f3ede41a;          /* hairlines, 10% ink; never for meaning */
@@ -14,9 +45,9 @@
   --ink-muted: #a99f93;       /* secondary text */
   --gold: #c9a96e;            /* small accents only */
   --gold-soft: #c9a96e1f;
-  --bordeaux: #a3122a;        /* the one action colour */
-  --bordeaux-press: #7d0d20;
-  --bordeaux-glow: #c21a36;   /* glow under the primary button, wash at the top; never text */
+  --bordeaux: #e3262e;
+  --bordeaux-press: #b81d24;
+  --bordeaux-glow: #e3262e;
   --on-bordeaux: #f8f2ea;
   --state-new: #f3ede4;
   --on-state-new: #0f0b09;
@@ -57,8 +88,8 @@
 
 /* The app's class names stay; their values come from the tokens (ink = background, ivory = text in the old naming). */
 @theme inline {
-  --font-sans: var(--font-varela), "Heebo", "Rubik", system-ui, sans-serif;
-  --font-display: var(--font-varela), "Heebo", system-ui, sans-serif;
+  --font-sans: var(--font-brand), "Heebo", "Rubik", system-ui, sans-serif;
+  --font-display: var(--font-brand), "Heebo", system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
   --color-ink: var(--ground);
   --color-ink-2: var(--surface);
@@ -96,7 +127,7 @@ body {
 }
 
 body {
-  font-family: var(--font-varela), "Heebo", system-ui, sans-serif;
+  font-family: var(--font-brand), "Heebo", system-ui, sans-serif;
   font-weight: 400;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -261,3 +292,20 @@ input[type="range"].big-range::-moz-range-thumb {
   color: var(--color-gold);
 }
 .eyebrow:lang(en), .eyebrow[dir="ltr"] { letter-spacing: 0.25em; font-size: 11px; }
+
+/* the live dot: a red dot with a soft pulse — the page is updating (design: V3) */
+.live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bordeaux);
+  flex: none;
+  animation: live-pulse 1.8s ease-out infinite;
+}
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(227 38 46 / 0.55); }
+  100% { box-shadow: 0 0 0 9px rgb(227 38 46 / 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; box-shadow: 0 0 0 4px rgb(227 38 46 / 0.3); }
+}

@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Varela_Round } from "next/font/google";
+import { IBM_Plex_Mono, Rubik } from "next/font/google";
 import { ToastProvider } from "@/components/Toast";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { Splash } from "@/components/Splash";
 import { he } from "@/lib/i18n/he";
 import "./globals.css";
 
-// One rounded Hebrew sans (Varela Round, SIL OFL) for the whole site, titles included; a mono for codes and the
-// reservation timer. Varela Round has a single weight, so bold text is drawn bolder by the browser.
-const brand = Varela_Round({ subsets: ["hebrew", "latin"], weight: "400", variable: "--font-varela" });
+// One Hebrew sans for the whole site (Rubik, SIL OFL): heavy 900 titles in the Meat2Me spirit, 400–700 for the
+// rest; a mono for codes and the reservation timer.
+const brand = Rubik({ subsets: ["hebrew", "latin"], weight: ["400", "500", "700", "900"], variable: "--font-brand" });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-plex-mono" });
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0f0b09",
+  themeColor: "#161312",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
