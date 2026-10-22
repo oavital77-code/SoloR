@@ -104,6 +104,14 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   const remainder = items.find((i) => i.kind === "remainder" && i.status !== "withdrawn") ?? null;
   const title = parent ? cutTitle(parent, breeds) || he.butcher.untitled : "";
   const media = useMemo(() => pageMedia(parent, items), [parent, items]);
+  // a tap on a tray's (or the block's) photo shows it in the big frame; on a phone the frame is above: scroll to it
+  const hero = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState<{ path: string; n: number } | null>(null);
+  const showPhoto = (m: CutMedia | undefined) => {
+    if (!m) return;
+    setShow((s) => ({ path: m.storage_path, n: (s?.n ?? 0) + 1 }));
+    if (window.innerWidth < 1024) hero.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const allGone = items.length > 0 && !items.some(isAvailable);
 
   return (
@@ -137,8 +145,8 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
 
       {state === "ok" && parent && items.length > 0 && (
         <article className="flex flex-col text-start lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-8 lg:pt-16">
-          <div className="lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
-            <PostMedia media={media} title={title} code={displayCode(clipNo(parent.code))} eager videoFirst state={allGone ? "sold" : null} />
+          <div ref={hero} className="lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
+            <PostMedia media={media} title={title} code={displayCode(clipNo(parent.code))} eager videoFirst state={allGone ? "sold" : null} show={show} />
           </div>
 
           <div className="flex flex-col gap-4 px-4 pt-5 lg:px-0 lg:pt-0">
@@ -166,13 +174,13 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
               <section className="flex flex-col gap-2.5" aria-label={he.item.readyUnits}>
                 <h2 className="sr-eyebrow m-0 mt-2">{he.item.readyUnits}</h2>
                 <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                  {units.map((u) => <UnitRow key={u.id} item={u} reserved={isReserved(u, held.get(u.id))} focus={focus === u.label} />)}
+                  {units.map((u) => <UnitRow key={u.id} item={u} reserved={isReserved(u, held.get(u.id))} focus={focus === u.label} onShow={showPhoto} />)}
                 </ul>
               </section>
             )}
 
             {remainder && (
-              <RemainderSection item={remainder} held={held.get(remainder.id)} focus={focus === remainder.label} />
+              <RemainderSection item={remainder} held={held.get(remainder.id)} focus={focus === remainder.label} onShow={showPhoto} />
             )}
 
             <Certificate parent={parent} items={items} breeds={breeds} />
@@ -246,7 +254,7 @@ function Marbling({ n }: { n: number }) {
 }
 
 /** One ready unit: its photo, label, steaks, weight and price, and [הזמן] — grey once sold (§6). */
-function UnitRow({ item, reserved, focus }: { item: SaleItem; reserved: boolean; focus: boolean }) {
+function UnitRow({ item, reserved, focus, onShow }: { item: SaleItem; reserved: boolean; focus: boolean; onShow: (m: CutMedia | undefined) => void }) {
   const inCart = useCart().some((l) => l.itemId === item.id);
   const add = useAddToCart("post");
   const cover = coverOf(item.cut_media);
@@ -255,10 +263,7 @@ function UnitRow({ item, reserved, focus }: { item: SaleItem; reserved: boolean;
   return (
     <li id={`i-${item.label}`} className={clsx("flex scroll-mt-24 items-center gap-3 rounded-2xl bg-ink-2 p-2 pe-3 transition-shadow",
       sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
-      <span className="block size-[72px] shrink-0 overflow-hidden rounded-xl bg-ink-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={item.code} loading="lazy" className="h-full w-full object-cover" />}
-      </span>
+      <ThumbButton cover={cover} label={item.code} onShow={onShow} />
       <span className="min-w-0 flex-1 text-[15px] leading-5">
         <span className="block font-bold"><span className="code !text-[14px]">{item.label}</span>{item.steak_count ? <> · {he.item.steaks(item.steak_count)}</> : null}</span>
         <span className="text-stone"><Ltr>{formatWeight(item.weight_g ?? 0)}</Ltr> · <Ltr className="font-bold text-ivory">{money(price)}</Ltr></span>
@@ -277,7 +282,9 @@ function UnitRow({ item, reserved, focus }: { item: SaleItem; reserved: boolean;
 }
 
 /** The remainder (or the whole cut when it was not split): its photo and balance, all of it or a slice. */
-function RemainderSection({ item, held, focus }: { item: SaleItem; held?: import("@/lib/items").Held; focus: boolean }) {
+function RemainderSection({ item, held, focus, onShow }: {
+  item: SaleItem; held?: import("@/lib/items").Held; focus: boolean; onShow: (m: CutMedia | undefined) => void;
+}) {
   const line = useCart().find((l) => l.itemId === item.id);
   const add = useAddToCart("post");
   const cover = coverOf(item.cut_media);
@@ -286,10 +293,7 @@ function RemainderSection({ item, held, focus }: { item: SaleItem; held?: import
     <section id={`i-${item.label}`} aria-label={item.split ? he.item.fromRemainder : he.item.wholeByWeight}
       className={clsx("flex scroll-mt-24 flex-col gap-3 rounded-2xl bg-ink-2 p-3", sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
       <div className="flex items-center gap-3">
-        <span className="block size-[72px] shrink-0 overflow-hidden rounded-xl bg-ink-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={item.code} loading="lazy" className="h-full w-full object-cover" />}
-        </span>
+        <ThumbButton cover={cover} label={item.code} onShow={onShow} />
         <span className="min-w-0 text-[15px] leading-5">
           <span className="block font-bold">{item.split ? he.item.fromRemainder : he.item.wholeByWeight} <span className="code !text-[14px] text-stone">{item.label}</span></span>
           <span className="text-stone">
@@ -303,6 +307,17 @@ function RemainderSection({ item, held, focus }: { item: SaleItem; held?: import
           onOrder={(...a) => add(item, ...a)} />
       )}
     </section>
+  );
+}
+
+/** A tray's (or the block's) photo: a tap shows it in the big frame. */
+function ThumbButton({ cover, label, onShow }: { cover: CutMedia | undefined; label: string; onShow: (m: CutMedia | undefined) => void }) {
+  return (
+    <button type="button" onClick={() => onShow(cover)} aria-label={he.cut.showPhoto(label)}
+      className="block size-[72px] shrink-0 overflow-hidden rounded-xl bg-ink-3 transition-transform active:scale-95">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
+    </button>
   );
 }
 

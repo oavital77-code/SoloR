@@ -274,6 +274,7 @@ export const he = {
   },
 
   cut: {
+    showPhoto: (label: string) => `הצג את ${label} בתמונה הגדולה`,
     realPhoto: "צילום אמיתי של הנתח",
     demoPhoto: "תמונות הדגמה",
     photoCredits: "צילומים",

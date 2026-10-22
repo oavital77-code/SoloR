@@ -13,7 +13,7 @@ import { mediaUrl, photosOf, videoOf } from "@/lib/cut-helpers";
 import type { CutMedia } from "@/lib/types";
 import { track as logEvent } from "@/lib/track";
 
-export function PostMedia({ media, title, code, href, eager, state, children, videoFirst, wide }: {
+export function PostMedia({ media, title, code, href, eager, state, children, videoFirst, wide, show }: {
   media: CutMedia[]; title: string; code: string;
   /** the feed post (design: V3): the work video leads, playing muted, the photos follow */
   videoFirst?: boolean;
@@ -23,6 +23,8 @@ export function PostMedia({ media, title, code, href, eager, state, children, vi
   href?: string; eager?: boolean; children?: React.ReactNode;
   /** sold: the photos lose their colour under the stamp; reserved: they dim (design system: PostStates) */
   state?: "sold" | "reserved" | null;
+  /** brings this photo (by its storage path) into view; `n` changes on every ask, so the same photo can be asked again */
+  show?: { path: string; n: number } | null;
 }) {
   const photos = photosOf(media);
   const video = videoOf(media);
@@ -37,6 +39,14 @@ export function PostMedia({ media, title, code, href, eager, state, children, vi
   const videoIndex = video ? (videoFirst ? 0 : slides.length - 1) : -1;
   // arrows for a mouse (a phone swipes): one slide at a time; in right-to-left the next slide is to the left
   const go = (dir: 1 | -1) => { const t = track.current; if (t) t.scrollBy({ left: -dir * t.clientWidth, behavior: "smooth" }); };
+
+  // a tray's thumbnail on the parent's page was tapped: its photo in the big frame
+  useEffect(() => {
+    const t = track.current;
+    const i = show ? slides.findIndex((s) => s.storage_path === show.path) : -1;
+    if (t && i >= 0) t.scrollTo({ left: -i * t.clientWidth, behavior: "smooth" });   // right to left: negative
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show?.n]);
 
   // slide index from the scroll position (RTL-safe: scrollLeft is negative in right-to-left containers)
   const onScroll = () => {
