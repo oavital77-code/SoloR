@@ -46,8 +46,6 @@ export interface Butcher {
   /** time windows the shop offers for delivery; none = waiting for the shop to coordinate */
   delivery_windows: string[];
   status: "active" | "inactive";
-  /** how the shop's scale labels carry the weight (BUTCHER_FLOW §7, W1); null = not calibrated */
-  scale_barcode_config: import("./barcode").ScaleConfig | null;
 }
 
 export interface Breed {

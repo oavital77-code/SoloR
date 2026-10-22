@@ -1,10 +1,9 @@
 "use client";
-// S9 — a sale at the counter, from the item's SoloR label. A unit: its card and "נמכרה בחנות". A remainder: "כמה
-// נשאר?" — what is left is weighed (its scale label scanned, or typed) and that becomes the new balance; it
-// replaces the old one, nothing is subtracted (§4.4, T10). "נמכרה כולה" when nothing is left.
+// S9 — a sale at the counter: the butcher types the number on the item's label (no scanning for now, 22.10.2026).
+// A unit: its card and "נמכרה בחנות". A remainder: "כמה נשאר?" — what is left is weighed and typed, and that
+// becomes the new balance; it replaces the old one, nothing is subtracted (§4.4, T10). "נמכרה כולה" when nothing is left.
 import { useState } from "react";
 import { useButcher } from "@/components/butcher/ButcherShell";
-import { BarcodeScanner } from "@/components/butcher/flow/BarcodeScanner";
 import { FlowScreen } from "@/components/butcher/flow/FlowScreen";
 import { WeightInput } from "@/components/butcher/flow/WeightInput";
 import { Ltr } from "@/components/ui";
@@ -25,7 +24,6 @@ export default function ScanPage() {
   const { butcher } = useButcher();
   const breeds = useBreeds();
   const toast = useToast();
-  const [scanning, setScanning] = useState(true);
   const [typed, setTyped] = useState("");
   const [item, setItem] = useState<Found | null>(null);
   const [left, setLeft] = useState<number | null>(null);
@@ -34,7 +32,7 @@ export default function ScanPage() {
 
   async function find(text: string) {
     setNote(null);
-    const label = readSolorLabel(text.includes("SOL") || text.includes("sol") ? text : `SOL-${text.trim()}`)?.label;
+    const label = readSolorLabel(text)?.label;
     if (!label) return setNote(he.flow.notFound);
     const { data } = await supabaseBrowser().from("items").select("*, cut_media(*), parent:parents(*)")
       .eq("butcher_id", butcher.id).eq("label", label).maybeSingle();
@@ -60,7 +58,7 @@ export default function ScanPage() {
     <FlowScreen title={he.flow.scanTitle} sub={he.flow.scanHint}
       footer={item ? (
         item.status !== "published" ? (
-          <button type="button" className="sr-cbtn sr-cbtn--quiet" onClick={() => { setItem(null); setScanning(true); }}>{he.flow.another}</button>
+          <button type="button" className="sr-cbtn sr-cbtn--quiet" onClick={() => setItem(null)}>{he.flow.another}</button>
         ) : item.kind === "unit" ? (
           <button type="button" className="sr-cbtn sr-cbtn--new" disabled={busy} onClick={() => sell(false, null)}>{he.flow.soldInStore}</button>
         ) : (
@@ -70,16 +68,14 @@ export default function ScanPage() {
           </>
         )
       ) : (
-        <button type="button" className="sr-cbtn sr-cbtn--new" onClick={() => setScanning(true)}>{he.flow.scanLabel}</button>
+        <button type="button" className="sr-cbtn sr-cbtn--new" disabled={!typed.trim()} onClick={() => find(typed)}>{he.flow.find}</button>
       )}>
       {!item && (
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); find(typed); }}>
-          <input className="sr-cinput ltr flex-1 !text-[24px]" inputMode="numeric" placeholder="523-1" aria-label={he.flow.typeLabel}
+          <input className="sr-cinput ltr flex-1 !text-[28px]" inputMode="text" placeholder="523-1" aria-label={he.flow.typeLabel} autoFocus
             value={typed} onChange={(e) => setTyped(e.target.value)} />
-          <button type="submit" className="sr-cchip" disabled={!typed.trim()}>{he.flow.find}</button>
         </form>
       )}
-      {!item && <p className="m-0 text-sm text-stone">{he.flow.typeLabel}</p>}
       {note && <p className="m-0 font-semibold text-sold" role="alert">{note}</p>}
 
       {item && (
@@ -103,14 +99,12 @@ export default function ScanPage() {
           {item.status === "published" && item.kind === "remainder" && (
             <>
               <h2 className="m-0 text-[22px] font-black">{he.flow.howMuchLeft}</h2>
-              <WeightInput grams={left} onChange={(g) => setLeft(g)} scale={butcher.scale_barcode_config} pricePerKg={ppk} />
+              <WeightInput grams={left} onChange={(g) => setLeft(g)} />
             </>
           )}
         </>
       )}
 
-      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} title={he.flow.scanTitle}
-        onScan={(s) => { setScanning(false); if (s.type === "solor") find(`SOL-${s.value.label}`); else setNote(he.flow.notFound); }} />
     </FlowScreen>
   );
 }

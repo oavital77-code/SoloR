@@ -1,10 +1,9 @@
 "use client";
 // S5 — a unit's weight and steaks (and the weighing of a remainder, S7): the number big, the steaks on a stepper (as
-// the previous unit by default; the customer sees it), the weight from the scale's label or the pad, and the sum
+// the previous unit by default; the customer sees it), the weight typed on the pad, and the sum
 // live. "המשך לצילום" once there is a weight; "בטל יחידה" drops it — its number is not used again (R3).
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useButcher } from "@/components/butcher/ButcherShell";
 import { FlowLoading, FlowScreen } from "@/components/butcher/flow/FlowScreen";
 import { WeightInput } from "@/components/butcher/flow/WeightInput";
 import { useItem } from "@/components/butcher/flow/useParent";
@@ -19,11 +18,9 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 export default function WeighPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { item, parent, state, reload } = useItem(id);
-  const { butcher } = useButcher();
   const router = useRouter();
   const toast = useToast();
   const [grams, setGrams] = useState<number | null>(null);
-  const [source, setSource] = useState<"scan" | "manual">("manual");
   const [steaks, setSteaks] = useState(2);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -46,7 +43,7 @@ export default function WeighPage({ params }: { params: Promise<{ id: string }> 
     if (!grams || !item) return;
     setBusy(true);
     const { error } = await supabaseBrowser().from("items")
-      .update({ weight_g: grams, weight_source: source, ...(unit ? { steak_count: steaks } : {}) }).eq("id", item.id);
+      .update({ weight_g: grams, weight_source: "manual", ...(unit ? { steak_count: steaks } : {}) }).eq("id", item.id);
     setBusy(false);
     if (error) return toast(errorText(error), { tone: "error" });
     router.push(`/butcher/item/${item.id}/photo`);
@@ -78,9 +75,7 @@ export default function WeighPage({ params }: { params: Promise<{ id: string }> 
           <Stepper size="lg" value={steaks} min={1} max={40} onChange={setSteaks} label={he.flow.steaks} />
         </div>
       )}
-      <WeightInput grams={grams} scale={butcher.scale_barcode_config} pricePerKg={ppk}
-        label={unit ? he.flow.grams : he.flow.remainderWeight}
-        onChange={(g, s) => { setGrams(g); setSource(s); }} />
+      <WeightInput grams={grams} label={unit ? he.flow.grams : he.flow.remainderWeight} onChange={(g) => setGrams(g)} />
       <ConfirmDialog open={cancelling} text={he.flow.cancelUnitConfirm(item.label)} confirmLabel={he.flow.cancelUnit} danger
         onConfirm={cancel} onCancel={() => setCancelling(false)} />
     </FlowScreen>

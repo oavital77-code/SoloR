@@ -1,7 +1,7 @@
 "use client";
 // S0 — the butcher's home (BUTCHER_FLOW §5): "נתח חדש — התחל הקלטה", the cut in work (R16: everything is kept,
 // "המשך" returns to exactly where it was), "סרוק פתק" for a sale at the counter (S9), and two tabs: what is in the
-// showcase and the orders.
+// showcase and the orders. ("סרוק פתק" is a typed number for now: no scanning, 22.10.2026.)
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -62,10 +62,7 @@ function ButcherHome() {
               <span className="sr-cchip !min-h-11 shrink-0">{he.flow.resume}</span>
             </Link>
           ))}
-          <div className="grid grid-cols-2 gap-2">
-            <Link href="/butcher/scan" className="sr-cbtn sr-cbtn--quiet !text-[17px]">{he.flow.scanLabel}</Link>
-            <Link href="/butcher/settings/scale" className="sr-cbtn sr-cbtn--quiet !text-[15px]">{he.flow.scaleSettings}</Link>
-          </div>
+          <Link href="/butcher/scan" className="sr-cbtn sr-cbtn--quiet">{he.flow.storeSale}</Link>
         </div>
         <Link href="/butcher/photo-guide" className="mt-1 flex min-h-11 items-center justify-center text-sm font-semibold text-stone underline underline-offset-4">
           {he.photoGuide.title}
