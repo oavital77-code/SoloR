@@ -11,6 +11,7 @@ import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
 import { timeAgo } from "@/lib/cut-helpers";
 import { errorCode, errorText } from "@/lib/errors";
+import { clipNo } from "@/lib/items";
 import { cutTypeLabel } from "@/lib/labels";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { CutType, Parent } from "@/lib/types";
@@ -61,7 +62,7 @@ export default function ClipPage({ params }: { params: Promise<{ id: string }> }
       <div className="grid min-h-dvh place-items-center bg-ink text-center" role="status">
         <div className="flex flex-col gap-2">
           <span className="text-xl font-bold text-stone">{he.flow.cutNo("").trim()}</span>
-          <span className="ltr font-[family-name:var(--font-plex-mono)] text-[120px] leading-none font-bold">{shown}</span>
+          <span className="ltr font-[family-name:var(--font-plex-mono)] text-[120px] leading-none font-bold">{clipNo(shown)}</span>
         </div>
       </div>
     );

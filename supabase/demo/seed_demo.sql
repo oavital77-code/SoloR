@@ -63,7 +63,7 @@ insert into demo_item select p.key, ins.id, ins.unit_no from ins join demo_paren
 
 with ins as (
   insert into items (parent_id, butcher_id, kind, label, weight_g, price_per_kg_agorot, weight_source, status, published_at, created_at)
-  select p.id, b.id, 'remainder', p.code::text, d.remainder_g, d.price_kg, 'manual', 'published',
+  select p.id, b.id, 'remainder', clip_label(p.code), d.remainder_g, d.price_kg, 'manual', 'published',
          now() - make_interval(secs => (d.hours_ago * 3600)::int), now() - make_interval(secs => (d.hours_ago * 3600)::int + 600)
   from demo_in d join demo_parent p using (key) join butchers b on b.slug = d.shop
   where d.remainder_g is not null

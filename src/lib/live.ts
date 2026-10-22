@@ -2,6 +2,7 @@
 // cut went up to the counter (once, however many items it has), an item sold out. Read from the catalog the feed
 // already holds, so it moves with every realtime update.
 import { cutTitle } from "./cut-helpers";
+import { clipNo } from "./items";
 import { he } from "./i18n/he";
 import type { Breed, Butcher, SaleItem } from "./types";
 
@@ -17,7 +18,7 @@ export function liveEvents(items: SaleItem[], butchers: Pick<Butcher, "id" | "na
       const cur = posted.get(c.parent_id);
       if (!cur || c.published_at < cur.at) {
         posted.set(c.parent_id, { id: `p-${c.parent_id}`, at: c.published_at, kind: "posted", text: he.live.posted(shop(c.butcher_id), name),
-          code: `SOL-${c.parent_code}`, parentId: c.parent_id });
+          code: `SOL-${clipNo(c.parent_code)}`, parentId: c.parent_id });
       }
     }
     if (c.status === "sold_out" && c.sold_out_at) {

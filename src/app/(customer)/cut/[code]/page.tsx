@@ -21,7 +21,7 @@ import { readSolorLabel } from "@/lib/barcode";
 import { breedLabel, coverOf, cutTitle, formatDateTime, mediaUrl, timeAgo } from "@/lib/cut-helpers";
 import { demoCredits, isDemoMedia } from "@/lib/demo-credits";
 import { isolateTimes } from "@/lib/hours";
-import { canBuyUnit, displayCode, isAvailable, isReserved, linePrice, toSaleItems, type ItemRow } from "@/lib/items";
+import { canBuyUnit, clipNo, displayCode, isAvailable, isReserved, linePrice, toSaleItems, type ItemRow } from "@/lib/items";
 import { agingMethodLabel, cutTypeLabel, originLabel } from "@/lib/labels";
 import { shopPath } from "@/lib/market";
 import { useBreeds, useButchers, useNow, useRefetchOnFocus } from "@/lib/hooks";
@@ -124,7 +124,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
               } catch { /* user cancelled */ }
             }}
             className="code pointer-events-auto self-center rounded-full bg-scrim px-2.5 py-1.5 text-ivory">
-            {displayCode(String(parent.code))}
+            {displayCode(clipNo(parent.code))}
           </button>
         )}
       </div>
@@ -138,7 +138,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
       {state === "ok" && parent && items.length > 0 && (
         <article className="flex flex-col text-start lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-8 lg:pt-16">
           <div className="lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
-            <PostMedia media={media} title={title} code={displayCode(String(parent.code))} eager videoFirst state={allGone ? "sold" : null} />
+            <PostMedia media={media} title={title} code={displayCode(clipNo(parent.code))} eager videoFirst state={allGone ? "sold" : null} />
           </div>
 
           <div className="flex flex-col gap-4 px-4 pt-5 lg:px-0 lg:pt-0">
@@ -146,7 +146,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
               {butcher && <a href={shopPath(butcher)} aria-label={butcher.name}><ShopMark shop={butcher} /></a>}
               <div className="min-w-0">
                 {butcher && <a href={shopPath(butcher)} className="sr-post__shop block truncate">{butcher.name}</a>}
-                <div className="sr-post__when">{timeAgo(firstPublished(items), now)} · {he.item.fromParent(displayCode(String(parent.code)))}</div>
+                <div className="sr-post__when">{timeAgo(firstPublished(items), now)} · {he.item.fromParent(displayCode(clipNo(parent.code)))}</div>
               </div>
             </header>
 
@@ -308,7 +308,7 @@ function RemainderSection({ item, held, focus }: { item: SaleItem; held?: import
 
 function Certificate({ parent, items, breeds }: { parent: Parent; items: SaleItem[]; breeds: import("@/lib/types").Breed[] }) {
   const rows: [string, React.ReactNode][] = [];
-  rows.push([he.cut.code, <span key="c" className="code text-[14px] text-ivory">{displayCode(String(parent.code))}</span>]);
+  rows.push([he.cut.code, <span key="c" className="code text-[14px] text-ivory">{displayCode(clipNo(parent.code))}</span>]);
   if (parent.cut_type) rows.push([he.cut.cutLabel, cutTypeLabel(parent.cut_type)]);
   const breed = breedLabel(parent, breeds);
   if (breed) rows.push([he.cut.breed, breed]);

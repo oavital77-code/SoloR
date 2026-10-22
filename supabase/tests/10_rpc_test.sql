@@ -189,7 +189,7 @@ select pg_temp.expect_error(format('select new_unit(%L)', current_setting('t.w')
 select pg_temp.expect_error(format('select publish_block(%L)', current_setting('t.w')), 'MISSING_FIELDS');   -- no photo yet
 insert into cut_media (parent_id, type, storage_path) values (current_setting('t.w')::uuid, 'photo', 'x/y/w.jpg');
 select set_config('t.wr', (select id::text from publish_block(current_setting('t.w')::uuid)), false);
-select pg_temp.check((select weight_g = 2400 and label = '7' and status = 'published' from items where id = current_setting('t.wr')::uuid),
+select pg_temp.check((select weight_g = 2400 and label = '07' and status = 'published' from items where id = current_setting('t.wr')::uuid),
                      'the block is the whole cut at the parent''s weight');
 select pg_temp.expect_error(format('delete from cut_media where parent_id = %L', current_setting('t.w')), 'LAST_PHOTO');
 select close_parent(current_setting('t.w')::uuid);
@@ -345,6 +345,35 @@ select stop_recording(current_setting('t.y')::uuid);
 select set_parent_code(current_setting('t.y')::uuid, 40);          -- its clip is free
 select discard_parent(current_setting('t.y')::uuid);
 select pg_temp.expect_error(format('select remove_parent(%L)', current_setting('t.p')), 'HAS_ACTIVE_ORDERS');   -- 15-01 is ordered
+
+-- cut 09: trays "09-01", "09-02" (two digits, founders 22.10.2026); 🗑 on a single tray — a draft goes, a live one
+-- comes off the showcase, not while ordered
+select set_config('t.n', (select id::text from start_parent()), false);
+select stop_recording(current_setting('t.n')::uuid);
+select set_parent_code(current_setting('t.n')::uuid, 9);
+update parents set cut_type = 'entrecote', breed_key = 'black_angus', origin_country = 'AR', is_aged = false, price_per_kg_agorot = 20000
+where id = current_setting('t.n')::uuid;
+select set_sale_mode(current_setting('t.n')::uuid, 'both');
+select set_config('t.n1', (select id::text from new_unit(current_setting('t.n')::uuid)), false);
+update items set weight_g = 650, steak_count = 2 where id = current_setting('t.n1')::uuid;
+insert into cut_media (item_id, type, storage_path) values (current_setting('t.n1')::uuid, 'photo', 'n/1.jpg');
+select publish_item(current_setting('t.n1')::uuid);
+select set_config('t.n2', (select id::text from new_unit(current_setting('t.n')::uuid)), false);
+update items set weight_g = 700, steak_count = 2 where id = current_setting('t.n2')::uuid;
+insert into cut_media (item_id, type, storage_path) values (current_setting('t.n2')::uuid, 'photo', 'n/2.jpg');
+select publish_item(current_setting('t.n2')::uuid);
+select pg_temp.check((select string_agg(label, ',' order by unit_no) from items where parent_id = current_setting('t.n')::uuid) = '09-01,09-02',
+                     'cut 09: trays 09-01 (650 g) and 09-02 (700 g)');
+select set_config('t.n3', (select id::text from new_unit(current_setting('t.n')::uuid)), false);
+select pg_temp.check(remove_item(current_setting('t.n3')::uuid) = 'discarded', '🗑 a draft tray');
+select pg_temp.check(remove_item(current_setting('t.n2')::uuid) = 'withdrawn', '🗑 a live tray');
+select pg_temp.check((select status from items where id = current_setting('t.n2')::uuid) = 'withdrawn'
+                 and (select count(*) from items where id = current_setting('t.n3')::uuid) = 0, '09-02 off the showcase, the draft gone');
+insert into cut_media (parent_id, type, storage_path) values (current_setting('t.n')::uuid, 'photo', 'n/p.jpg');
+select set_config('t.nb', (select id::text from publish_block(current_setting('t.n')::uuid, 900)), false);
+select pg_temp.check((select label from items where id = current_setting('t.nb')::uuid) = '09', 'the block of cut 09 is "09"');
+select pg_temp.expect_error(format('select remove_item(%L)', current_setting('t.u1')), 'HAS_ACTIVE_ORDERS');     -- 15-01 is ordered
+select remove_parent(current_setting('t.n')::uuid);
 
 
 \echo 'Butcher flow tests passed'

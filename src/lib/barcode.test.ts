@@ -6,6 +6,8 @@ describe("item labels", () => {
     expect(readSolorLabel("SOL-15-09")).toEqual({ label: "15-09", parentCode: 15, unitNo: 9 });
     expect(readSolorLabel(" 15-9 ")).toEqual({ label: "15-09", parentCode: 15, unitNo: 9 });
     expect(readSolorLabel("15-12")).toEqual({ label: "15-12", parentCode: 15, unitNo: 12 });
+    expect(readSolorLabel("9-1")).toEqual({ label: "09-01", parentCode: 9, unitNo: 1 });
+    expect(readSolorLabel("9")).toEqual({ label: "09", parentCode: 9, unitNo: null });
     expect(readSolorLabel("15")).toEqual({ label: "15", parentCode: 15, unitNo: null });
     expect(readSolorLabel("https://solor.app/cut/x?l=sol-15")).toEqual({ label: "15", parentCode: 15, unitNo: null });
     expect(readSolorLabel("hello")).toBeNull();

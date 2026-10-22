@@ -1,5 +1,8 @@
 // כל הטקסטים שמוצגים למשתמש — במקום אחד, לעריכה קלה.
 
+/** a cut's number, two digits at least ("09") — as clipNo in lib/items */
+const clip = (code: number | string) => (code === "" ? "" : String(code).padStart(2, "0"));
+
 export const he = {
   app: {
     name: "SoloR",
@@ -567,7 +570,7 @@ export const he = {
     tabShowcase: "בוויטרינה",
     tabOrders: "הזמנות",
     emptyShowcase: "אין כרגע פריטים בוויטרינה. כשתאשרו מגש או גוש, הוא יופיע כאן.",
-    cutNo: (code: number | string) => `נתח ${code}`,
+    cutNo: (code: number | string) => `נתח ${clip(code)}`,
     noTitle: "פרטים חסרים",
     // S1
     recTitle: "הקלטת הקיצוב",
@@ -589,8 +592,13 @@ export const he = {
     discard: "בטל את הנתח",
     removeCut: "מחק נתח",
     removeCutConfirm: (code: number | string | null) =>
-      `למחוק את ${code != null ? `נתח ${code}` : "הנתח"}? טיוטות ותמונות שלא עלו נמחקות, ומה שבאוויר יורד מהוויטרינה. אי אפשר לבטל.`,
+      `למחוק את ${code != null ? `נתח ${clip(code)}` : "הנתח"}? טיוטות ותמונות שלא עלו נמחקות, ומה שבאוויר יורד מהוויטרינה. אי אפשר לבטל.`,
     removedCut: "הנתח נמחק",
+    removeItem: (label: string | null) => (label ? `מחק את ${label}` : "מחק את המגש"),
+    removeItemConfirm: (label: string | null) =>
+      label ? `למחוק את ${label}? הוא יורד מהוויטרינה. אי אפשר לבטל.` : "למחוק את המגש? הוא עוד לא קיבל מספר.",
+    removedItem: "נמחק",
+    removeItemHasOrders: "יש הזמנה פתוחה על הפריט — קודם מסיימים או מבטלים אותה בהזמנות",
     removeHasOrders: "יש הזמנה פתוחה על הנתח — קודם מסיימים או מבטלים אותה בהזמנות",
     videoUploading: (pct: number) => `הסרטון עולה ברקע · ${pct}%`,
     videoUploaded: "הסרטון עלה",
@@ -603,7 +611,7 @@ export const he = {
     clipTitle: "מספר הקליפס",
     clipHint: "קחו קליפס מהמגירה, הצמידו לנתח והקלידו את המספר שעליו",
     clipConfirm: "✅ זה המספר",
-    clipInUse: (n: number | string, what: string) => `קליפס ${n} כבר על נתח אחר (${what}). קחו קליפס אחר.`,
+    clipInUse: (n: number | string, what: string) => `קליפס ${clip(n)} כבר על נתח אחר (${what}). קחו קליפס אחר.`,
     clipLocked: "כבר נמכר מהנתח הזה — אי אפשר להחליף לו את המספר",
     clipInvalid: "מספר בין 1 ל-9999",
     clipChange: "החלף מספר קליפס",
@@ -662,14 +670,14 @@ export const he = {
     missingBefore: "חסר לפני העלאה:",
     fillDetails: "להשלמת פרטי הנתח",
     // S7
-    blockTitle: (code: number | string) => `גוש ${code}`,
+    blockTitle: (code: number | string) => `גוש ${clip(code)}`,
     blockWeight: "משקל הגוש בגרמים",
     leftWeight: "שוקלים את מה שנשאר (גרם)",
     leftHint: "מה שנשאר אחרי החיתוך עולה כגוש, עם התמונות של הנתח",
     nothingLeft: "לא נשאר כלום — הכל במגשים",
-    blockLive: (code: number | string) => `גוש ${code} באוויר`,
+    blockLive: (code: number | string) => `גוש ${clip(code)} באוויר`,
     // S8
-    summaryTitle: (code: number | string) => `סיכום נתח ${code}`,
+    summaryTitle: (code: number | string) => `סיכום נתח ${clip(code)}`,
     summaryLine: (units: number, rest: string | null, total: string) =>
       [units ? (units === 1 ? "מגש אחד" : `${units} מגשים`) : null, rest && `גוש ${rest}`, `סה״כ שווי ${total}`].filter(Boolean).join(" · "),
     video: "הסרטון",

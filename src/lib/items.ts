@@ -23,7 +23,10 @@ export function validSlice(g: number, freeG: number): boolean {
   return g >= SLICE_MIN_G && g % SLICE_STEP_G === 0 && g <= sliceMaxG(freeG);
 }
 
-/** "SOL-15-09" / "SOL-15" */
+/** a cut's number as written on the clip and the labels: two digits at least ("09", "15", "123") */
+export const clipNo = (code: number | string | null | undefined) => (code == null || code === "" ? "" : String(code).padStart(2, "0"));
+
+/** "SOL-09-01" / "SOL-09" */
 export const displayCode = (label: string) => `SOL-${label}`;
 
 /** A parent's page, by its id (clip numbers come back, v2 R1); a sale item opens it scrolled to the item. */

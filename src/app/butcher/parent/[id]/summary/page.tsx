@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FlowLoading, FlowScreen } from "@/components/butcher/flow/FlowScreen";
 import { useParent } from "@/components/butcher/flow/useParent";
+import { RemoveItem } from "@/components/butcher/flow/RemoveParent";
 import { Ltr, Toggle } from "@/components/ui";
 import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
@@ -82,6 +83,7 @@ export default function SummaryPage({ params }: { params: Promise<{ id: string }
                 </span>
               </span>
               <span className="shrink-0 text-sm font-bold">{CUT_STATUS_LABEL[i.status]}</span>
+              {i.status !== "withdrawn" && <RemoveItem itemId={i.id} label={i.label} onRemoved={reload} className="!size-10" />}
             </li>
           );
         })}

@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
 import { FlowLoading, FlowScreen } from "@/components/butcher/flow/FlowScreen";
 import { ScreenLabel } from "@/components/butcher/flow/LabelOutput";
+import { RemoveItem } from "@/components/butcher/flow/RemoveParent";
 import { useParent, type FlowItem } from "@/components/butcher/flow/useParent";
 import { Ltr } from "@/components/ui";
 import { IconCheck } from "@/components/icons";
@@ -63,7 +64,7 @@ function UnitsBoard({ id }: { id: string }) {
       }>
       {units.length === 0 ? <p className="m-0 mt-6 text-center text-stone">{he.flow.unitsEmpty}</p> : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {units.map((u) => <UnitCard key={u.id} item={u} parent={parent} />)}
+          {units.filter((u) => u.status !== "withdrawn").map((u) => <UnitCard key={u.id} item={u} parent={parent} onRemoved={reload} />)}
         </ul>
       )}
       <ScreenLabel label={label} onDone={() => { toast(he.flow.isLive(label ?? ""), { tone: "success" }); setLabel(null); }} />
@@ -71,14 +72,14 @@ function UnitsBoard({ id }: { id: string }) {
   );
 }
 
-function UnitCard({ item, parent }: { item: FlowItem; parent: Parent }) {
+function UnitCard({ item, parent, onRemoved }: { item: FlowItem; parent: Parent; onRemoved: () => void }) {
   const cover = coverOf(item.cut_media);
   const ppk = item.price_per_kg_agorot ?? parent.price_per_kg_agorot;
   const done = item.status !== "draft";
   const href = done ? `/butcher/parent/${parent.id}/summary` : item.weight_g ? `/butcher/item/${item.id}/photo` : `/butcher/item/${item.id}/weigh`;
   return (
-    <li>
-      <Link href={href} className={clsx("flex min-h-[84px] items-center gap-3 rounded-2xl bg-ink-2 p-2 pe-3 shadow-[var(--shadow-card)]", !done && "border-2 border-dashed border-[var(--status-prep)]")}>
+    <li className="flex items-center gap-2">
+      <Link href={href} className={clsx("flex min-h-[84px] min-w-0 flex-1 items-center gap-3 rounded-2xl bg-ink-2 p-2 pe-3 shadow-[var(--shadow-card)]", !done && "border-2 border-dashed border-[var(--status-prep)]")}>
         <span className="block size-16 shrink-0 overflow-hidden rounded-xl bg-ink-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className="h-full w-full object-cover" />}
@@ -94,6 +95,7 @@ function UnitCard({ item, parent }: { item: FlowItem; parent: Parent }) {
           ? <span className="inline-flex shrink-0 items-center gap-1 font-bold text-[var(--status-ready)]"><IconCheck className="size-5" />{item.status === "published" ? he.flow.live : he.item.soldOut}</span>
           : <span className="shrink-0 font-bold text-[var(--status-prep)]">{he.flow.notDone}</span>}
       </Link>
+      <RemoveItem itemId={item.id} label={item.label} onRemoved={onRemoved} />
     </li>
   );
 }

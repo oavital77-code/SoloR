@@ -14,6 +14,7 @@ import { RemoveParent } from "@/components/butcher/flow/RemoveParent";
 import { Toggle } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { cutTitle } from "@/lib/cut-helpers";
+import { clipNo } from "@/lib/items";
 import { useBreeds, useRefetchOnFocus } from "@/lib/hooks";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Parent } from "@/lib/types";
@@ -58,7 +59,7 @@ function ButcherHome() {
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs font-bold text-[var(--status-prep)]">{p.paused_at ? he.flow.paused : he.flow.inWork}</span>
                   <span className="block truncate text-[17px] font-bold">
-                    {p.code != null ? `${p.code} · ` : ""}{he.flow.inWorkLine(cutTitle(p, breeds) || he.flow.noTitle, p.items.filter((i) => i.kind === "unit").length)}
+                    {p.code != null ? `${clipNo(p.code)} · ` : ""}{he.flow.inWorkLine(cutTitle(p, breeds) || he.flow.noTitle, p.items.filter((i) => i.kind === "unit").length)}
                   </span>
                 </span>
                 <span className="sr-cchip !min-h-11 shrink-0">{he.flow.resume}</span>

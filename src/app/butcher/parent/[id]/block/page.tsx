@@ -14,6 +14,7 @@ import { useParent, type FlowItem } from "@/components/butcher/flow/useParent";
 import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
 import { itemMissing } from "@/lib/cut-helpers";
+import { clipNo } from "@/lib/items";
 import { errorText } from "@/lib/errors";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
@@ -37,7 +38,7 @@ export default function BlockPage({ params }: { params: Promise<{ id: string }> 
   const whole = parent.sale_mode === "block";
   const drafts = items.filter((i) => i.kind === "unit" && i.status === "draft").length;
   const preview: FlowItem = {
-    id: `${id}-block`, parent_id: id, butcher_id: parent.butcher_id, kind: "remainder", unit_no: null, label: String(parent.code ?? ""),
+    id: `${id}-block`, parent_id: id, butcher_id: parent.butcher_id, kind: "remainder", unit_no: null, label: clipNo(parent.code),
     steak_count: null, weight_g: grams, price_per_kg_agorot: null, weight_source: "manual", status: "draft", published_at: null,
     sold_out_at: null, created_at: parent.created_at, updated_at: parent.updated_at, cut_media: media,
   };
