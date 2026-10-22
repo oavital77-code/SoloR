@@ -9,9 +9,11 @@ import type { LineMode } from "./types";
 
 export interface CartLine {
   itemId: string;
-  /** "SOL-523-1" */
+  /** "SOL-15-09" */
   code: string;
   parentCode: number;
+  /** the parent's page (lines added before v2 have none: they link by the code) */
+  parentId?: string;
   butcherId: string;
   mode: LineMode;
   /** slices only: grams asked for and the thickness (optional) */
@@ -62,7 +64,8 @@ export function sanitizeCart(raw: unknown): CartLine[] {
     const thick = slice && Number(l.thicknessCm) >= 1 && Number(l.thicknessCm) <= 8 ? Number(l.thicknessCm) : null;
     seen.add(l.itemId);
     out.push({
-      itemId: l.itemId, code: String(l.code ?? ""), parentCode: Number(l.parentCode) || 0, butcherId: String(l.butcherId ?? ""),
+      itemId: l.itemId, code: String(l.code ?? ""), parentCode: Number(l.parentCode) || 0,
+      ...(typeof l.parentId === "string" ? { parentId: l.parentId } : {}), butcherId: String(l.butcherId ?? ""),
       mode: l.mode, grams, thicknessCm: thick,
       estAgorot: Math.max(0, Math.round(Number(l.estAgorot) || 0)), addedAt: Number(l.addedAt) || 0,
     });

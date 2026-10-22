@@ -7,7 +7,7 @@ import type { Butcher, Checkout, CutMedia, Item, Order, OrderItem, Parent } from
 export type ItemRow = OrderItem & {
   items: (Pick<Item, "id" | "parent_id" | "label" | "kind" | "steak_count"> & {
     cut_media: CutMedia[];
-    parent: Pick<Parent, "code" | "cut_type" | "breed_key" | "breed_other"> | null;
+    parent: (Pick<Parent, "code" | "cut_type" | "breed_key" | "breed_other"> & { cut_media?: CutMedia[] }) | null;
   }) | null;
 };
 export type ShopOrderRow = Order & {
@@ -18,10 +18,10 @@ export type ShopOrderRow = Order & {
 export type CheckoutRow = Checkout & { orders: ShopOrderRow[] };
 
 export const CHECKOUT_SELECT =
-  "*, orders(*, butchers(name, address, pickup_hours, phone, slug, logo_path), order_items(*, items(id, parent_id, label, kind, steak_count, cut_media(*), parent:parents(code, cut_type, breed_key, breed_other))))";
+  "*, orders(*, butchers(name, address, pickup_hours, phone, slug, logo_path), order_items(*, items(id, parent_id, label, kind, steak_count, cut_media(*), parent:parents(code, cut_type, breed_key, breed_other, cut_media(*)))))";
 
 /** The same line embedding, for the shop's own orders. */
-export const ORDER_ITEMS_EMBED = "order_items(*, items(id, parent_id, label, kind, steak_count, cut_media(*), parent:parents(code, cut_type, breed_key, breed_other)))";
+export const ORDER_ITEMS_EMBED = "order_items(*, items(id, parent_id, label, kind, steak_count, cut_media(*), parent:parents(code, cut_type, breed_key, breed_other, cut_media(*))))";
 
 /** Shop orders in a stable order (by order number) and their lines (active first). */
 export function normalizeCheckout(k: CheckoutRow): CheckoutRow {
@@ -57,5 +57,6 @@ export function useMyOrdersRealtime(onChange: () => void) {
 const NO_CUT = { cut_type: null, breed_key: null, breed_other: null } as const;
 export const lineCut = (i: ItemRow) => i.items?.parent ?? NO_CUT;
 export const lineCode = (i: ItemRow) => (i.items ? `SOL-${i.items.label}` : "");
-export const lineMedia = (i: ItemRow): CutMedia[] => i.items?.cut_media ?? [];
-export const lineHref = (i: ItemRow) => (i.items?.parent?.code != null ? `/cut/${i.items.parent.code}#i-${i.items.label}` : "/");
+// the block has no photos of its own: the parent's
+export const lineMedia = (i: ItemRow): CutMedia[] => (i.items?.cut_media?.length ? i.items.cut_media : i.items?.parent?.cut_media ?? []);
+export const lineHref = (i: ItemRow) => (i.items ? `/cut/${i.items.parent_id}#i-${i.items.label}` : "/");

@@ -1,6 +1,6 @@
 "use client";
-// One post = one sale item (customer spec §5, BUTCHER_FLOW §6): a ready unit or the remainder of a parent cut. It is
-// a social post (design: V3, 22.10.2026): the shop and "חי מהדלפק", the cut, which part of it this is and the
+// One post = one parent cut (BUTCHER_FLOW_v2 Q6), led by one of its sale items — the block, or a tray — with the
+// parent's other trays on sale in a strip under it ("עוד מהנתח הזה"). It is a social post (design: V3, 22.10.2026): the shop and "חי מהדלפק", the cut, which part of it this is and the
 // butcher's word, the cutting video leading a landscape carousel, four facts, the price with "הוסף לסל", and more
 // from the same counter. Tapping it opens the parent's page at this item. With `preview` it is the butcher's
 // ItemPreviewCard (§9.4): exactly what the customer will see, nothing acts.
@@ -25,7 +25,7 @@ import { shopPath } from "@/lib/market";
 import { formatWeight, money } from "@/lib/pricing";
 import type { Breed, Butcher, SaleItem } from "@/lib/types";
 
-export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserved, held, eager, related, preview, onPriceTap }: {
+export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserved, held, eager, related, trays, preview, onPriceTap }: {
   cut: SaleItem; breeds: Breed[]; shop?: Pick<Butcher, "name" | "slug" | "logo_path"> | null; now: number;
   /** where the post is shown, for measurement (§15): feed / butcher / search */
   source?: "feed" | "butcher" | "search";
@@ -38,13 +38,15 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
   eager?: boolean;
   /** other items on the same counter, linked at the bottom */
   related?: SaleItem[];
+  /** the same parent's other items on sale (v2: one post per parent) */
+  trays?: SaleItem[];
   /** the butcher's preview before "אשר והעלה" */
   preview?: boolean;
   /** preview only: tapping the price changes it for this item (R11) */
   onPriceTap?: () => void;
 }) {
   const title = cutTitle(cut, breeds) || he.butcher.untitled;
-  const href = parentPath(cut.parent_code, cut.label);
+  const href = parentPath(cut.parent_id, cut.label);
   const soldOut = !preview && (gone || !isAvailable(cut));
   const [open, setOpen] = useState(false);
   const { ref, visible } = usePostView<HTMLElement>(cut.id, { butcherId: cut.butcher_id, source });
@@ -107,6 +109,15 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
         </div>
       </div>
 
+      {trays && trays.length > 0 && (
+        <div className="flex flex-col gap-2.5 border-t border-line px-4 pt-3 pb-4 lg:px-[18px]">
+          <span className="text-[13px] font-bold">{he.item.alsoFrom}</span>
+          <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2.5 overflow-x-auto px-4 lg:-mx-[18px] lg:px-[18px]">
+            {trays.map((r) => <TrayCard key={r.id} cut={r} />)}
+          </ul>
+        </div>
+      )}
+
       {related && related.length > 0 && shop && (
         <div className="flex flex-col gap-2.5 border-t border-line px-4 pt-3 pb-4 lg:px-[18px]">
           <span className="text-[13px] font-bold">{he.live.more(shop.name)}</span>
@@ -148,7 +159,7 @@ export function useAddToCart(source: "feed" | "post") {
   const lines = useCart();
   return (cut: SaleItem, ...[mode, grams, thicknessCm, total]: Parameters<OnOrder>) => {
     const had = lines.some((l) => l.itemId === cut.id);
-    cart.put({ itemId: cut.id, code: cut.code, parentCode: cut.parent_code, butcherId: cut.butcher_id, mode, grams, thicknessCm, estAgorot: total });
+    cart.put({ itemId: cut.id, code: cut.code, parentCode: cut.parent_code, parentId: cut.parent_id, butcherId: cut.butcher_id, mode, grams, thicknessCm, estAgorot: total });
     track("add_to_cart", { item_id: cut.id, mode, grams, source, price: total });
     toast(had ? he.cart.updated : he.cart.added, { tone: "success" });
   };
@@ -212,13 +223,35 @@ function RelatedCut({ cut, breeds }: { cut: SaleItem; breeds: Breed[] }) {
   const title = cutTitle(cut, breeds);
   return (
     <li className="shrink-0">
-      <Link href={parentPath(cut.parent_code, cut.label)} className="flex w-[200px] items-center gap-2.5 rounded-[14px] bg-ink-3 p-1.5">
+      <Link href={parentPath(cut.parent_id, cut.label)} className="flex w-[200px] items-center gap-2.5 rounded-[14px] bg-ink-3 p-1.5">
         <span className="block h-12 w-16 shrink-0 overflow-hidden rounded-[10px] bg-ink">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
         </span>
         <span className="min-w-0 text-[13px] leading-[17px]">
           <span className="block truncate font-medium">{title} <span className="text-stone">{cut.label}</span></span>
+          <span className="text-brand"><UnitPrice cut={cut} /></span>
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+/** A tray (or the block) of the same parent: its photo, number, steaks and price, opening the parent's page at it. */
+function TrayCard({ cut }: { cut: SaleItem }) {
+  const cover = coverOf(cut.cut_media);
+  const unit = cut.kind === "unit";
+  return (
+    <li className="shrink-0">
+      <Link href={parentPath(cut.parent_id, cut.label)} className="flex w-[180px] items-center gap-2.5 rounded-[14px] bg-ink-3 p-1.5">
+        <span className="block size-12 shrink-0 overflow-hidden rounded-[10px] bg-ink">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
+        </span>
+        <span className="min-w-0 text-[13px] leading-[17px]">
+          <span className="block truncate font-medium">
+            {unit ? <><span className="code !text-[12px]">{cut.label}</span>{cut.steak_count ? ` · ${he.item.steaks(cut.steak_count)}` : ""}</> : he.item.remainder}
+          </span>
           <span className="text-brand"><UnitPrice cut={cut} /></span>
         </span>
       </Link>

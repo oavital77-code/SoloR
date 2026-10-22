@@ -15,6 +15,7 @@ import { Chip, ErrorState, Skeleton } from "@/components/ui";
 import { IconClose, IconSearch } from "@/components/icons";
 import { he } from "@/lib/i18n/he";
 import { isReserved, rankFeed } from "@/lib/feed";
+import { onePerParent } from "@/lib/items";
 import {
   AGING_PRESETS, EMPTY_FILTER, activeFilterCount, filterFromParams, filterToParams, matchesFilter, type FeedFilter,
 } from "@/lib/feed-filter";
@@ -74,12 +75,14 @@ function SearchView() {
       .map((c) => ({ c, s: searchScore(c, urlQuery, breeds, shopOf(c.butcher_id)) }))
       .filter((x) => x.s > 0);
     // best match first; equal matches keep the feed order (newest first)
-    return scored.map((x, i) => ({ ...x, i })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => x.c);
+    const ranked = scored.map((x, i) => ({ ...x, i })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => ({ cut: x.c }));
+    return onePerParent(ranked).map((x) => ({ ...x.cut, trays: x.trays }));   // one post per parent cut (v2 Q6)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [available, filter, urlQuery, breeds, butchers]);
 
   // under each result, more from the same counter (design: V3): what that shop still has, newest first
-  const relatedOf = (cut: SaleItem) => available.filter((c) => c.butcher_id === cut.butcher_id && c.id !== cut.id).slice(0, 4);
+  const relatedOf = (cut: SaleItem) => onePerParent(available.map((c) => ({ cut: c })))
+    .filter(({ cut: c }) => c.butcher_id === cut.butcher_id && c.parent_id !== cut.parent_id).slice(0, 4).map((x) => x.cut);
 
   useScrollMemory(`search?${params.toString()}`, cuts !== null);
 
@@ -167,7 +170,7 @@ function SearchView() {
                         if ((e.target as HTMLElement).closest("a")) track("search_result_click", { item_id: c.id, position: i + 1 });
                       }}>
                         <CutPost cut={c} breeds={breeds} shop={shopOf(c.butcher_id)} now={now} source="search" eager={i === 0} held={held.get(c.id)}
-                          related={relatedOf(c)} />
+                          related={relatedOf(c)} trays={c.trays} />
                       </li>
                     ))}
                   </ul>

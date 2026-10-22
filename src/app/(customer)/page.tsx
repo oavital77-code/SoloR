@@ -12,7 +12,7 @@ import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { isReserved } from "@/lib/feed";
-import { parentPath } from "@/lib/items";
+import { onePerParent, parentPath } from "@/lib/items";
 import { clsx } from "clsx";
 import { ShopMark } from "@/components/ShopMark";
 import { Ltr } from "@/components/ui";
@@ -41,6 +41,8 @@ export default function FeedPage() {
   const { pending, waiting, showNew, ready } = live;
   // only shops that are active (spec §4.1); before the shop list loads, everything shows
   const items = live.items.filter(({ cut }) => butchers.find((b) => b.id === cut.butcher_id)?.status !== "inactive");
+  // one post per parent cut, its other trays under it (v2 Q6)
+  const posts = onePerParent(items);
 
   // how far the customer got is kept for the session, so "back" lands on the same post
   const [limit, setLimit] = useState(PAGE);
@@ -57,10 +59,10 @@ export default function FeedPage() {
     const io = new IntersectionObserver(([e]) => e.isIntersecting && setLimit((l) => l + PAGE), { rootMargin: "1200px" });
     io.observe(el);
     return () => io.disconnect();
-  }, [items.length, limit]);
+  }, [posts.length, limit]);
 
   useScrollMemory("feed", ready);
-  const held = useHeldItems(items.slice(0, limit).filter((i) => !i.gone).map((i) => i.cut.id));
+  const held = useHeldItems(posts.slice(0, limit).filter((i) => !i.gone).map((i) => i.cut.id));
 
   const refresh = () => { showNew(); reload(); };
   const takeNew = () => { track("new_posts_pill_click", { count: pending }); showNew(); window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -71,15 +73,15 @@ export default function FeedPage() {
     const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" }) : "");
     const d = day(new Date(now).toISOString());
     const list = items.filter((i) => !i.gone && day(i.cut.published_at) === d).map((i) => i.cut);
-    return { cuts: list.length, shops: new Set(list.map((c) => c.butcher_id)).size };
+    return { cuts: new Set(list.map((c) => c.parent_id)).size, shops: new Set(list.map((c) => c.butcher_id)).size };
   })();
 
   if (error && !cuts) return <main className="min-h-dvh pt-10"><ErrorState dark onRetry={reload} /></main>;
 
   const events = liveEvents(cuts ?? [], butchers, breeds);
   // more from the same counter, under each post: what that shop still has, newest first
-  const relatedOf = (cut: SaleItem) => items
-    .filter((i) => !i.gone && i.cut.butcher_id === cut.butcher_id && i.cut.id !== cut.id && isAvailable(i.cut))
+  const relatedOf = (cut: SaleItem) => posts
+    .filter((i) => !i.gone && i.cut.butcher_id === cut.butcher_id && i.cut.parent_id !== cut.parent_id && isAvailable(i.cut))
     .slice(0, 4).map((i) => i.cut);
 
   return (
@@ -122,19 +124,19 @@ export default function FeedPage() {
 
           {!ready ? (
             <div className="flex flex-col gap-5 px-4 lg:px-0">{[0, 1].map((i) => <Skeleton key={i} className="h-[560px] rounded-[22px]" />)}</div>
-          ) : items.length === 0 ? (
+          ) : posts.length === 0 ? (
             <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
           ) : (
             <>
               <ul className="m-0 flex list-none flex-col gap-5 p-0 px-3 lg:px-0">
-                {items.slice(0, limit).map(({ cut, gone }, i) => (
+                {posts.slice(0, limit).map(({ cut, gone, trays }, i) => (
                   <li key={cut.id}>
                     <CutPost cut={cut} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}
-                      reserved={!gone && isReserved(cut, held.get(cut.id))} held={held.get(cut.id)} eager={i === 0} related={relatedOf(cut)} />
+                      reserved={!gone && isReserved(cut, held.get(cut.id))} held={held.get(cut.id)} eager={i === 0} related={relatedOf(cut)} trays={trays} />
                   </li>
                 ))}
               </ul>
-              {items.length > limit ? <div ref={sentinel} className="h-10" aria-hidden />
+              {posts.length > limit ? <div ref={sentinel} className="h-10" aria-hidden />
                 : <FeedEnd title={he.feed.end} hint={he.feed.endHint} butchers={butchers} />}
             </>
           )}
@@ -191,7 +193,7 @@ function LiveLog({ events }: { events: LiveEvent[] }) {
       <div data-theme="night" className="sticky top-24 flex flex-col gap-3 rounded-[20px] bg-ink p-[18px] text-start text-ivory">
         <h2 className="m-0 flex items-center gap-2 text-[17px] font-bold"><span className="live-dot" aria-hidden />{he.live.log}</h2>
         {events.length === 0 ? <p className="m-0 text-sm text-stone">{he.feed.emptyToday}</p> : events.map((e) => (
-          <Link key={e.id} href={parentPath(e.parentCode)} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 text-[13px] leading-[19px]">
+          <Link key={e.id} href={parentPath(e.parentId)} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 text-[13px] leading-[19px]">
             <span className={clsx(e.kind === "sold" ? "text-stone" : "text-brand")}><Ltr>{clock(e.at)}</Ltr></span>
             <span>{e.text}</span>
           </Link>

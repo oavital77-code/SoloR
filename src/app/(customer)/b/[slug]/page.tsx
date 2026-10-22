@@ -12,6 +12,7 @@ import { useCatalog } from "@/components/customer/useCatalog";
 import { useHeldItems } from "@/components/customer/useHeldItems";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { isReserved } from "@/lib/feed";
+import { onePerParent } from "@/lib/items";
 import { EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { mediaUrl } from "@/lib/cut-helpers";
@@ -45,7 +46,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
   if (butchers.length > 0 && !shop) {
     return <div className="flex flex-col items-center pt-20"><ErrorState dark text={he.market.shopNotFound} />{backBtn}</div>;
   }
-  const live = items.filter((i) => !i.gone).length;
+  const live = new Set(items.filter((i) => !i.gone).map((i) => i.cut.parent_id)).size;
 
   return (
     <main className="relative min-h-dvh pb-28 text-start">
@@ -67,10 +68,10 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
                 <button type="button" onClick={showNew} className="sr-newpill self-center">{he.feed.newPosts(pending)}</button>
               )}
               <ul className="m-0 flex list-none flex-col gap-5 p-0">
-                {items.map(({ cut, gone }, i) => (
+                {onePerParent(items).map(({ cut, gone, trays }, i) => (
                   <li key={cut.id}>
                     <CutPost cut={cut} breeds={breeds} shop={shop} now={now} gone={gone} source="butcher"
-                      reserved={!gone && isReserved(cut, held.get(cut.id))} held={held.get(cut.id)} eager={i === 0} />
+                      reserved={!gone && isReserved(cut, held.get(cut.id))} held={held.get(cut.id)} eager={i === 0} trays={trays} />
                   </li>
                 ))}
               </ul>

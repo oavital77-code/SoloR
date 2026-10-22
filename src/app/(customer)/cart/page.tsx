@@ -86,7 +86,7 @@ export default function CartPage() {
  * A slice can be changed here in steps of 50 g. */
 function CartRow({ row: { line, cut, price, problem }, title, last }: { row: Row; title: string; last: boolean }) {
   const cover = cut ? coverOf(cut.cut_media) : undefined;
-  const href = parentPath(line.parentCode, line.code.replace(/^SOL-/, ""));
+  const href = parentPath(line.parentId ?? String(line.parentCode), line.code.replace(/^SOL-/, ""));
   const cap = cut ? sliceCapG(cut.weight_g ?? 0) : 0;
   const what = orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
     cut ? { label: cut.label, steak_count: cut.steak_count } : null);

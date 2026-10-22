@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canBuyAll, canBuyUnit, canSlice, defaultLine, isReserved, linePrice, sliceCapG, sliceMaxG, validSlice } from "./items";
+import { canBuyAll, canBuyUnit, canSlice, defaultLine, isReserved, linePrice, sliceCapG, sliceMaxG, validSlice, onePerParent } from "./items";
 import type { SaleItem } from "./types";
 
 const item = (o: Partial<SaleItem>) => ({ kind: "remainder", status: "published", weight_g: 1100, price_per_kg_agorot: 22000, ...o }) as SaleItem;
@@ -36,5 +36,28 @@ describe("remainder slices (R13/R14)", () => {
   it("a quick add takes all of a free remainder, else the default slice", () => {
     expect(defaultLine(item({}))).toEqual({ mode: "remainder_all", grams: null });
     expect(defaultLine(item({}), { held_g: 100, whole_held: false })).toEqual({ mode: "remainder_slice", grams: 600 });
+  });
+});
+
+const it_ = (id: string, parent_id: string, o: Partial<SaleItem> = {}): SaleItem =>
+  ({ id, parent_id, kind: "unit", unit_no: 1, status: "published", weight_g: 500, ...o } as SaleItem);
+
+describe("onePerParent", () => {
+  it("leads with the first of each parent on sale and carries the rest as trays, the block first", () => {
+    const list = [
+      { cut: it_("t2", "p15", { unit_no: 2 }) },
+      { cut: it_("x", "p7", { kind: "remainder", unit_no: null }) },
+      { cut: it_("b", "p15", { kind: "remainder", unit_no: null }) },
+      { cut: it_("t1", "p15", { unit_no: 1 }) },
+      { cut: it_("t3", "p15", { unit_no: 3, status: "sold_out", weight_g: 0 }) },
+    ];
+    const posts = onePerParent(list);
+    expect(posts.map((p) => p.cut.id)).toEqual(["t2", "x"]);
+    expect(posts[0].trays.map((t) => t.id)).toEqual(["b", "t1"]);
+  });
+  it("does not lead with an item that sold while on screen when another is on sale", () => {
+    const posts = onePerParent([{ cut: it_("a", "p1"), gone: true }, { cut: it_("b", "p1", { unit_no: 2 }) }]);
+    expect(posts.map((p) => p.cut.id)).toEqual(["b"]);
+    expect(posts[0].trays).toEqual([]);
   });
 });

@@ -5,24 +5,24 @@ import { cutTitle } from "./cut-helpers";
 import { he } from "./i18n/he";
 import type { Breed, Butcher, SaleItem } from "./types";
 
-export interface LiveEvent { id: string; at: string; kind: "posted" | "sold"; text: string; code: string; parentCode: number }
+export interface LiveEvent { id: string; at: string; kind: "posted" | "sold"; text: string; code: string; parentId: string }
 
 export function liveEvents(items: SaleItem[], butchers: Pick<Butcher, "id" | "name">[], breeds: Breed[], limit = 8): LiveEvent[] {
   const shop = (id: string) => butchers.find((b) => b.id === id)?.name ?? "";
   const out: LiveEvent[] = [];
-  const posted = new Map<number, LiveEvent>();
+  const posted = new Map<string, LiveEvent>();
   for (const c of items) {
     const name = cutTitle(c, breeds);
     if (c.published_at) {
-      const cur = posted.get(c.parent_code);
+      const cur = posted.get(c.parent_id);
       if (!cur || c.published_at < cur.at) {
-        posted.set(c.parent_code, { id: `p-${c.parent_code}`, at: c.published_at, kind: "posted", text: he.live.posted(shop(c.butcher_id), name),
-          code: `SOL-${c.parent_code}`, parentCode: c.parent_code });
+        posted.set(c.parent_id, { id: `p-${c.parent_id}`, at: c.published_at, kind: "posted", text: he.live.posted(shop(c.butcher_id), name),
+          code: `SOL-${c.parent_code}`, parentId: c.parent_id });
       }
     }
     if (c.status === "sold_out" && c.sold_out_at) {
       out.push({ id: `s-${c.id}`, at: c.sold_out_at, kind: "sold", text: he.live.sold(`${name} ${c.label}`, shop(c.butcher_id)),
-        code: c.code, parentCode: c.parent_code });
+        code: c.code, parentId: c.parent_id });
     }
   }
   return [...out, ...posted.values()].sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);

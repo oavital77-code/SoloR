@@ -23,25 +23,27 @@ export function validSlice(g: number, freeG: number): boolean {
   return g >= SLICE_MIN_G && g % SLICE_STEP_G === 0 && g <= sliceMaxG(freeG);
 }
 
-/** "SOL-523-1" / "SOL-523" */
+/** "SOL-15-09" / "SOL-15" */
 export const displayCode = (label: string) => `SOL-${label}`;
 
-/** A parent's page; a sale item opens it scrolled to the item (§6). */
-export function parentPath(parentCode: number | string, label?: string): string {
-  return `/cut/${parentCode}${label ? `#i-${label}` : ""}`;
+/** A parent's page, by its id (clip numbers come back, v2 R1); a sale item opens it scrolled to the item. */
+export function parentPath(parentId: string, label?: string): string {
+  return `/cut/${parentId}${label ? `#i-${label}` : ""}`;
 }
 
-export type ItemRow = Item & { parent: Parent | null; cut_media?: CutMedia[] };
-export const SALE_ITEM_SELECT = "*, parent:parents(*), cut_media(*)";
+export type ItemRow = Item & { parent: (Parent & { cut_media?: CutMedia[] }) | null; cut_media?: CutMedia[] };
+export const SALE_ITEM_SELECT = "*, parent:parents(*, cut_media(*)), cut_media(*)";
 
 /**
- * Flattens an item row with its parent. The parent's video joins the media as a "video" entry when it is published
- * to the feed (R12) or when `video` is "always" (the parent's own page).
+ * Flattens an item row with its parent. The block has no photos of its own: it shows the parent's (v2 §3). The
+ * parent's video joins the media as a "video" entry when it is published to the feed (R12) or when `video` is
+ * "always" (the parent's own page).
  */
 export function toSaleItem(row: ItemRow, video: "feed" | "always" = "feed"): SaleItem | null {
   const p = row.parent;
   if (!p || p.code == null) return null;
-  const media = [...(row.cut_media ?? [])];
+  const own = (row.cut_media ?? []).filter((m) => m.type === "photo");
+  const media = own.length ? [...(row.cut_media ?? [])] : (p.cut_media ?? []).map((m) => ({ ...m, item_id: row.id }));
   if (p.video_path && (p.video_published || video === "always")) {
     media.push({
       id: `${p.id}-video`, item_id: row.id, type: "video", storage_path: p.video_path, thumb_path: null,
@@ -69,6 +71,27 @@ export function toSaleItem(row: ItemRow, video: "feed" | "always" = "feed"): Sal
     video_published: p.video_published,
     cut_media: media,
   };
+}
+
+/**
+ * One post per parent (v2 Q6): the first of each parent in the list's order leads (the newest, so in "גם וגם" the
+ * block, which goes live last), preferring one still on sale; the rest of that parent's items on sale go with it.
+ */
+export function onePerParent<T extends { cut: SaleItem; gone?: boolean }>(list: T[]): (T & { trays: SaleItem[] })[] {
+  const byParent = new Map<string, T[]>();
+  for (const x of list) byParent.set(x.cut.parent_id, [...(byParent.get(x.cut.parent_id) ?? []), x]);
+  const out: (T & { trays: SaleItem[] })[] = [];
+  const seen = new Set<string>();
+  for (const x of list) {
+    if (seen.has(x.cut.parent_id)) continue;
+    seen.add(x.cut.parent_id);
+    const all = byParent.get(x.cut.parent_id)!;
+    const lead = all.find((y) => !y.gone && isAvailable(y.cut)) ?? x;
+    const trays = all.filter((y) => y !== lead && !y.gone && isAvailable(y.cut)).map((y) => y.cut)
+      .sort((a, b) => Number(a.kind === "unit") - Number(b.kind === "unit") || (a.unit_no ?? 0) - (b.unit_no ?? 0));
+    out.push({ ...lead, trays });
+  }
+  return out;
 }
 
 export function toSaleItems(rows: ItemRow[] | null | undefined, video: "feed" | "always" = "feed"): SaleItem[] {

@@ -1,8 +1,9 @@
 "use client";
-// The parent cut's page (BUTCHER_FLOW §6): one page per cut taken out of the counter. The cutting video and the
-// photos, the details entered once by the butcher, then what can be bought of it: the ready units, each at its
-// own weight and price, and the remainder by weight — all of it, or "פרוס לי". Sold items stay, grey, without a
-// button. Opened from a post it scrolls to that item (#i-523-1). Old links (/cut/SOL-0012, /cut/SOL-523-1) work.
+// The parent cut's page (BUTCHER_FLOW_v2 §5): one page per cut taken out of the counter, addressed by its id (clip
+// numbers come back). The cutting video and the cut's photos, the details entered once by the butcher, then what can
+// be bought of it: the trays, each at its own weight and price, and the block by weight — all of it, or "פרוס לי".
+// Sold items stay, grey, without a button. Opened from a post it scrolls to that item (#i-15-09). Old links by
+// number (/cut/523, /cut/SOL-523-1) open the latest cut with that number.
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
@@ -30,9 +31,12 @@ import type { CutMedia, Parent, SaleItem } from "@/lib/types";
 
 const overlayBtn = "pointer-events-auto grid size-11 place-items-center rounded-full bg-scrim text-ivory";
 
-/** "523", "SOL-523", "SOL-523-1" → the parent code and, maybe, the item to scroll to */
-function parseCode(raw: string): { parent: number; label: string | null } | null {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** a parent's id; or, from an old link, "523", "SOL-523", "SOL-523-1" → the number and, maybe, the item to scroll to */
+function parseCode(raw: string): { id: string } | { parent: number; label: string | null } | null {
   const s = decodeURIComponent(raw);
+  if (UUID.test(s)) return { id: s };
   if (/^\d{1,7}$/.test(s)) return { parent: Number(s), label: null };
   const l = readSolorLabel(s);
   return l ? { parent: l.parentCode, label: l.unitNo ? l.label : null } : null;
@@ -46,14 +50,16 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   const now = useNow(60000);
   const toast = useToast();
   const router = useRouter();
-  const [parent, setParent] = useState<Parent | null>(null);
+  const [parent, setParent] = useState<(Parent & { cut_media?: CutMedia[] }) | null>(null);
   const [items, setItems] = useState<SaleItem[]>([]);
   const [state, setState] = useState<"loading" | "ok" | "notfound" | "error">("loading");
 
   const load = useCallback(async () => {
     if (!parsed) return setState("notfound");
     const sb = supabaseBrowser();
-    const { data: p, error } = await sb.from("parents").select("*").eq("code", parsed.parent).maybeSingle();
+    const q = sb.from("parents").select("*, cut_media(*)");
+    const { data: p, error } = await ("id" in parsed ? q.eq("id", parsed.id)
+      : q.eq("code", parsed.parent).order("created_at", { ascending: false }).limit(1)).maybeSingle();
     if (error) return setState("error");
     if (!p) return setState("notfound");
     const { data: rows, error: e2 } = await sb.from("items").select("*, cut_media(*)").eq("parent_id", p.id)
@@ -84,12 +90,13 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   const [focus, setFocus] = useState<string | null>(null);
   useEffect(() => {
     if (state !== "ok" || scrolled.current) return;
-    const want = window.location.hash.replace(/^#i-/, "") || parsed?.label;
+    const want = window.location.hash.replace(/^#i-/, "") || (parsed && "label" in parsed ? parsed.label : null);
     scrolled.current = true;
     if (!want) return;
     const el = document.getElementById(`i-${want}`);
     if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); setFocus(want); }
-  }, [state, parsed?.label]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   const held = useHeldItems(useMemo(() => items.map((i) => i.id), [items]));
   const butcher = butchers.find((b) => b.id === parent?.butcher_id) ?? null;
@@ -110,7 +117,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
         {parent?.code != null && (
           <button type="button" aria-label={he.cut.share}
             onClick={async () => {
-              const url = `${window.location.origin}/cut/${parent.code}`;
+              const url = `${window.location.origin}/cut/${parent.id}`;
               try {
                 if (navigator.share) await navigator.share({ title, url });
                 else { await navigator.clipboard.writeText(url); toast(he.cut.linkCopied, { tone: "success" }); }
@@ -189,12 +196,16 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   );
 }
 
-/** The cutting video first (R12: shown on the parent's own page), then the cover of every item. */
-function pageMedia(parent: Parent | null, items: SaleItem[]): CutMedia[] {
+/** The cutting video first (R12: shown on the parent's own page), the cut's own photos, then the cover of every tray. */
+function pageMedia(parent: (Parent & { cut_media?: CutMedia[] }) | null, items: SaleItem[]): CutMedia[] {
   const out: CutMedia[] = [];
   const video = items.flatMap((i) => i.cut_media).find((m) => m.type === "video");
   if (video) out.push(video);
   const seen = new Set<string>();
+  for (const m of (parent?.cut_media ?? []).filter((x) => x.type === "photo").sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order)) {
+    seen.add(m.storage_path);
+    out.push({ ...m, is_cover: out.length === (video ? 1 : 0), sort_order: out.length });
+  }
   for (const i of items) {
     for (const m of i.cut_media.filter((x) => x.type === "photo").sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order)) {
       if (seen.has(m.storage_path)) continue;

@@ -15,7 +15,7 @@ import { formatWeight, money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { CutMedia, Item, Parent } from "@/lib/types";
 
-type Row = Item & { cut_media: CutMedia[]; parent: Parent };
+type Row = Item & { cut_media: CutMedia[]; parent: Parent & { cut_media?: CutMedia[] } };
 
 export function Showcase() {
   const { butcher, ordersVersion } = useButcher();
@@ -27,7 +27,7 @@ export function Showcase() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const { data, error } = await supabaseBrowser().from("items").select("*, cut_media(*), parent:parents(*)")
+    const { data, error } = await supabaseBrowser().from("items").select("*, cut_media(*), parent:parents(*, cut_media(*))")
       .eq("butcher_id", butcher.id).eq("status", "published").order("published_at", { ascending: false }).limit(200);
     if (error) return setError(true);
     setError(false);
@@ -62,7 +62,7 @@ export function Showcase() {
     <>
       <ul className="m-0 grid list-none gap-2.5 px-4 pt-3 pb-4 lg:grid-cols-2">
         {rows.map((r) => {
-          const cover = coverOf(r.cut_media);
+          const cover = coverOf(r.cut_media) ?? coverOf(r.parent.cut_media ?? []);
           const ppk = r.price_per_kg_agorot ?? r.parent.price_per_kg_agorot;
           return (
             <li key={r.id} className="flex items-center gap-3 rounded-2xl bg-ink-2 p-2 pe-3 shadow-[var(--shadow-card)]">

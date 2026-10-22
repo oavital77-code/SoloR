@@ -18,7 +18,7 @@ import { formatWeight, money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { CutMedia, Item, Parent } from "@/lib/types";
 
-type Found = Item & { cut_media: CutMedia[]; parent: Parent };
+type Found = Item & { cut_media: CutMedia[]; parent: Parent & { cut_media?: CutMedia[] } };
 
 export default function ScanPage() {
   const { butcher } = useButcher();
@@ -34,7 +34,7 @@ export default function ScanPage() {
     setNote(null);
     const label = readSolorLabel(text)?.label;
     if (!label) return setNote(he.flow.notFound);
-    const { data } = await supabaseBrowser().from("items").select("*, cut_media(*), parent:parents(*)")
+    const { data } = await supabaseBrowser().from("items").select("*, cut_media(*), parent:parents(*, cut_media(*))")
       .eq("butcher_id", butcher.id).eq("label", label).neq("status", "draft")
       .order("published_at", { ascending: false }).limit(1).maybeSingle();   // clips come back: the latest with that number
     if (!data) return setNote(he.flow.notFound);
@@ -54,7 +54,7 @@ export default function ScanPage() {
   }
 
   const ppk = item ? item.price_per_kg_agorot ?? item.parent.price_per_kg_agorot : null;
-  const cover = item ? coverOf(item.cut_media) : undefined;
+  const cover = item ? coverOf(item.cut_media) ?? coverOf(item.parent.cut_media ?? []) : undefined;
   return (
     <FlowScreen title={he.flow.scanTitle} sub={he.flow.scanHint}
       footer={item ? (
