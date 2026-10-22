@@ -9,7 +9,8 @@ import { clsx } from "clsx";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { ScreenHead } from "@/components/customer/market-ui";
 import { ShopMark } from "@/components/ShopMark";
-import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow, type ItemRow, type ShopOrderRow, lineCode, lineCut, lineHref, lineMedia } from "@/components/customer/useMyOrders";
+import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow, type ItemRow, type ShopOrderRow, lineCode, lineCut, lineCutNo, lineHref, lineMedia, lineParentHref, lineParentId, lineParentMedia } from "@/components/customer/useMyOrders";
+import { CutGroup, groupByCut } from "@/components/CutGroup";
 import { useToast } from "@/components/Toast";
 import { ConfirmDialog, ErrorState, Ltr, Spinner } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
@@ -126,9 +127,13 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
       )}
 
       <ul className="m-0 flex list-none flex-col border-t border-line p-0">
-        {o.order_items.map((i, n) => (
-          <ItemLine key={i.id} item={i} title={cutTitle(lineCut(i), breeds)} last={n === o.order_items.length - 1}
-            canCancel={open && i.status === "active"} onCancel={() => onCancelItem(i.id)} />
+        {groupByCut(o.order_items, lineParentId).map((g, n, all) => (
+          <CutGroup key={g.key} last={n === all.length - 1} title={cutTitle(lineCut(g.rows[0]), breeds)} code={lineCutNo(g.rows[0])}
+            cover={coverOf(lineParentMedia(g.rows[0]))} href={lineParentHref(g.rows[0])} dim={g.rows.every((i) => i.status === "cancelled")}>
+            {g.rows.map((i) => (
+              <ItemLine key={i.id} item={i} canCancel={open && i.status === "active"} onCancel={() => onCancelItem(i.id)} />
+            ))}
+          </CutGroup>
         ))}
       </ul>
       <Totals order={o} />
@@ -176,18 +181,19 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
   );
 }
 
-function ItemLine({ item: i, title, canCancel, onCancel, last }: { item: ItemRow; title: string; canCancel: boolean; onCancel: () => void; last: boolean }) {
+/** One line under its cut: its photo, what was taken (a tray, all of the block, a slice), the code and the price. */
+function ItemLine({ item: i, canCancel, onCancel }: { item: ItemRow; canCancel: boolean; onCancel: () => void }) {
   const cover = coverOf(lineMedia(i));
   const cancelled = i.status === "cancelled";
   return (
-    <li className={clsx("sr-cartrow !items-start", cancelled && "sr-cartrow--sold", last && "!border-b-0")}>
-      <Link href={lineHref(i)} className="block size-16 overflow-hidden rounded-lg bg-ink-3">
+    <li className={clsx("sr-cartrow sr-cartrow--nested !items-start", cancelled && "sr-cartrow--sold")}>
+      <Link href={lineHref(i)} className="block size-11 overflow-hidden rounded-lg bg-ink-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${lineCode(i)}`} />}
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={lineCode(i)} />}
       </Link>
-      <div className="flex min-w-0 flex-col gap-1">
-        <Link href={lineHref(i)} className={clsx("sr-cartrow__title", cancelled && "text-stone line-through")}>{title}</Link>
-        <span className="sr-cartrow__sub">{orderWhat(i, i.items)} · <span className="code">{lineCode(i)}</span></span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className={clsx("sr-cartrow__title", cancelled && "text-stone line-through")}>{orderWhat(i, i.items)}</span>
+        <span className="sr-cartrow__sub"><span className="code">{lineCode(i)}</span></span>
         {cancelled && i.cancelled_by && (
           <span className="sr-cartrow__warn">{he.orders.itemCancelledBy(i.cancelled_by)}{i.cancel_reason && `  ·  ${i.cancel_reason}`}</span>
         )}

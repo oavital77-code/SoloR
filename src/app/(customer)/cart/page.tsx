@@ -1,17 +1,19 @@
 "use client";
-// The cart (customer spec §9, design: Cart): every chosen item, grouped by shop in a card, with live price and stock. Adding reserves
+// The cart (customer spec §9, design: Cart): every chosen item, grouped by shop in a card and within it by cut (the
+// cut's photo, name and number, what was taken of it hanging off it), with live price and stock. Adding reserves
 // nothing; a line that was sold meanwhile (or is held by someone at checkout) is marked and blocks the way on.
 // Guests fill the cart freely; signing in is asked for only on the way to the checkout.
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { ScreenHead } from "@/components/customer/market-ui";
+import { CutGroup, groupByCut } from "@/components/CutGroup";
 import { ShopMark } from "@/components/ShopMark";
 import { useCartRows, type Row } from "@/components/customer/useCartRows";
 import { EmptyState, ErrorState, Ltr, Skeleton, Stepper } from "@/components/ui";
 import { cart } from "@/lib/cart";
 import { coverOf, cutTitle, mediaUrl, orderWhat } from "@/lib/cut-helpers";
-import { parentPath, SLICE_MIN_G, SLICE_STEP_G, sliceCapG } from "@/lib/items";
+import { clipNo, parentPath, SLICE_MIN_G, SLICE_STEP_G, sliceCapG } from "@/lib/items";
 import { he } from "@/lib/i18n/he";
 import { useBreeds, useSession } from "@/lib/hooks";
 import { money } from "@/lib/pricing";
@@ -56,10 +58,19 @@ export default function CartPage() {
                     {shop && <ShopMark shop={shop} size="sm" />}
                     <span className="font-display text-lg font-semibold">{shop?.name}</span>
                   </div>
-                  <ul className="flex flex-col">
-                    {shopRows.map((r, i) => (
-                      <CartRow key={r.line.itemId} row={r} last={i === shopRows.length - 1} title={r.cut ? cutTitle(r.cut, breeds) : r.line.code} />
-                    ))}
+                  <ul className="m-0 flex list-none flex-col p-0">
+                    {groupByCut(shopRows, (r) => r.cut?.parent_id ?? r.line.parentId ?? String(r.line.parentCode)).map((g, n, all) => {
+                      const c = g.rows[0].cut;
+                      const code = c ? clipNo(c.parent_code) : clipNo(g.rows[0].line.parentCode);
+                      return (
+                        <CutGroup key={g.key} last={n === all.length - 1} title={c ? cutTitle(c, breeds) : g.rows[0].line.code}
+                          code={he.flow.cutNo(code)} cover={c ? coverOf(c.parent_media?.length ? c.parent_media : c.cut_media) : undefined}
+                          href={parentPath(c?.parent_id ?? g.rows[0].line.parentId ?? String(g.rows[0].line.parentCode))}
+                          dim={g.rows.every((r) => r.problem)}>
+                          {g.rows.map((r) => <CartRow key={r.line.itemId} row={r} />)}
+                        </CutGroup>
+                      );
+                    })}
                   </ul>
                 </section>
               ))}
@@ -82,26 +93,26 @@ export default function CartPage() {
   );
 }
 
-/** One line (design: Cart): photo, cut, what was chosen and the code, the price and "הסר". A sold line greys out.
- * A slice can be changed here in steps of 50 g. */
-function CartRow({ row: { line, cut, price, problem }, title, last }: { row: Row; title: string; last: boolean }) {
+/** One line under its cut (design: Cart): its photo, what was chosen and the code, the price and "הסר". A sold line
+ * greys out. A slice can be changed here in steps of 50 g. */
+function CartRow({ row: { line, cut, price, problem } }: { row: Row }) {
   const cover = cut ? coverOf(cut.cut_media) : undefined;
   const href = parentPath(line.parentId ?? String(line.parentCode), line.code.replace(/^SOL-/, ""));
   const cap = cut ? sliceCapG(cut.weight_g ?? 0) : 0;
   const what = orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
     cut ? { label: cut.label, steak_count: cut.steak_count } : null);
   return (
-    <li className={clsx("sr-cartrow", problem && "sr-cartrow--sold", last && "!border-b-0")}>
-      <Link href={href} className="block size-16 overflow-hidden rounded-lg bg-ink-3">
+    <li className={clsx("sr-cartrow sr-cartrow--nested", problem && "sr-cartrow--sold")}>
+      <Link href={href} className="block size-11 overflow-hidden rounded-lg bg-ink-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${line.code}`} />}
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={line.code} />}
       </Link>
-      <div className="flex min-w-0 flex-col gap-1">
-        <Link href={href} className={clsx("sr-cartrow__title", problem && "text-stone line-through")}>{title}</Link>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className={clsx("sr-cartrow__title", problem && "text-stone line-through")}>{what}</span>
         {problem ? (
           <span className="sr-cartrow__warn" role="alert">{problem} · <span className="code !text-inherit">{line.code}</span></span>
         ) : (
-          <span className="sr-cartrow__sub">{what}{" · "}<span className="code">{line.code}</span></span>
+          <span className="sr-cartrow__sub"><span className="code">{line.code}</span></span>
         )}
         {!problem && line.mode === "remainder_slice" && cap > SLICE_MIN_G ? (
           <div className="pt-1">

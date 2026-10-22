@@ -4,7 +4,8 @@
 // received, every line, the total, and the way on to tracking the order.
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CHECKOUT_SELECT, normalizeCheckout, type CheckoutRow, lineCode, lineCut, lineHref, lineMedia } from "@/components/customer/useMyOrders";
+import { groupByCut } from "@/components/CutGroup";
+import { CHECKOUT_SELECT, normalizeCheckout, type CheckoutRow, lineCode, lineCut, lineCutNo, lineParentId, lineHref, lineMedia } from "@/components/customer/useMyOrders";
 import { IconCheck, IconStore, IconTruck } from "@/components/icons";
 import { ShopMark } from "@/components/ShopMark";
 import { ErrorState, Ltr, Spinner } from "@/components/ui";
@@ -69,10 +70,17 @@ export default function ConfirmationPage({ params }: { params: Promise<{ id: str
                   : shop ? he.checkout.pickup(shop.name, shop.address, shop.pickup_hours) : null}
               </p>
               <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-                {items.map((i) => (
-                  <li key={i.id} className="sr-rowline !text-sm">
-                    <span className="min-w-0 text-ivory/85">{cutTitle(lineCut(i), breeds)} · <span className="code">{lineCode(i)}</span></span>
-                    <Ltr className="shrink-0">{money(i.total_agorot)}</Ltr>
+                {groupByCut(items, lineParentId).map((g) => (
+                  <li key={g.key} className="flex flex-col gap-1">
+                    <span className="text-sm font-semibold text-ivory">{cutTitle(lineCut(g.rows[0]), breeds)} · {lineCutNo(g.rows[0])}</span>
+                    <ul className="m-0 ms-3 flex list-none flex-col gap-1 border-s-2 border-dashed border-stone/40 p-0 ps-3">
+                      {g.rows.map((i) => (
+                        <li key={i.id} className="sr-rowline !text-sm">
+                          <span className="min-w-0 text-ivory/85">{orderWhat(i, i.items)} · <span className="code">{lineCode(i)}</span></span>
+                          <Ltr className="shrink-0">{money(i.total_agorot)}</Ltr>
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
                 {o.delivery_fee_agorot > 0 && (

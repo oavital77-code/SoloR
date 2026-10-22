@@ -12,7 +12,8 @@ import { useBreeds, useNow, useRefetchOnFocus } from "@/lib/hooks";
 import { money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Order, OrderStatus } from "@/lib/types";
-import { lineCode, lineCut, lineMedia, ORDER_ITEMS_EMBED, type ItemRow } from "../customer/useMyOrders";
+import { lineCode, lineCut, lineCutNo, lineMedia, lineParentId, lineParentMedia, ORDER_ITEMS_EMBED, type ItemRow } from "../customer/useMyOrders";
+import { groupByCut } from "../CutGroup";
 
 /** An order line with its item and that item's parent (the same shape the customer side reads). */
 export type ButcherItemRow = ItemRow;
@@ -82,7 +83,7 @@ function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: 
   const items = sortedItems(o);
   const active = items.filter((i) => i.status === "active");
   const shown = active.length ? active : items;
-  const cover = shown[0] ? coverOf(lineMedia(shown[0])) : undefined;
+  const cover = shown[0] ? coverOf(lineParentMedia(shown[0])) ?? coverOf(lineMedia(shown[0])) : undefined;
   const edge = o.status === "preparing" ? "sr-ocard--prep" : o.status === "ready" ? "sr-ocard--ready"
     : o.status === "new" ? "" : "!border-s-line";
   return (
@@ -101,9 +102,16 @@ function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: 
             <span className="text-xl font-bold leading-7">
               {o.profiles?.full_name ?? "—"} · {o.receive_method === "delivery" ? he.checkout.deliveryLabel : he.butcherOrders.pickupShort}
             </span>
-            {shown.map((i) => (
-              <span key={i.id} className={clsx("text-[17px]", i.status === "cancelled" && "text-stone line-through")}>
-                {cutTitle(lineCut(i), breeds).split(" · ")[0]} · {orderWhat(i, i.items)} <span className="code !text-sm">{lineCode(i)}</span>
+            {groupByCut(shown, lineParentId).map((g) => (
+              <span key={g.key} className="flex flex-col">
+                <span className="text-[15px] font-semibold text-stone">{cutTitle(lineCut(g.rows[0]), breeds).split(" · ")[0]} · {lineCutNo(g.rows[0])}</span>
+                <span className="ms-2 flex flex-col border-s-2 border-dashed border-stone/40 ps-3">
+                  {g.rows.map((i) => (
+                    <span key={i.id} className={clsx("text-[17px]", i.status === "cancelled" && "text-stone line-through")}>
+                      {orderWhat(i, i.items)} <span className="code !text-sm">{lineCode(i)}</span>
+                    </span>
+                  ))}
+                </span>
               </span>
             ))}
             <Ltr className="text-sm font-semibold text-stone">{money(o.total_agorot)}</Ltr>

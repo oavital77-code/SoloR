@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { he } from "@/lib/i18n/he";
+import { clipNo } from "@/lib/items";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Butcher, Checkout, CutMedia, Item, Order, OrderItem, Parent } from "@/lib/types";
 
@@ -59,4 +61,9 @@ export const lineCut = (i: ItemRow) => i.items?.parent ?? NO_CUT;
 export const lineCode = (i: ItemRow) => (i.items ? `SOL-${i.items.label}` : "");
 // the block has no photos of its own: the parent's
 export const lineMedia = (i: ItemRow): CutMedia[] => (i.items?.cut_media?.length ? i.items.cut_media : i.items?.parent?.cut_media ?? []);
+// the cut a line was taken of (the cart and the orders group by it): its id, its own photos, "נתח 09"
+export const lineParentId = (i: ItemRow) => i.items?.parent_id ?? i.item_id ?? i.id;
+export const lineParentMedia = (i: ItemRow): CutMedia[] => (i.items?.parent?.cut_media?.length ? i.items.parent.cut_media : lineMedia(i));
+export const lineCutNo = (i: ItemRow) => he.flow.cutNo(clipNo(i.items?.parent?.code ?? ""));
+export const lineParentHref = (i: ItemRow) => (i.items ? `/cut/${i.items.parent_id}` : "/");
 export const lineHref = (i: ItemRow) => (i.items ? `/cut/${i.items.parent_id}#i-${i.items.label}` : "/");

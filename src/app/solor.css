@@ -160,6 +160,8 @@
 .sr-cartrow { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .sr-cartrow img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; }
 .sr-cartrow--sold img { filter: grayscale(1) brightness(.6); }
+.sr-cartrow--nested { grid-template-columns: 44px 1fr auto; padding: 8px 0; border-bottom: 0; }
+.sr-cartrow--nested img { width: 44px; height: 44px; }
 .sr-cartrow__title { font-weight: 600; font-size: 15px; line-height: 20px; }
 .sr-cartrow__sub { font-size: 13px; color: var(--ink-muted); }
 .sr-cartrow__warn { font-size: 13px; color: var(--state-sold); font-weight: 600; }

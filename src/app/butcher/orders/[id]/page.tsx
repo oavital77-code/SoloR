@@ -8,7 +8,8 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { BUTCHER_ORDER_SELECT, orderWhat, sortedItems, type ButcherItemRow, type ButcherOrderRow } from "@/components/butcher/OrderList";
-import { lineCode, lineCut, lineMedia } from "@/components/customer/useMyOrders";
+import { lineCode, lineCut, lineCutNo, lineMedia, lineParentId, lineParentMedia } from "@/components/customer/useMyOrders";
+import { CutGroup, groupByCut } from "@/components/CutGroup";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { useToast } from "@/components/Toast";
@@ -81,11 +82,17 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
       <div className="flex flex-1 flex-col gap-4 p-4">
         <section className="rounded-2xl bg-ink-2 p-3 shadow-[var(--shadow-card)]">
           <h2 className="sr-clabel m-0 mb-2 px-1">{he.butcherOrders.items} · {he.butcherOrders.itemsCount(items.filter((i) => i.status === "active").length)}</h2>
-          <ul className="flex flex-col divide-y divide-line">
-            {items.map((i) => (
-              <ItemRow key={i.id} item={i} title={cutTitle(lineCut(i), breeds)}
-                onCancel={canCancel && i.status === "active" ? () => setCancel({ item: i }) : undefined}
-                canWeigh={canCancel && i.status === "active"} onWeighed={load} />
+          <ul className="m-0 flex list-none flex-col p-0 px-1">
+            {groupByCut(items, lineParentId).map((g, n, all) => (
+              <CutGroup key={g.key} last={n === all.length - 1} title={cutTitle(lineCut(g.rows[0]), breeds)} code={lineCutNo(g.rows[0])}
+                cover={coverOf(lineParentMedia(g.rows[0]))} href={g.rows[0].items ? `/butcher/parent/${g.rows[0].items.parent_id}/summary` : undefined}
+                dim={g.rows.every((i) => i.status === "cancelled")}>
+                {g.rows.map((i) => (
+                  <ItemRow key={i.id} item={i}
+                    onCancel={canCancel && i.status === "active" ? () => setCancel({ item: i }) : undefined}
+                    canWeigh={canCancel && i.status === "active"} onWeighed={load} />
+                ))}
+              </CutGroup>
             ))}
           </ul>
         </section>
@@ -159,20 +166,21 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
   );
 }
 
-function ItemRow({ item: i, title, onCancel, canWeigh, onWeighed }: {
-  item: ButcherItemRow; title: string; onCancel?: () => void; canWeigh: boolean; onWeighed: () => void;
+/** One line under its cut, to prepare: its photo, what was taken (big), the code and the price. */
+function ItemRow({ item: i, onCancel, canWeigh, onWeighed }: {
+  item: ButcherItemRow; onCancel?: () => void; canWeigh: boolean; onWeighed: () => void;
 }) {
   const cover = coverOf(lineMedia(i));
   const cancelled = i.status === "cancelled";
   return (
-    <li className="flex gap-3 py-3">
-      <Link href={i.items ? `/butcher/parent/${i.items.parent_id}/summary` : "/butcher"} className={clsx("size-16 shrink-0 overflow-hidden rounded-xl bg-ink-3", cancelled && "opacity-40 grayscale")}>
+    <li className="flex gap-3 py-2.5">
+      <span className={clsx("size-12 shrink-0 overflow-hidden rounded-xl bg-ink-3", cancelled && "opacity-40 grayscale")}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${lineCode(i)}`} className="h-full w-full object-cover" />}
-      </Link>
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={lineCode(i)} className="h-full w-full object-cover" />}
+      </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className={clsx("text-lg font-extrabold leading-tight", cancelled && "text-stone line-through")}>{orderWhat(i, i.items)}</p>
-        <p className="text-sm text-stone">{title} · <Ltr>{lineCode(i)}</Ltr> · <Ltr>{money(i.total_agorot)}</Ltr></p>
+        <p className="text-sm text-stone"><Ltr>{lineCode(i)}</Ltr> · <Ltr>{money(i.total_agorot)}</Ltr></p>
         {cancelled && (
           <p className="text-sm font-semibold text-sold">
             {he.butcherOrders.lineCancelled}{i.cancel_reason && ` · ${i.cancel_reason}`}
