@@ -2,13 +2,16 @@
 // S2 — the parent's details, entered once (R10): the cut, breed, origin and aging as chips, the price per kg on the
 // big pad (it starts at the last price for the same cut and breed), "מלא כמו הנתח הקודם" to copy the previous
 // parent. It can be skipped and finished later, but nothing goes live until it is complete (R9).
-// S3 — "פורסים?": two big buttons, then the units board (S4) or the whole cut by weight (S7).
+// The weight of the whole cut on the scale. T5 — "איך מוכרים?": גוש / סטייקים / גם וגם, three big buttons, then the
+// block's confirm or the trays board (BUTCHER_FLOW_v2 §3).
 import { use, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { FlowLoading, FlowScreen } from "@/components/butcher/flow/FlowScreen";
 import { Keypad } from "@/components/butcher/flow/Keypad";
+import { WeightInput } from "@/components/butcher/flow/WeightInput";
 import { useParent } from "@/components/butcher/flow/useParent";
 import { Ltr } from "@/components/ui";
 import { useToast } from "@/components/Toast";
@@ -19,7 +22,7 @@ import { useBreeds } from "@/lib/hooks";
 import { AGING_METHODS, CUT_TYPES, ORIGINS } from "@/lib/labels";
 import { agorotToShekelsInput, shekelsToAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import { PARENT_DETAIL_FIELDS, type Parent, type ParentDetails } from "@/lib/types";
+import { PARENT_DETAIL_FIELDS, type Parent, type ParentDetails, type SaleMode } from "@/lib/types";
 
 const AGING_DAYS = [14, 21, 28, 45];
 const pick = (p: Parent): ParentDetails => Object.fromEntries(PARENT_DETAIL_FIELDS.map((k) => [k, p[k]])) as ParentDetails;
@@ -34,7 +37,8 @@ export default function DetailsPage({ params }: { params: Promise<{ id: string }
   const [d, setD] = useState<ParentDetails | null>(null);
   const [price, setPrice] = useState("");
   const [priceTouched, setPriceTouched] = useState(false);
-  const [step, setStep] = useState<"details" | "split">("details");
+  const [weight, setWeight] = useState<number | null>(null);
+  const [step, setStep] = useState<"details" | "mode">("details");
   const [busy, setBusy] = useState(false);
   const [previous, setPrevious] = useState<Parent[]>([]);
   const [otherDays, setOtherDays] = useState(false);
@@ -43,6 +47,7 @@ export default function DetailsPage({ params }: { params: Promise<{ id: string }
     if (!parent || d) return;
     setD(pick(parent));
     setPrice(agorotToShekelsInput(parent.price_per_kg_agorot));
+    setWeight(parent.weight_g);
     setOtherDays(!!parent.aging_days && !AGING_DAYS.includes(parent.aging_days));
   }, [parent, d]);
 
@@ -60,40 +65,48 @@ export default function DetailsPage({ params }: { params: Promise<{ id: string }
   const set = (patch: Partial<ParentDetails>) => setD((x) => (x ? { ...x, ...patch } : x));
   const save = useCallback(async () => {
     if (!d) return false;
-    const row = { ...d, price_per_kg_agorot: price ? shekelsToAgorot(price) : null };
+    const row = { ...d, price_per_kg_agorot: price ? shekelsToAgorot(price) : null, weight_g: weight };
     const { error } = await supabaseBrowser().from("parents").update(row).eq("id", id);
     if (error) { toast(errorText(error), { tone: "error" }); return false; }
     return true;
-  }, [d, price, id, toast]);
+  }, [d, price, weight, id, toast]);
 
   async function next() {
     setBusy(true);
     const ok = await save();
     setBusy(false);
     if (!ok || !parent) return;
-    if (parent.split == null) return setStep("split");
-    router.push(parent.split ? `/butcher/parent/${id}/units` : `/butcher/parent/${id}/remainder`);
+    if (parent.sale_mode == null) return setStep("mode");
+    router.push(parent.sale_mode === "block" ? `/butcher/parent/${id}/block` : `/butcher/parent/${id}/units`);
   }
 
-  async function split(yes: boolean) {
+  async function mode(m: SaleMode) {
     setBusy(true);
-    const { error } = await supabaseBrowser().rpc("set_split", { p_parent_id: id, p_split: yes });
+    const { error } = await supabaseBrowser().rpc("set_sale_mode", { p_parent_id: id, p_mode: m });
     setBusy(false);
     if (error) return toast(errorText(error), { tone: "error" });
-    router.push(yes ? `/butcher/parent/${id}/units` : `/butcher/parent/${id}/remainder`);
+    router.push(m === "block" ? `/butcher/parent/${id}/block` : `/butcher/parent/${id}/units`);
   }
 
   if (state !== "ok" || !parent || !d) return <FlowLoading state={state === "ok" ? "loading" : state} onRetry={reload} />;
   const title = he.flow.cutNo(parent.code ?? "");
 
-  if (step === "split") {
+  if (step === "mode") {
+    const modes: [SaleMode, string, string][] = [
+      ["block", he.flow.modeBlock, he.flow.modeBlockHint],
+      ["steaks", he.flow.modeSteaks, he.flow.modeSteaksHint],
+      ["both", he.flow.modeBoth, he.flow.modeBothHint],
+    ];
     return (
-      <FlowScreen title={title} sub={he.flow.splitTitle} back={null}>
-        <h2 className="m-0 mt-4 text-center text-[34px] font-black">{he.flow.splitTitle}</h2>
-        <button type="button" disabled={busy} onClick={() => split(true)}
-          className="sr-cbtn sr-cbtn--new !min-h-[120px] !text-[26px]">{he.flow.splitYes}</button>
-        <button type="button" disabled={busy} onClick={() => split(false)}
-          className="sr-cbtn sr-cbtn--quiet !min-h-[120px] !text-[26px]">{he.flow.splitNo}</button>
+      <FlowScreen title={title} sub={he.flow.saleModeTitle} back={null}>
+        <h2 className="m-0 mt-4 text-center text-[34px] font-black">{he.flow.saleModeTitle}</h2>
+        {modes.map(([m, label, hint]) => (
+          <button key={m} type="button" disabled={busy} onClick={() => mode(m)}
+            className={clsx("sr-cbtn !min-h-[110px] !flex-col !gap-1", m === "both" ? "sr-cbtn--new" : "sr-cbtn--quiet")}>
+            <span className="text-[26px]">{label}</span>
+            <span className="text-sm font-semibold opacity-80">{hint}</span>
+          </button>
+        ))}
         <button type="button" className="min-h-11 text-sm font-semibold text-stone underline" onClick={() => setStep("details")}>{he.flow.editDetails}</button>
       </FlowScreen>
     );
@@ -111,13 +124,17 @@ export default function DetailsPage({ params }: { params: Promise<{ id: string }
           {missing.length > 0 && <button type="button" className="min-h-11 text-sm font-semibold text-stone underline" disabled={busy} onClick={next}>{he.flow.skip}</button>}
         </>
       }>
+      <div className="flex flex-wrap gap-2">
+      <Link href={`/butcher/parent/${id}/code`} className="sr-cchip">{he.flow.clipChange}</Link>
+      <Link href={`/butcher/parent/${id}/photos`} className="sr-cchip">{he.flow.parentPhotosTitle}</Link>
       {last && (
-        <button type="button" className="sr-cchip self-start" onClick={() => {
+        <button type="button" className="sr-cchip" onClick={() => {
           setD(pick(last));
           setPrice(agorotToShekelsInput(last.price_per_kg_agorot));
           setOtherDays(!!last.aging_days && !AGING_DAYS.includes(last.aging_days));
         }}>{he.flow.sameAsLast}</button>
       )}
+      </div>
 
       <Group label={he.wizard.cutType}>
         {CUT_TYPES.map((c) => <Pill key={c.key} on={d.cut_type === c.key} onClick={() => set({ cut_type: c.key })}>{c.label}</Pill>)}
@@ -161,6 +178,8 @@ export default function DetailsPage({ params }: { params: Promise<{ id: string }
         {lastPrice && !priceTouched && price === agorotToShekelsInput(lastPrice) && <p className="m-0 text-xs text-stone">{he.flow.lastPrice}</p>}
         <Keypad value={price} decimal max={6} maxValue={5000} onChange={(v) => { setPriceTouched(true); setPrice(v); }} />
       </section>
+
+      <WeightInput grams={weight} label={he.flow.parentWeight} onChange={(g) => setWeight(g)} />
 
       <Group label={he.wizard.marbling}>
         {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (

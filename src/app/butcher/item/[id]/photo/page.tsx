@@ -1,9 +1,9 @@
 "use client";
-// S6 — photo and confirm (also the remainder's, S7). The tray with its label goes under the camera, "📷 צלם";
-// the preview is the customer's card exactly (ItemPreviewCard), the price on it can be changed for this item
-// (R11); "✅ אשר והעלה" is the publishing (R8) — blocked, with what is missing, until R9 holds. "↺ צלם שוב" and
-// "+ עוד תמונה" (up to four).
-import { use, useRef, useState } from "react";
+// T7 — a tray's photo and confirm (BUTCHER_FLOW_v2). The tray goes under the camera, "📷 צלם"; the preview is the
+// customer's card exactly (ItemPreviewCard), the price on it can be changed for this tray (R11); "✅ אשר" is the
+// publishing — the tray takes its number now ("15-01", R3) and it is shown big, to write on the sticker. Blocked, with
+// what is missing, until everything is there. "↺ צלם שוב" and "+ עוד תמונה" (up to four).
+import { use, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useButcher } from "@/components/butcher/ButcherShell";
@@ -19,11 +19,8 @@ import { itemMissing, mediaUrl, photosOf } from "@/lib/cut-helpers";
 import { errorText } from "@/lib/errors";
 import { agorotToShekelsInput, shekelsToAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import { mediaPath, prepareImage, removeStorageObjects, tusUpload } from "@/lib/upload";
+import { MAX_PHOTOS, useShoot } from "@/components/butcher/flow/useShoot";
 import type { Item } from "@/lib/types";
-
-const MAX_PHOTOS = 4;
-const FRESH_MS = 15 * 60 * 1000;
 
 export default function PhotoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -31,49 +28,17 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
   const { butcher } = useButcher();
   const router = useRouter();
   const toast = useToast();
-  const input = useRef<HTMLInputElement>(null);
-  const replace = useRef(false);
-  const [uploading, setUploading] = useState(0);
   const [busy, setBusy] = useState(false);
   const [pricing, setPricing] = useState<string | null>(null);
 
+  const photos = item ? photosOf(item.cut_media) : [];
+  const { take, uploading, fileInput } = useShoot({ item_id: id }, photos, reload);
+
   if (state !== "ok" || !item || !parent) return <FlowLoading state={state === "ok" ? "loading" : state} onRetry={reload} />;
-  const photos = photosOf(item.cut_media);
   const missing = itemMissing(item, parent, photos.length);
   const parentGaps = missing.filter((m) => !["photos", "weight_g", "steak_count", "price_per_kg"].includes(m));
   const unit = item.kind === "unit";
-  const title = unit ? he.flow.photoTitle(item.label) : parent.split ? he.flow.remainderTitle(item.label) : he.flow.wholeTitle(item.label);
-
-  async function shoot(files: FileList | null) {
-    const file = files?.[0];
-    if (!file || !item) return;
-    if (Date.now() - file.lastModified > FRESH_MS) return toast(he.wizard.notFresh, { tone: "error" });
-    setUploading((n) => n + 1);
-    try {
-      const sb = supabaseBrowser();
-      if (replace.current && photos[0]) {
-        const old = photos[0];
-        await sb.from("cut_media").delete().eq("id", old.id);
-        removeStorageObjects([old.storage_path, old.thumb_path]).catch(() => {});
-      }
-      const img = await prepareImage(file);
-      const full = mediaPath(butcher.id, item.id, "jpg");
-      const thumb = full.replace(/\.jpg$/, "_t.jpg");
-      await tusUpload(img.full, full, "image/jpeg", () => {}).promise;
-      await tusUpload(img.thumb, thumb, "image/jpeg", () => {}).promise;
-      const { error } = await sb.from("cut_media").insert({
-        item_id: item.id, type: "photo", storage_path: full, thumb_path: thumb, is_cover: replace.current || photos.length === 0,
-        sort_order: replace.current ? 0 : photos.length, width: img.width || null, height: img.height || null,
-      });
-      if (error) throw error;
-      await reload();
-    } catch {
-      toast(he.wizard.uploadFailed, { tone: "error" });
-    } finally {
-      replace.current = false;
-      setUploading((n) => n - 1);
-    }
-  }
+  const title = he.flow.photoTitle(item.label);
 
   async function savePrice() {
     if (pricing == null || !item) return;
@@ -90,10 +55,9 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
     setBusy(false);
     if (error) return toast(errorText(error), { tone: "error" });
     const it = data as Item;
-    router.replace(unit ? `/butcher/parent/${it.parent_id}/units?live=${encodeURIComponent(it.label)}` : `/butcher/parent/${it.parent_id}/summary`);
+    router.replace(unit ? `/butcher/parent/${it.parent_id}/units?live=${encodeURIComponent(it.label ?? "")}` : `/butcher/parent/${it.parent_id}/summary`);
   }
 
-  const take = (again: boolean) => { replace.current = again; input.current?.click(); };
   return (
     <FlowScreen title={<span className="ltr font-[family-name:var(--font-plex-mono)] text-[28px]">{title}</span>} back={`/butcher/item/${id}/weigh`}
       footer={
@@ -111,7 +75,7 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
               </button>}
         </>
       }>
-      <input ref={input} hidden type="file" accept="image/*" capture="environment" onChange={(e) => { shoot(e.target.files); e.target.value = ""; }} />
+      {fileInput}
 
       {photos.length === 0 ? (
         <div className="sr-shotframe">

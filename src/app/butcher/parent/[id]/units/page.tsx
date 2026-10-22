@@ -1,7 +1,8 @@
 "use client";
-// S4 — the units board, the centre of the split: a card for every unit (photo, "523-1", steaks, grams, price, live
-// or not done yet), "➕ יחידת מכירה חדשה" (a new number, its label, then S5), "🏁 סיימתי — השארית לוויטרינה"
-// (S7) and, when nothing is left, "אין שארית — הכל חולק" (S8).
+// T6 — the trays board (BUTCHER_FLOW_v2): a card for every tray (photo, "15-01", steaks, grams, price, live or not
+// done yet), "➕ תת יחידה" (a draft tray: steaks and weight, photo, confirm), and "🏁 סיימתי לחתוך" — for "גם וגם"
+// the block of what is left, for "סטייקים" the summary. A tray confirmed comes back here with its number shown big,
+// to write on the sticker.
 import { Suspense, use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -28,38 +29,36 @@ function UnitsBoard({ id }: { id: string }) {
   const params = useSearchParams();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
-  const [label, setLabel] = useState<Item | null>(null);
+  const [label, setLabel] = useState<string | null>(null);
 
   const live = params.get("live");
   const told = useRef<string | null>(null);
   useEffect(() => {
     if (!live || told.current === live) return;
     told.current = live;
-    toast(he.flow.isLive(live), { tone: "success" });
+    setLabel(live);
     router.replace(`/butcher/parent/${id}/units`);
-  }, [live, id, router, toast]);
+  }, [live, id, router]);
 
   async function newUnit() {
     setBusy(true);
     const { data, error } = await supabaseBrowser().rpc("new_unit", { p_parent_id: id });
     setBusy(false);
     if (error) return toast(errorText(error), { tone: "error" });
-    setLabel(data as Item);
+    router.push(`/butcher/item/${(data as Item).id}/weigh`);
   }
 
   if (state !== "ok" || !parent) return <FlowLoading state={state === "ok" ? "loading" : state} onRetry={reload} />;
   const units = items.filter((i) => i.kind === "unit");
   const remainder = items.find((i) => i.kind === "remainder");
+  const done = parent.sale_mode === "both" ? `/butcher/parent/${id}/block` : `/butcher/parent/${id}/summary`;
   return (
     <FlowScreen title={`${he.flow.cutNo(parent.code ?? "")} · ${cutTitle(parent, breeds) || he.flow.noTitle}`}
       sub={<Link href={`/butcher/parent/${id}/details`} className="underline">{he.flow.editDetails}</Link>}
       footer={
         <>
           <button type="button" className="sr-cbtn sr-cbtn--new" disabled={busy || remainder?.status === "published"} onClick={newUnit}>{he.flow.newUnit}</button>
-          <Link href={`/butcher/parent/${id}/remainder`} className="sr-cbtn sr-cbtn--ready">{he.flow.doneRemainder}</Link>
-          {!remainder && units.length > 0 && (
-            <Link href={`/butcher/parent/${id}/summary`} className="flex min-h-11 items-center justify-center text-sm font-semibold text-stone underline">{he.flow.noRemainder}</Link>
-          )}
+          <Link href={done} className="sr-cbtn sr-cbtn--ready">{he.flow.doneCutting}</Link>
         </>
       }>
       {units.length === 0 ? <p className="m-0 mt-6 text-center text-stone">{he.flow.unitsEmpty}</p> : (
@@ -67,7 +66,7 @@ function UnitsBoard({ id }: { id: string }) {
           {units.map((u) => <UnitCard key={u.id} item={u} parent={parent} />)}
         </ul>
       )}
-      <ScreenLabel label={label?.label ?? null} onDone={() => { const it = label; setLabel(null); if (it) router.push(`/butcher/item/${it.id}/weigh`); }} />
+      <ScreenLabel label={label} onDone={() => { toast(he.flow.isLive(label ?? ""), { tone: "success" }); setLabel(null); }} />
     </FlowScreen>
   );
 }
@@ -85,7 +84,7 @@ function UnitCard({ item, parent }: { item: FlowItem; parent: Parent }) {
           {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className="h-full w-full object-cover" />}
         </span>
         <span className="min-w-0 flex-1 text-[15px] leading-5">
-          <span className="ltr block font-[family-name:var(--font-plex-mono)] text-[20px] font-bold">{item.label}</span>
+          <span className="ltr !block text-right font-[family-name:var(--font-plex-mono)] text-[20px] font-bold">{item.label ?? he.flow.draftTray}</span>
           <span className="text-stone">
             {[item.steak_count && he.item.steaks(item.steak_count), item.weight_g && formatWeight(item.weight_g)].filter(Boolean).join(" · ")}
             {item.weight_g && ppk ? <> · <Ltr className="font-bold text-ivory">{money(linePrice({ weight_g: item.weight_g, price_per_kg_agorot: ppk }, "unit"))}</Ltr></> : null}

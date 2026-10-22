@@ -1,7 +1,7 @@
 "use client";
-// S5 — a unit's weight and steaks (and the weighing of a remainder, S7): the number big, the steaks on a stepper (as
-// the previous unit by default; the customer sees it), the weight typed on the pad, and the sum
-// live. "המשך לצילום" once there is a weight; "בטל יחידה" drops it — its number is not used again (R3).
+// T6 — a tray's steaks and weight (BUTCHER_FLOW_v2): the steaks on a stepper (as the previous tray by default; the
+// customer sees it), the weight of all of them together typed on the pad, and the sum live. "המשך לצילום" once there
+// is a weight; "בטל מגש" drops it — it has no number yet, so none is lost (R3).
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FlowLoading, FlowScreen } from "@/components/butcher/flow/FlowScreen";
@@ -28,22 +28,21 @@ export default function WeighPage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => {
     if (!item || ready) return;
-    if (item.status !== "draft") { router.replace(`/butcher/parent/${item.parent_id}`); return; }
+    if (item.status !== "draft" || item.kind !== "unit") { router.replace(`/butcher/parent/${item.parent_id}`); return; }
     setGrams(item.weight_g || null);
     setSteaks(item.steak_count ?? 2);
     setReady(true);
   }, [item, ready, router]);
 
   if (state !== "ok" || !item || !parent || !ready) return <FlowLoading state={state === "ok" ? "loading" : state} onRetry={reload} />;
-  const unit = item.kind === "unit";
-  const back = unit ? `/butcher/parent/${parent.id}/units` : parent.split ? `/butcher/parent/${parent.id}/units` : `/butcher/parent/${parent.id}/details`;
+  const back = `/butcher/parent/${parent.id}/units`;
   const ppk = item.price_per_kg_agorot ?? parent.price_per_kg_agorot;
 
   async function next() {
     if (!grams || !item) return;
     setBusy(true);
     const { error } = await supabaseBrowser().from("items")
-      .update({ weight_g: grams, weight_source: "manual", ...(unit ? { steak_count: steaks } : {}) }).eq("id", item.id);
+      .update({ weight_g: grams, weight_source: "manual", steak_count: steaks }).eq("id", item.id);
     setBusy(false);
     if (error) return toast(errorText(error), { tone: "error" });
     router.push(`/butcher/item/${item.id}/photo`);
@@ -56,9 +55,8 @@ export default function WeighPage({ params }: { params: Promise<{ id: string }> 
     router.replace(back);
   }
 
-  const title = unit ? he.flow.unitTitle(item.label) : parent.split ? he.flow.remainderTitle(item.label) : he.flow.wholeTitle(item.label);
   return (
-    <FlowScreen title={<span className="ltr font-[family-name:var(--font-plex-mono)] text-[28px]">{title}</span>} back={back}
+    <FlowScreen title={he.flow.unitTitle(item.label)} sub={he.flow.cutNo(parent.code ?? "")} back={back}
       footer={
         <>
           <div className="flex items-baseline justify-between text-[17px]" aria-live="polite">
@@ -66,17 +64,15 @@ export default function WeighPage({ params }: { params: Promise<{ id: string }> 
             {grams && ppk ? <Ltr className="text-[24px] font-black">{money(linePrice({ weight_g: grams, price_per_kg_agorot: ppk }, "unit"))}</Ltr> : null}
           </div>
           <button type="button" className="sr-cbtn sr-cbtn--new" disabled={!grams || busy} onClick={next}>{he.flow.toPhoto}</button>
-          {unit && <button type="button" className="min-h-11 text-sm font-semibold text-stone underline" onClick={() => setCancelling(true)}>{he.flow.cancelUnit}</button>}
+          <button type="button" className="min-h-11 text-sm font-semibold text-stone underline" onClick={() => setCancelling(true)}>{he.flow.cancelUnit}</button>
         </>
       }>
-      {unit && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-ink-2 p-3 shadow-[var(--shadow-card)]">
-          <span className="text-[17px] font-bold">{he.flow.steaks}</span>
-          <Stepper size="lg" value={steaks} min={1} max={40} onChange={setSteaks} label={he.flow.steaks} />
-        </div>
-      )}
-      <WeightInput grams={grams} label={unit ? he.flow.grams : he.flow.remainderWeight} onChange={(g) => setGrams(g)} />
-      <ConfirmDialog open={cancelling} text={he.flow.cancelUnitConfirm(item.label)} confirmLabel={he.flow.cancelUnit} danger
+      <div className="flex items-center justify-between gap-3 rounded-2xl bg-ink-2 p-3 shadow-[var(--shadow-card)]">
+        <span className="text-[17px] font-bold">{he.flow.steaks}</span>
+        <Stepper size="lg" value={steaks} min={1} max={40} onChange={setSteaks} label={he.flow.steaks} />
+      </div>
+      <WeightInput grams={grams} onChange={(g) => setGrams(g)} />
+      <ConfirmDialog open={cancelling} text={he.flow.cancelUnitConfirm} confirmLabel={he.flow.cancelUnit} danger
         onConfirm={cancel} onCancel={() => setCancelling(false)} />
     </FlowScreen>
   );

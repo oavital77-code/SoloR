@@ -52,8 +52,9 @@ export function toSaleItem(row: ItemRow, video: "feed" | "always" = "feed"): Sal
   const { parent: _parent, cut_media: _media, updated_at: _u, ...item } = row;
   return {
     ...item,
+    label: row.label ?? "",
     price_per_kg_agorot: row.price_per_kg_agorot ?? p.price_per_kg_agorot,
-    code: displayCode(row.label),
+    code: displayCode(row.label ?? ""),
     parent_code: p.code,
     split: !!p.split,
     cut_type: p.cut_type,

@@ -8,6 +8,8 @@ export type CutStatus = "draft" | "published" | "sold_out" | "withdrawn";
 export type MediaType = "photo" | "video";
 export type ItemKind = "unit" | "remainder";
 export type ParentStatus = "recording" | "details" | "splitting" | "closed";
+/** BUTCHER_FLOW_v2 §4: the whole cut by weight, trays of steaks, or trays and then the block of what is left */
+export type SaleMode = "block" | "steaks" | "both";
 /** An order line: a unit, all of a remainder, or a slice of it ("פרוס לי"). */
 export type LineMode = "unit" | "remainder_all" | "remainder_slice";
 export type OrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
@@ -59,12 +61,15 @@ export interface Breed {
 /** The cut taken out of the counter (BUTCHER_FLOW §2): its details, price and video. Never sold itself. */
 export interface Parent {
   id: string;
-  /** running number given when the recording stops; null while recording */
+  /** the number on the clip the butcher took from the drawer (v2 R1); null until typed in */
   code: number | null;
   butcher_id: string;
   status: ParentStatus;
   /** true = split into units, false = sold whole by weight, null = not decided yet */
   split: boolean | null;
+  sale_mode: SaleMode | null;
+  /** the whole cut on the scale, before cutting */
+  weight_g: number | null;
   cut_type: CutType | null;
   breed_key: string | null;
   breed_other: string | null;
@@ -85,14 +90,15 @@ export interface Parent {
   closed_at: string | null;
 }
 
-/** What is sold: a unit ("523-1", whole at its weight) or the parent's remainder ("523", by weight). */
+/** What is sold: a tray ("15-01", whole at its weight) or the parent's block ("15", by weight). */
 export interface Item {
   id: string;
   parent_id: string;
   butcher_id: string;
   kind: ItemKind;
   unit_no: number | null;
-  label: string;
+  /** given when it goes live; null on a draft tray */
+  label: string | null;
   steak_count: number | null;
   /** unit: final; remainder: the balance left */
   weight_g: number | null;
@@ -106,10 +112,11 @@ export interface Item {
   updated_at: string;
 }
 
-/** A photo of an item (the video is on the parent; sale items carry it as a "video" entry, see toSaleItem). */
+/** A photo of a tray, or of the parent itself (shown on the block); the video is on the parent. */
 export interface CutMedia {
   id: string;
-  item_id: string;
+  item_id: string | null;
+  parent_id?: string | null;
   type: MediaType;
   storage_path: string;
   thumb_path: string | null;
@@ -126,7 +133,8 @@ export interface CutMedia {
  * A sale item as the customer side shows it: the item with its parent's details (inherited, R10), its photos and
  * the parent's video. `code` is the label as printed ("SOL-523-1").
  */
-export interface SaleItem extends Omit<Item, "updated_at"> {
+export interface SaleItem extends Omit<Item, "updated_at" | "label"> {
+  label: string;
   code: string;
   parent_code: number;
   split: boolean;

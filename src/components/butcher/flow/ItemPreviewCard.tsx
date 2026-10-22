@@ -14,9 +14,9 @@ export function asSaleItem(item: Item & { cut_media: CutMedia[] }, parent: Paren
       poster_path: parent.video_poster_path, is_cover: false, sort_order: 99, width: null, height: null, duration_s: null, created_at: parent.created_at });
   }
   return {
-    ...rest, status: "published", published_at: item.published_at ?? new Date().toISOString(),
+    ...rest, label: item.label ?? "", status: "published", published_at: item.published_at ?? new Date().toISOString(),
     price_per_kg_agorot: item.price_per_kg_agorot ?? parent.price_per_kg_agorot,
-    code: displayCode(item.label), parent_code: parent.code ?? 0, split: !!parent.split,
+    code: displayCode(item.label ?? ""), parent_code: parent.code ?? 0, split: !!parent.split,
     cut_type: parent.cut_type, breed_key: parent.breed_key, breed_other: parent.breed_other, origin_country: parent.origin_country,
     is_aged: parent.is_aged, aging_days: parent.aging_days, aging_method: parent.aging_method, butcher_marbling: parent.butcher_marbling,
     description: parent.description, video_published: parent.video_published, cut_media: media,

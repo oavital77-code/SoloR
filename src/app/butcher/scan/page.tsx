@@ -35,7 +35,8 @@ export default function ScanPage() {
     const label = readSolorLabel(text)?.label;
     if (!label) return setNote(he.flow.notFound);
     const { data } = await supabaseBrowser().from("items").select("*, cut_media(*), parent:parents(*)")
-      .eq("butcher_id", butcher.id).eq("label", label).maybeSingle();
+      .eq("butcher_id", butcher.id).eq("label", label).neq("status", "draft")
+      .order("published_at", { ascending: false }).limit(1).maybeSingle();   // clips come back: the latest with that number
     if (!data) return setNote(he.flow.notFound);
     setItem(data as Found);
     setLeft(null);
@@ -86,7 +87,7 @@ export default function ScanPage() {
               {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className="h-full w-full object-cover" />}
             </span>
             <span className="min-w-0 text-[15px] leading-5">
-              <span className="ltr block font-[family-name:var(--font-plex-mono)] text-[24px] font-bold">{item.label}</span>
+              <span className="ltr !block text-right font-[family-name:var(--font-plex-mono)] text-[24px] font-bold">{item.label}</span>
               <span className="block font-bold">{cutTitle(item.parent, breeds)}</span>
               <span className="text-stone">
                 {item.kind === "unit"

@@ -1,5 +1,5 @@
 "use client";
-// S8 — the parent's summary and closing: units, the remainder and the total value, every item with its state, the
+// T9 — the parent's summary and closing: the trays, the block and the total value, every item with its state, the
 // video with "פרסם את הסרטון לפיד" (on by default, R12), the sum of the weights as information only, and "סיום".
 // Closing waits for drafts (they are finished or cancelled first).
 import { use, useEffect, useState } from "react";
@@ -20,7 +20,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 
 export default function SummaryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { parent, items, state, reload } = useParent(id);
+  const { parent, media, items, state, reload } = useParent(id);
   const breeds = useBreeds();
   const router = useRouter();
   const toast = useToast();
@@ -57,8 +57,8 @@ export default function SummaryPage({ params }: { params: Promise<{ id: string }
     <FlowScreen title={he.flow.summaryTitle(parent.code ?? "")} sub={cutTitle(parent, breeds) || he.flow.noTitle} back="/butcher"
       footer={
         <>
-          {drafts.length > 0 && <p className="m-0 text-sm font-semibold text-sold">{he.flow.hasDrafts(drafts.map((d) => d.label).join(", "))}</p>}
-          {parent.status !== "closed" && parent.split && <Link href={`/butcher/parent/${id}/units`} className="sr-cbtn sr-cbtn--quiet">{he.flow.backToUnits}</Link>}
+          {drafts.length > 0 && <p className="m-0 text-sm font-semibold text-sold">{he.flow.hasDrafts(drafts.length)}</p>}
+          {parent.status !== "closed" && parent.sale_mode !== "block" && <Link href={`/butcher/parent/${id}/units`} className="sr-cbtn sr-cbtn--quiet">{he.flow.backToUnits}</Link>}
           <button type="button" className="sr-cbtn sr-cbtn--new" disabled={busy || drafts.length > 0} onClick={finish}>{he.flow.finish}</button>
         </>
       }>
@@ -67,7 +67,7 @@ export default function SummaryPage({ params }: { params: Promise<{ id: string }
       </p>
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {items.map((i) => {
-          const cover = coverOf(i.cut_media);
+          const cover = coverOf(i.cut_media) ?? coverOf(media);
           return (
             <li key={i.id} className="flex items-center gap-3 rounded-2xl bg-ink-2 p-2 pe-3 shadow-[var(--shadow-card)]">
               <span className="block size-14 shrink-0 overflow-hidden rounded-xl bg-ink-3">
@@ -75,7 +75,7 @@ export default function SummaryPage({ params }: { params: Promise<{ id: string }
                 {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className="h-full w-full object-cover" />}
               </span>
               <span className="min-w-0 flex-1 text-[15px] leading-5">
-                <span className="ltr block font-[family-name:var(--font-plex-mono)] text-[18px] font-bold">{i.label}</span>
+                <span className="ltr !block text-right font-[family-name:var(--font-plex-mono)] text-[18px] font-bold">{i.label ?? he.flow.draftTray}</span>
                 <span className="text-stone">
                   {[i.kind === "unit" ? (i.steak_count && he.item.steaks(i.steak_count)) : he.item.remainder, i.weight_g && formatWeight(i.weight_g)].filter(Boolean).join(" · ")}
                   {i.weight_g ? <> · <Ltr>{money(linePrice({ weight_g: i.weight_g, price_per_kg_agorot: ppkOf(i) }, "unit"))}</Ltr></> : null}

@@ -1,5 +1,5 @@
 "use client";
-// /butcher/parent/[id] — goes to the step the parent is at (BUTCHER_FLOW §9.3).
+// /butcher/parent/[id] — goes to the step the parent is at (BUTCHER_FLOW_v2 §3).
 import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FlowLoading, parentStep } from "@/components/butcher/flow/FlowScreen";

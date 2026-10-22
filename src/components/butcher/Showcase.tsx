@@ -85,7 +85,7 @@ export function Showcase() {
           );
         })}
       </ul>
-      <ConfirmDialog open={!!removing} text={removing ? he.flow.withdrawConfirm(removing.label) : ""} confirmLabel={he.flow.withdraw}
+      <ConfirmDialog open={!!removing} text={removing ? he.flow.withdrawConfirm(removing.label ?? "") : ""} confirmLabel={he.flow.withdraw}
         onConfirm={withdraw} onCancel={() => setRemoving(null)} loading={busy} danger />
     </>
   );

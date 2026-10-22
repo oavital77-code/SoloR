@@ -1,8 +1,7 @@
 "use client";
 // S1 — recording the butchering (BUTCHER_FLOW §5). The parent is created as the screen opens and the recording
 // starts by itself: a live view, a running clock and the red "מקליט" dot, pause / resume, and "הפסק הקלטה".
-// Stopping gives the parent its code (R1), shown big for two seconds, and the video goes on uploading in the
-// background while the butcher fills in the details. When the browser cannot record, the phone's own camera does
+// Stopping goes on to the photos of the cut (BUTCHER_FLOW_v2 §3); the video goes on uploading in the background. When the browser cannot record, the phone's own camera does
 // (a file capture). A recording that did not save says so: "המשך בלי סרטון" / "הקלט שוב".
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +15,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { uploadParentVideo } from "@/lib/video-upload";
 import type { Parent } from "@/lib/types";
 
-type Phase = "starting" | "camera" | "recording" | "paused" | "native" | "failed" | "code" | "busy";
+type Phase = "starting" | "camera" | "recording" | "paused" | "native" | "failed" | "busy";
 
 const MIME = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
 
@@ -29,7 +28,6 @@ function Recording() {
   const [inProgress, setInProgress] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("starting");
   const [secs, setSecs] = useState(0);
-  const [code, setCode] = useState<number | null>(null);
   const [discarding, setDiscarding] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
@@ -86,7 +84,7 @@ function Recording() {
     return () => window.clearInterval(t);
   }, [phase]);
 
-  // "הפסק הקלטה": the code now, the video after (in the background)
+  // "הפסק הקלטה": the photos now, the video after (in the background)
   async function finish(file: Blob | null) {
     if (!parent) return;
     setPhase("busy");
@@ -94,9 +92,7 @@ function Recording() {
     if (error) { toast(errorText(error), { tone: "error" }); return setPhase(file ? "failed" : "native"); }
     const p = data as Parent;
     if (file) uploadParentVideo(file, butcher.id, p.id);
-    setCode(p.code);
-    setPhase("code");
-    window.setTimeout(() => router.replace(`/butcher/parent/${p.id}/details`), 2000);
+    router.replace(`/butcher/parent/${p.id}/photos`);
   }
 
   function stop() {
@@ -133,17 +129,6 @@ function Recording() {
         }}>{he.flow.backToIt}</button>
         <button type="button" className="sr-cbtn sr-cbtn--quiet" onClick={() => start(true)}>{he.flow.pauseAndNew}</button>
       </FlowScreen>
-    );
-  }
-
-  if (phase === "code" && code != null) {
-    return (
-      <div className="grid min-h-dvh place-items-center bg-ink text-center" role="status">
-        <div className="flex flex-col gap-2">
-          <span className="text-xl font-bold text-stone">{he.flow.cutNo("").trim()}</span>
-          <span className="ltr font-[family-name:var(--font-plex-mono)] text-[120px] leading-none font-bold">{code}</span>
-        </div>
-      </div>
     );
   }
 

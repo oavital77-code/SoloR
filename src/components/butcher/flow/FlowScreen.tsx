@@ -75,10 +75,11 @@ export function FlowLoading({ state, onRetry }: { state: "loading" | "notfound" 
   );
 }
 
-/** Where a parent in work continues (BUTCHER_FLOW §9.3, R16). */
-export function parentStep(p: { id: string; status: string; split: boolean | null; code: number | null }): string {
+/** Where a parent in work continues (BUTCHER_FLOW_v2 §3: video → photos → clip → details → sale mode → trays / block). */
+export function parentStep(p: { id: string; status: string; sale_mode: string | null; code: number | null }): string {
   if (p.status === "recording") return `/butcher/parent/new?id=${p.id}`;
-  if (p.status === "details" || p.split == null) return `/butcher/parent/${p.id}/details`;
   if (p.status === "closed") return `/butcher/parent/${p.id}/summary`;
-  return p.split ? `/butcher/parent/${p.id}/units` : `/butcher/parent/${p.id}/remainder`;
+  if (p.code == null) return `/butcher/parent/${p.id}/photos`;
+  if (p.status === "details" || p.sale_mode == null) return `/butcher/parent/${p.id}/details`;
+  return p.sale_mode === "block" ? `/butcher/parent/${p.id}/block` : `/butcher/parent/${p.id}/units`;
 }
