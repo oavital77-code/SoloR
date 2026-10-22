@@ -11,7 +11,7 @@ let butchersCache: Butcher[] | null = null;
 export function useBreeds(): Breed[] {
   const [breeds, setBreeds] = useState<Breed[]>(breedsCache ?? []);
   useEffect(() => {
-    if (breedsCache) return;
+    if (breedsCache) { setBreeds(breedsCache); return; }
     supabaseBrowser().from("breeds").select("*").eq("active", true).order("sort_order")
       .then(({ data }) => {
         if (data) { breedsCache = data as Breed[]; setBreeds(breedsCache); }
@@ -23,7 +23,8 @@ export function useBreeds(): Breed[] {
 export function useButchers(): Butcher[] {
   const [list, setList] = useState<Butcher[]>(butchersCache ?? []);
   useEffect(() => {
-    if (butchersCache) return;
+    // another screen may have filled the cache between this one's first render and now
+    if (butchersCache) { setList(butchersCache); return; }
     supabaseBrowser().from("butchers").select("*").then(({ data }) => {
       if (data) { butchersCache = data as Butcher[]; setList(butchersCache); }
     });

@@ -78,6 +78,9 @@ function SearchView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [available, filter, urlQuery, breeds, butchers]);
 
+  // under each result, more from the same counter (design: V3): what that shop still has, newest first
+  const relatedOf = (cut: Cut) => available.filter((c) => c.butcher_id === cut.butcher_id && c.id !== cut.id).slice(0, 4);
+
   useScrollMemory(`search?${params.toString()}`, cuts !== null);
 
   // measurement (§15): each distinct search once, with what it found
@@ -163,7 +166,8 @@ function SearchView() {
                       <li key={c.id} onClickCapture={(e) => {
                         if ((e.target as HTMLElement).closest("a")) track("search_result_click", { cut_id: c.id, position: i + 1 });
                       }}>
-                        <CutPost cut={c} media={c.cut_media} breeds={breeds} shop={shopOf(c.butcher_id)} now={now} source="search" eager={i === 0} />
+                        <CutPost cut={c} media={c.cut_media} breeds={breeds} shop={shopOf(c.butcher_id)} now={now} source="search" eager={i === 0}
+                          related={relatedOf(c)} />
                       </li>
                     ))}
                   </ul>
