@@ -3,6 +3,7 @@
 begin;
 create temp table demo_parents on commit drop as
   select distinct i.parent_id as id from cut_media m join items i on i.id = m.item_id where m.storage_path like '/demo/%'
+  union select parent_id from cut_media where parent_id is not null and storage_path like '/demo/%'
   union select id from parents where video_path like '/demo/%';
 create temp table demo_ids on commit drop as select id from items where parent_id in (select id from demo_parents);
 create temp table touched_orders on commit drop as
@@ -27,7 +28,7 @@ update orders o set total_agorot = coalesce((select sum(total_agorot) from order
 where o.id in (select id from touched_orders) and o.status <> 'cancelled';
 
 alter table cut_media disable trigger cut_media_guard_delete;
-delete from cut_media where item_id in (select id from demo_ids);
+delete from cut_media where item_id in (select id from demo_ids) or parent_id in (select id from demo_parents);
 alter table cut_media enable trigger cut_media_guard_delete;
 delete from items where id in (select id from demo_ids);
 delete from parents where id in (select id from demo_parents);

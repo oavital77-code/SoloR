@@ -36,11 +36,11 @@ begin
   v_p := (start_parent(true)).id;
   perform stop_recording(v_p);
   update parents set cut_type = 'sinta', breed_key = 'wagyu', origin_country = 'JP', is_aged = false, price_per_kg_agorot = 50000 where id = v_p;
-  perform set_split(v_p, false);
-  select id into v_i from items where parent_id = v_p;
-  update items set weight_g = p_weight where id = v_i;
-  insert into cut_media (item_id, type, storage_path) values (v_i, 'photo', 'p/q/h.jpg');
-  perform publish_item(v_i);
+  perform set_parent_code(v_p, (select coalesce(max(code), 0) + 1 from parents));
+  update parents set weight_g = p_weight where id = v_p;
+  perform set_sale_mode(v_p, 'block');
+  insert into cut_media (parent_id, type, storage_path) values (v_p, 'photo', 'p/q/h.jpg');
+  v_i := (publish_block(v_p)).id;
   perform close_parent(v_p);
   return v_i;
 end $$;

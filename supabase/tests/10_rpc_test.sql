@@ -67,56 +67,68 @@ insert into profiles (id, full_name, phone) values
 update profiles set role = 'butcher', butcher_id = '00000000-0000-4000-8000-000000000001'
 where id = '10000000-0000-4000-8000-00000000000b';
 
--- ═════════ T1: recording → stop → a new parent code ═════════
+-- ═════════ A1: video → stop → the clip's number (v2: typed in, not given) ═════════
 set role authenticated;
 set request.jwt.claim.sub = '10000000-0000-4000-8000-00000000000b';
 
 select set_config('t.p', (select id::text from start_parent()), false);
 select pg_temp.check((select code is null and status = 'recording' from parents where id = current_setting('t.p')::uuid),
-                     'a new parent has no code while recording');
+                     'a new parent has no number while recording');
 select pg_temp.expect_error(format('select stop_recording(%L, ''elsewhere/v.mp4'')', current_setting('t.p')), 'NOT_ALLOWED');
+select pg_temp.expect_error(format('select set_parent_code(%L, 15)', current_setting('t.p')), 'INVALID_TRANSITION');  -- still recording
 select stop_recording(current_setting('t.p')::uuid, '00000000-0000-4000-8000-000000000001/v/rec.mp4');
-select set_config('t.code', (select code::text from parents where id = current_setting('t.p')::uuid), false);
-select pg_temp.check((select code > 0 and status = 'details' and video_path like '%/rec.mp4'
-                      from parents where id = current_setting('t.p')::uuid), 'T1: the code is given at stop, the video is linked');
-select pg_temp.check((select code from stop_recording(current_setting('t.p')::uuid)) = current_setting('t.code')::int,
-                     'a second stop keeps the code');
+select pg_temp.check((select code is null and status = 'details' and video_path like '%/rec.mp4'
+                      from parents where id = current_setting('t.p')::uuid), 'stop links the video; no number yet');
+select pg_temp.check((select status from stop_recording(current_setting('t.p')::uuid)) = 'details', 'a second stop changes nothing');
+-- the parent's own photo
+insert into cut_media (parent_id, type, storage_path, is_cover) values (current_setting('t.p')::uuid, 'photo', 'x/p/1.jpg', true);
+select pg_temp.expect_error(format('select set_parent_code(%L, 0)', current_setting('t.p')), 'INVALID_CODE');
+select set_parent_code(current_setting('t.p')::uuid, 15);
+select set_config('t.code', '15', false);
+select pg_temp.check((select code from parents where id = current_setting('t.p')::uuid) = 15, 'A1: the clip number is the parent''s');
 
--- R17: one parent at a time, unless paused explicitly
+-- R17: one parent at a time, unless paused explicitly; A2: a clip in use is refused
 select pg_temp.expect_error('select start_parent()', 'PARENT_IN_PROGRESS');
 select set_config('t.p2', (select id::text from start_parent(true)), false);
 select pg_temp.check((select paused_at is not null from parents where id = current_setting('t.p')::uuid), 'the first parent is paused');
+select stop_recording(current_setting('t.p2')::uuid);
+do $$
+declare d text;
+begin
+  perform set_parent_code(current_setting('t.p2')::uuid, 15);
+  raise exception 'should have failed';
+exception when others then
+  get stacked diagnostics d = pg_exception_detail;
+  perform pg_temp.check(sqlerrm = 'CODE_IN_USE' and d::jsonb ? 'created_at', 'A2: clip 15 is taken, with who holds it: ' || sqlerrm || ' ' || coalesce(d, ''));
+end $$;
 select resume_parent(current_setting('t.p')::uuid);
 select pg_temp.check((select paused_at is null from parents where id = current_setting('t.p')::uuid)
                  and (select paused_at is not null from parents where id = current_setting('t.p2')::uuid), 'R16: resumed, the other paused');
 select discard_parent(current_setting('t.p2')::uuid);
-select pg_temp.check((select count(*) from parents where id = current_setting('t.p2')::uuid) = 0, 'a recording parent can be thrown away');
+select pg_temp.check((select count(*) from parents where id = current_setting('t.p2')::uuid) = 0, 'an unfinished parent can be thrown away');
 
--- details are the butcher's columns; status, code and stock are not
+-- details are the butcher's columns; status, number and stock are not
 select pg_temp.expect_error(format('update parents set status = ''closed'' where id = %L', current_setting('t.p')), '42501');
 select pg_temp.expect_error(format('update parents set code = 9 where id = %L', current_setting('t.p')), '42501');
+select pg_temp.expect_error(format('update parents set sale_mode = ''block'' where id = %L', current_setting('t.p')), '42501');
 select pg_temp.expect_error(format('insert into items (parent_id, butcher_id, kind, label) values (%L, ''00000000-0000-4000-8000-000000000001'', ''remainder'', ''x'')', current_setting('t.p')), '42501');
 update parents set cut_type = 'entrecote', breed_key = 'black_angus', origin_country = 'AR', is_aged = true,
-                   aging_days = 28, aging_method = 'dry', price_per_kg_agorot = 22000
+                   aging_days = 28, aging_method = 'dry', price_per_kg_agorot = 22000, weight_g = 3400
 where id = current_setting('t.p')::uuid;
 
--- ═════════ S3/S4: split into units; numbers are never reused (T3) ═════════
-select pg_temp.expect_error(format('select new_unit(%L)', current_setting('t.p')), 'INVALID_TRANSITION');   -- not split yet
-select set_split(current_setting('t.p')::uuid, true);
+-- ═════════ "גם וגם": trays numbered when confirmed (Q2); a dropped tray uses no number (A5) ═════════
+select pg_temp.expect_error(format('select new_unit(%L)', current_setting('t.p')), 'INVALID_TRANSITION');   -- no sale mode yet
+select set_sale_mode(current_setting('t.p')::uuid, 'both');
 select set_config('t.u1', (select id::text from new_unit(current_setting('t.p')::uuid)), false);
 select set_config('t.u2', (select id::text from new_unit(current_setting('t.p')::uuid)), false);
-select pg_temp.check((select label from items where id = current_setting('t.u1')::uuid) = current_setting('t.code') || '-1'
-                 and (select label from items where id = current_setting('t.u2')::uuid) = current_setting('t.code') || '-2',
-                     'T2: units are code-1, code-2');
+select pg_temp.check((select label is null and unit_no is null from items where id = current_setting('t.u1')::uuid), 'a draft tray has no number');
 select cancel_unit(current_setting('t.u2')::uuid);
 select set_config('t.u3', (select id::text from new_unit(current_setting('t.p')::uuid)), false);
-select pg_temp.check((select label from items where id = current_setting('t.u3')::uuid) = current_setting('t.code') || '-3',
-                     'T3: after cancelling -2 the next unit is -3');
-select pg_temp.expect_error(format('select set_split(%L, false)', current_setting('t.p')), 'HAS_UNITS');
+select pg_temp.expect_error(format('select set_sale_mode(%L, ''block'')', current_setting('t.p')), 'HAS_UNITS');
 
--- T7: no weight / no photo → cannot go live
+-- T7: no weight / no photo → cannot go live (a tray needs its own photo, not the parent's)
 select pg_temp.expect_error(format('select publish_item(%L)', current_setting('t.u1')), 'MISSING_FIELDS');
-update items set weight_g = 1240, steak_count = 3, weight_source = 'scan' where id = current_setting('t.u1')::uuid;
+update items set weight_g = 1240, steak_count = 3, weight_source = 'manual' where id = current_setting('t.u1')::uuid;
 do $$
 declare d text;
 begin
@@ -128,47 +140,58 @@ exception when others then
 end $$;
 insert into cut_media (item_id, type, storage_path, is_cover) values (current_setting('t.u1')::uuid, 'photo', 'x/y/1.jpg', true);
 select publish_item(current_setting('t.u1')::uuid);
-select pg_temp.check((select status = 'published' and price_per_kg_agorot = 22000 and published_at is not null
-                      from items where id = current_setting('t.u1')::uuid), 'R8/R10: live, with the parent''s price');
--- R6: a live unit's weight is final
+select pg_temp.check((select status = 'published' and price_per_kg_agorot = 22000 and published_at is not null and label = '15-01' and unit_no = 1
+                      from items where id = current_setting('t.u1')::uuid), 'A3: live as 15-01, with the parent''s price');
+-- R6: a live tray's weight is final
 select pg_temp.expect_error(format('update items set weight_g = 1000 where id = %L', current_setting('t.u1')), 'NOT_ALLOWED');
 select pg_temp.expect_error(format('insert into cut_media (item_id, type, storage_path) values (%L, ''photo'', ''x/y/2.jpg'')', current_setting('t.u1')), '42501');
 select pg_temp.expect_error(format('delete from cut_media where item_id = %L', current_setting('t.u1')), 'LAST_PHOTO');
 select pg_temp.expect_error(format('select cancel_unit(%L)', current_setting('t.u1')), 'INVALID_TRANSITION');
 
--- R11: this unit at its own price
+-- R11: this tray at its own price; A5: the dropped draft took no number → 15-02
 update items set weight_g = 830, steak_count = 2, price_per_kg_agorot = 25000 where id = current_setting('t.u3')::uuid;
 insert into cut_media (item_id, type, storage_path) values (current_setting('t.u3')::uuid, 'photo', 'x/y/3.jpg');
 select publish_item(current_setting('t.u3')::uuid);
-select pg_temp.check((select price_per_kg_agorot from items where id = current_setting('t.u3')::uuid) = 25000, 'R11: price changed for one unit');
+select pg_temp.check((select price_per_kg_agorot = 25000 and label = '15-02' from items where id = current_setting('t.u3')::uuid),
+                     'A5/R11: 15-02, at its own price');
 
--- S7: the remainder ("סיימתי"), one per parent; closing waits for drafts
-select set_config('t.r', (select id::text from create_remainder(current_setting('t.p')::uuid)), false);
-select pg_temp.check((select id from create_remainder(current_setting('t.p')::uuid)) = current_setting('t.r')::uuid, 'one remainder per parent');
-select pg_temp.check((select label from items where id = current_setting('t.r')::uuid) = current_setting('t.code'), 'the remainder carries the parent code');
-select pg_temp.expect_error(format('select close_parent(%L, true)', current_setting('t.p')), 'HAS_DRAFTS');
-update items set weight_g = 1100, weight_source = 'manual' where id = current_setting('t.r')::uuid;
-insert into cut_media (item_id, type, storage_path) values (current_setting('t.r')::uuid, 'photo', 'x/y/r.jpg');
-select publish_item(current_setting('t.r')::uuid);
-select pg_temp.expect_error(format('select new_unit(%L)', current_setting('t.p')), 'INVALID_TRANSITION');  -- the rest is back on the counter
+-- the clip can be corrected while nothing was sold; the labels follow it
+select set_parent_code(current_setting('t.p')::uuid, 16);
+select pg_temp.check((select label from items where id = current_setting('t.u3')::uuid) = '16-02', 'a corrected clip relabels the trays');
+select set_parent_code(current_setting('t.p')::uuid, 15);
+
+-- A4: "סיימתי לחתוך" — what is left, weighed again, goes live with the parent's photos (Q3, Q4)
+select set_config('t.u4', (select id::text from new_unit(current_setting('t.p')::uuid)), false);
+select pg_temp.expect_error(format('select publish_block(%L, 1100)', current_setting('t.p')), 'HAS_DRAFTS');
+select cancel_unit(current_setting('t.u4')::uuid);
+select set_config('t.r', (select id::text from publish_block(current_setting('t.p')::uuid, 1100)), false);
+select pg_temp.check((select kind = 'remainder' and label = '15' and weight_g = 1100 and status = 'published'
+                      from items where id = current_setting('t.r')::uuid), 'A4: the block of 1,100 g is live as 15');
+select pg_temp.expect_error(format('select new_unit(%L)', current_setting('t.p')), 'INVALID_TRANSITION');  -- the cutting is over
 select close_parent(current_setting('t.p')::uuid, false);
 select pg_temp.check((select status = 'closed' and not video_published and closed_at is not null
-                      from parents where id = current_setting('t.p')::uuid), 'S8: closed, video kept off the feed');
+                      from parents where id = current_setting('t.p')::uuid), 'closed, video kept off the feed');
 select pg_temp.expect_error(format('select discard_parent(%L)', current_setting('t.p')), 'INVALID_TRANSITION');
+-- still active (things on sale): its clip stays taken
+select set_config('t.p3', (select id::text from start_parent()), false);
+select stop_recording(current_setting('t.p3')::uuid);
+select pg_temp.expect_error(format('select set_parent_code(%L, 15)', current_setting('t.p3')), 'CODE_IN_USE');
+select discard_parent(current_setting('t.p3')::uuid);
 
--- ═════════ T4: not split → only the whole cut, as a remainder ═════════
+-- ═════════ "גוש": the whole cut by weight, live at once with the parent's photo ═════════
 select set_config('t.w', (select id::text from start_parent()), false);
 select stop_recording(current_setting('t.w')::uuid);
+select set_parent_code(current_setting('t.w')::uuid, 7);
 update parents set cut_type = 'picanha', breed_other = 'אנגוס מקומי', origin_country = 'IL', is_aged = false,
-                   price_per_kg_agorot = 18000 where id = current_setting('t.w')::uuid;
-select set_split(current_setting('t.w')::uuid, false);
-select set_config('t.wr', (select id::text from items where parent_id = current_setting('t.w')::uuid), false);
-select pg_temp.check((select count(*) = 1 and bool_and(kind = 'remainder') from items where parent_id = current_setting('t.w')::uuid),
-                     'T4: one item, the remainder');
+                   price_per_kg_agorot = 18000, weight_g = 2400 where id = current_setting('t.w')::uuid;
+select set_sale_mode(current_setting('t.w')::uuid, 'block');
 select pg_temp.expect_error(format('select new_unit(%L)', current_setting('t.w')), 'INVALID_TRANSITION');
-update items set weight_g = 2400 where id = current_setting('t.wr')::uuid;
-insert into cut_media (item_id, type, storage_path) values (current_setting('t.wr')::uuid, 'photo', 'x/y/w.jpg');
-select publish_item(current_setting('t.wr')::uuid);
+select pg_temp.expect_error(format('select publish_block(%L)', current_setting('t.w')), 'MISSING_FIELDS');   -- no photo yet
+insert into cut_media (parent_id, type, storage_path) values (current_setting('t.w')::uuid, 'photo', 'x/y/w.jpg');
+select set_config('t.wr', (select id::text from publish_block(current_setting('t.w')::uuid)), false);
+select pg_temp.check((select weight_g = 2400 and label = '7' and status = 'published' from items where id = current_setting('t.wr')::uuid),
+                     'the block is the whole cut at the parent''s weight');
+select pg_temp.expect_error(format('delete from cut_media where parent_id = %L', current_setting('t.w')), 'LAST_PHOTO');
 select close_parent(current_setting('t.w')::uuid);
 
 -- ═════════ customers: one page per parent (T2, T5) ═════════
@@ -177,7 +200,7 @@ select pg_temp.check((select count(*) from items where parent_id = current_setti
                  and (select cut_type = 'entrecote' and breed_key = 'black_angus' and aging_days = 28 and not video_published
                       from parents where id = current_setting('t.p')::uuid),
                      'T2/T5: three items on one page, the parent''s details readable once, the video kept off the feed');
-select pg_temp.check((select label from items where id = current_setting('t.u1')::uuid) = current_setting('t.code') || '-1', 'labelled code-1');
+select pg_temp.check((select label from items where id = current_setting('t.u1')::uuid) = '15-01', 'labelled 15-01');
 select pg_temp.check((select count(*) from items where status = 'draft') = 0, 'customers see no drafts');
 update items set weight_g = 1 where id = current_setting('t.r')::uuid;              -- filtered out by RLS
 select pg_temp.check((select weight_g from items where id = current_setting('t.r')::uuid) = 1100, 'a customer cannot change an item');
@@ -280,6 +303,16 @@ select pg_temp.check((select status from items where id = current_setting('t.wr'
                  and (select count(*) from parents where id = current_setting('t.w')::uuid) = 1, 'a withdrawn item is still readable');
 select pg_temp.expect_error(format('select pg_temp.buy(%L, ''remainder_all'', null, gen_random_uuid(), null)', current_setting('t.wr')), 'ITEM_NOT_AVAILABLE');
 
+-- Q1: everything of 15 sold, everything of 7 withdrawn → both clips are free again
+set request.jwt.claim.sub = '10000000-0000-4000-8000-00000000000b';
+select set_config('t.p4', (select id::text from start_parent()), false);
+select stop_recording(current_setting('t.p4')::uuid);
+select set_parent_code(current_setting('t.p4')::uuid, 15);
+select set_parent_code(current_setting('t.p4')::uuid, 7);
+select discard_parent(current_setting('t.p4')::uuid);
+select pg_temp.expect_error(format('select set_parent_code(%L, 99)', current_setting('t.p')), 'CODE_LOCKED');
+\echo 'Q1: a clip is free once its cut is sold or withdrawn; a sold cut keeps its number'
+
 \echo 'Butcher flow tests passed'
 
 -- ═════════ cart across two shops, all or nothing, line cancellations ═════════
@@ -296,11 +329,11 @@ select set_config('t.sp', (select id::text from start_parent()), false);
 select stop_recording(current_setting('t.sp')::uuid);
 update parents set cut_type = 'sinta', breed_key = 'black_angus', origin_country = 'UY', is_aged = false, price_per_kg_agorot = 20000
 where id = current_setting('t.sp')::uuid;
-select set_split(current_setting('t.sp')::uuid, false);
-select set_config('t.s1', (select id::text from items where parent_id = current_setting('t.sp')::uuid), false);
-update items set weight_g = 1500 where id = current_setting('t.s1')::uuid;
-insert into cut_media (item_id, type, storage_path) values (current_setting('t.s1')::uuid, 'photo', 's/1.jpg');
-select publish_item(current_setting('t.s1')::uuid);
+select set_parent_code(current_setting('t.sp')::uuid, 21);
+update parents set weight_g = 1500 where id = current_setting('t.sp')::uuid;
+select set_sale_mode(current_setting('t.sp')::uuid, 'block');
+insert into cut_media (parent_id, type, storage_path) values (current_setting('t.sp')::uuid, 'photo', 's/1.jpg');
+select set_config('t.s1', (select id::text from publish_block(current_setting('t.sp')::uuid)), false);
 select close_parent(current_setting('t.sp')::uuid);
 
 set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000b2';
@@ -308,18 +341,19 @@ select set_config('t.ap', (select id::text from start_parent()), false);
 select stop_recording(current_setting('t.ap')::uuid);
 update parents set cut_type = 'asado', breed_key = 'black_angus', origin_country = 'AR', is_aged = false, price_per_kg_agorot = 11000
 where id = current_setting('t.ap')::uuid;
-select set_split(current_setting('t.ap')::uuid, false);
-select set_config('t.s2', (select id::text from items where parent_id = current_setting('t.ap')::uuid), false);
-update items set weight_g = 3000 where id = current_setting('t.s2')::uuid;
-insert into cut_media (item_id, type, storage_path) values (current_setting('t.s2')::uuid, 'photo', 's/2.jpg');
-select publish_item(current_setting('t.s2')::uuid);
+select set_parent_code(current_setting('t.ap')::uuid, 15);   -- another shop: its own clips
+update parents set weight_g = 3000 where id = current_setting('t.ap')::uuid;
+select set_sale_mode(current_setting('t.ap')::uuid, 'block');
+insert into cut_media (parent_id, type, storage_path) values (current_setting('t.ap')::uuid, 'photo', 's/2.jpg');
+select set_config('t.s2', (select id::text from publish_block(current_setting('t.ap')::uuid)), false);
 select close_parent(current_setting('t.ap')::uuid);
 
 select set_config('t.dp', (select id::text from start_parent()), false);
 select stop_recording(current_setting('t.dp')::uuid);
 update parents set cut_type = 'denver', breed_key = 'wagyu', origin_country = 'PY', is_aged = false, price_per_kg_agorot = 17500
 where id = current_setting('t.dp')::uuid;
-select set_split(current_setting('t.dp')::uuid, true);
+select set_parent_code(current_setting('t.dp')::uuid, 32);
+select set_sale_mode(current_setting('t.dp')::uuid, 'steaks');
 select set_config('t.s3', (select id::text from new_unit(current_setting('t.dp')::uuid)), false);
 update items set weight_g = 600, steak_count = 2 where id = current_setting('t.s3')::uuid;
 insert into cut_media (item_id, type, storage_path) values (current_setting('t.s3')::uuid, 'photo', 's/3.jpg');

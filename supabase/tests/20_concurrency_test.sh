@@ -16,12 +16,15 @@ select set_config('t.p', (select id::text from start_parent(true)), false);
 select stop_recording(current_setting('t.p')::uuid);
 update parents set cut_type = 'sinta', breed_key = 'wagyu', origin_country = 'JP', is_aged = false, price_per_kg_agorot = 50000
 where id = current_setting('t.p')::uuid;
-select set_split(current_setting('t.p')::uuid, $1);
-select set_config('t.i', (select coalesce((select id from items where parent_id = current_setting('t.p')::uuid and kind = 'remainder'),
-                                          (select id from new_unit(current_setting('t.p')::uuid))))::text, false);
-update items set weight_g = 2000, steak_count = case when kind = 'unit' then 2 end where id = current_setting('t.i')::uuid;
-insert into cut_media (item_id, type, storage_path) values (current_setting('t.i')::uuid, 'photo', 'p/q/r.jpg');
-select publish_item(current_setting('t.i')::uuid);
+select set_parent_code(current_setting('t.p')::uuid, (select coalesce(max(code), 0) + 1 from parents));
+update parents set weight_g = 2000 where id = current_setting('t.p')::uuid;
+insert into cut_media (parent_id, type, storage_path) values (current_setting('t.p')::uuid, 'photo', 'p/q/r.jpg');
+select set_sale_mode(current_setting('t.p')::uuid, case when $1 then 'steaks' else 'block' end::text);
+select set_config('t.i', (case when $1 then (select id from new_unit(current_setting('t.p')::uuid))
+                               else (select id from publish_block(current_setting('t.p')::uuid)) end)::text, false);
+update items set weight_g = 2000, steak_count = 2 where id = current_setting('t.i')::uuid and status = 'draft';
+insert into cut_media (item_id, type, storage_path) select current_setting('t.i')::uuid, 'photo', 'p/q/r.jpg' where $1;
+select publish_item(current_setting('t.i')::uuid) where $1;
 select close_parent(current_setting('t.p')::uuid);
 select current_setting('t.i');
 SQL
