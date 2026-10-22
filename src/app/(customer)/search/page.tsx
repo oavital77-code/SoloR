@@ -75,8 +75,12 @@ function SearchView() {
       .map((c) => ({ c, s: searchScore(c, urlQuery, breeds, shopOf(c.butcher_id)) }))
       .filter((x) => x.s > 0);
     // best match first; equal matches keep the feed order (newest first)
-    const ranked = scored.map((x, i) => ({ ...x, i })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => ({ cut: x.c }));
-    return onePerParent(ranked).map((x) => ({ ...x.cut, trays: x.trays }));   // one post per parent cut (v2 Q6)
+    const ranked = scored.map((x, i) => ({ ...x, i })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => x.c);
+    // one post per cut, in the order its best match ranks (v2 Q6) — the whole cut, as in the feed: its block and
+    // every tray on sale, whichever of them matched
+    const families = new Map(onePerParent(available.map((c) => ({ cut: c }))).map((f) => [f.cut.parent_id, f]));
+    return [...new Set(ranked.map((c) => c.parent_id))].map((id) => families.get(id)!).filter(Boolean)
+      .map((f) => ({ ...f.cut, trays: f.trays }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [available, filter, urlQuery, breeds, butchers]);
 

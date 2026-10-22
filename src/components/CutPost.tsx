@@ -226,19 +226,19 @@ function AddPill({ cut, soldOut, reserved, preview, onChoose }: {
   );
 }
 
-/** One linked cut at the bottom of a post: a small landscape photo, the cut and its unit price. */
+/** One linked cut at the bottom of a post: a small landscape photo, the cut and its number, and its price. */
 function RelatedCut({ cut, breeds }: { cut: SaleItem; breeds: Breed[] }) {
-  const cover = coverOf(cut.cut_media);
+  const cover = coverOf(cut.parent_media?.length ? cut.parent_media : cut.cut_media);   // the cut's own photo first
   const title = cutTitle(cut, breeds);
   return (
     <li className="shrink-0">
-      <Link href={parentPath(cut.parent_id, cut.label)} className="flex w-[200px] items-center gap-2.5 rounded-[14px] bg-ink-3 p-1.5">
+      <Link href={parentPath(cut.parent_id)} className="flex w-[200px] items-center gap-2.5 rounded-[14px] bg-ink-3 p-1.5">
         <span className="block h-12 w-16 shrink-0 overflow-hidden rounded-[10px] bg-ink">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
         </span>
         <span className="min-w-0 text-[13px] leading-[17px]">
-          <span className="block truncate font-medium">{title} <span className="text-stone">{cut.label}</span></span>
+          <span className="block truncate font-medium">{title} <span className="code !text-[12px] text-stone">{clipNo(cut.parent_code)}</span></span>
           <span className="text-brand"><UnitPrice cut={cut} /></span>
         </span>
       </Link>
