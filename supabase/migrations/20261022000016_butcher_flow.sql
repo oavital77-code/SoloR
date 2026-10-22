@@ -192,8 +192,11 @@ begin
 end $$;
 
 -- holds are short-lived: release what is open (the customer simply holds again) and start the lines afresh
+-- (the old lines are kept aside until 0017 removes the old model)
 update holds set status = 'released', released_at = now() where status = 'active';
-drop table hold_lines;
+alter table hold_lines rename to hold_lines_legacy;
+alter index if exists hold_lines_cut rename to hold_lines_legacy_cut;
+alter table hold_lines_legacy rename constraint hold_lines_pkey to hold_lines_legacy_pkey;
 create table hold_lines (
   hold_id     uuid not null references holds(id) on delete cascade,
   item_id     uuid not null references items(id) on delete cascade,
@@ -205,41 +208,26 @@ create index hold_lines_item on hold_lines (item_id);
 -- carts on accounts hold cut lines the new app cannot read
 update carts set lines = '[]'::jsonb, updated_at = now() where jsonb_array_length(lines) > 0;
 
--- ───────── remove the old model ─────────
-drop function if exists publish_cut(uuid), revert_to_draft(uuid), store_sale(uuid, int, boolean), withdraw_cut(uuid),
-  remove_cut(uuid), cut_has_active_orders(uuid), cut_has_sales(uuid, uuid), return_item_stock(order_items, uuid, text),
-  cut_held(uuid, uuid), checkout_line_total(cuts, order_mode, int), cut_holds(uuid[]), cut_missing_fields(cuts),
-  compute_stock(cuts), max_steaks(int, int), checkout_problems(jsonb, uuid), checkout_lock(jsonb),
-  reserve_checkout(jsonb, uuid, jsonb, jsonb, jsonb), pay_checkout(uuid), place_checkout(jsonb, uuid, jsonb),
-  cancel_order(uuid, text), cancel_order_item(uuid, text, boolean);
-drop trigger if exists cut_media_guard_delete on cut_media;
-drop function if exists cut_media_guard_delete();
-
-drop policy if exists cut_media_select_visible on cut_media;
-drop policy if exists cut_media_manage_own on cut_media;
-drop policy if exists cut_media_select_anon on cut_media;
-drop policy if exists stock_events_select_butcher on stock_events;
-
-delete from cut_media where item_id is null;
-alter table cut_media drop column cut_id;
-alter table cut_media alter column item_id set not null;
-create index on cut_media (item_id, sort_order);
-
-delete from stock_events where item_id is null;
-alter table stock_events drop column cut_id, drop column steaks_delta, drop column whole_after;
-alter table stock_events alter column item_id set not null;
-create index on stock_events (item_id, created_at);
-
-alter table order_items drop column cut_id, drop column mode, drop column steaks_qty;
+-- ───────── the old model steps aside ─────────
+-- Nothing is dropped here: `cuts` and the old columns stay, unused, until 0017 removes them (dropping needs an
+-- explicit confirmation on the hosted database). Their NOT NULLs are lifted so the new rows can be written.
+alter table order_items alter column cut_id drop not null;
+alter table order_items rename column mode to legacy_mode;
+alter table order_items alter column legacy_mode drop not null;
 alter table order_items rename column line to mode;
 alter table order_items alter column item_id set not null, alter column mode set not null;
 create index on order_items (item_id, status);
 
-drop table cuts;
-drop function if exists cuts_guard_update();
-drop sequence if exists cut_code_seq;
-drop type sale_mode;
-drop type order_mode;
+alter table stock_events alter column cut_id drop not null;
+create index on stock_events (item_id, created_at);
+create index on cut_media (item_id, sort_order);
+
+-- the old RPCs: two whose names are reused with other arguments step aside; none can be called any more
+alter function store_sale(uuid, int, boolean) rename to store_sale_legacy;
+alter function return_item_stock(order_items, uuid, text) rename to return_item_stock_legacy;
+revoke execute on function publish_cut(uuid), revert_to_draft(uuid), withdraw_cut(uuid), remove_cut(uuid),
+  cut_holds(uuid[]), store_sale_legacy(uuid, int, boolean), return_item_stock_legacy(order_items, uuid, text)
+from public, anon, authenticated;
 
 -- ───────── helpers (internal) ─────────
 create or replace function slice_min_g()  returns int language sql immutable as $$ select 200 $$;   -- Q4
@@ -347,7 +335,6 @@ begin
   end if;
   return old;
 end $$;
-create trigger cut_media_guard_delete before delete on cut_media for each row execute function cut_media_guard_delete();
 
 -- ───────── the butcher's flow (§9.2) ─────────
 -- S0 → S1: a new parent, recording. One parent is worked on at a time (R17): another open one must be paused
@@ -1046,7 +1033,7 @@ create policy parents_select_own on parents for select to authenticated using (b
 create policy parents_update_own on parents for update to authenticated
   using (butcher_id = current_butcher_id()) with check (butcher_id = current_butcher_id());
 
--- cut_media: photos of items
+-- cut_media: photos of items (the old cut-based policies are removed in 0017; they never match an item's row)
 revoke all on cut_media from anon, authenticated;
 grant select on cut_media to anon, authenticated;
 grant insert (item_id, type, storage_path, thumb_path, poster_path, is_cover, sort_order, width, height, duration_s)
@@ -1057,12 +1044,12 @@ create policy cut_media_select_public on cut_media for select to anon, authentic
   using (exists (select 1 from items i where i.id = cut_media.item_id and item_is_public(i.status, i.published_at)));
 create policy cut_media_select_own on cut_media for select to authenticated
   using (exists (select 1 from items i where i.id = cut_media.item_id and i.butcher_id = current_butcher_id()));
-create policy cut_media_manage_own on cut_media for all to authenticated
+create policy cut_media_manage_own_items on cut_media for all to authenticated
   using (exists (select 1 from items i where i.id = cut_media.item_id and i.butcher_id = current_butcher_id()))
   with check (exists (select 1 from items i where i.id = cut_media.item_id and i.butcher_id = current_butcher_id()
                       and i.status = 'draft'));
 
-create policy stock_events_select_butcher on stock_events for select to authenticated
+create policy stock_events_select_own_items on stock_events for select to authenticated
   using (exists (select 1 from items i where i.id = stock_events.item_id and i.butcher_id = current_butcher_id()));
 
 alter table hold_lines enable row level security;

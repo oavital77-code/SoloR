@@ -19,6 +19,8 @@ delete from order_events where order_id in (select id from empty_orders);
 create temp table touched_checkouts on commit drop as
   select distinct checkout_id as id from orders where id in (select id from empty_orders);
 delete from orders where id in (select id from empty_orders);
+delete from holds h where h.checkout_id in (select id from touched_checkouts)
+  and not exists (select 1 from orders o where o.checkout_id = h.checkout_id);
 delete from checkouts k where k.id in (select id from touched_checkouts)
   and not exists (select 1 from orders o where o.checkout_id = k.id);
 update orders o set total_agorot = coalesce((select sum(total_agorot) from order_items i where i.order_id = o.id and i.status = 'active'), 0)
