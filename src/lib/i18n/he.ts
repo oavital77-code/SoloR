@@ -713,6 +713,7 @@ export const he = {
     withdrawConfirm: (label: string) => `להסיר את ${label}? הוא ייעלם מהפיד של הלקוחות.`,
     removed: "הפריט הוסר",
     left: (w: string) => `נותרו ${w}`,
+    onlyTrays: "נחתך כולו למגשים",
   },
 
 
