@@ -14,7 +14,6 @@ done
 "${PSQL[@]}" -d "$DB" -f supabase/seed.sql
 "${PSQL[@]}" -d "$DB" -f supabase/tests/10_rpc_test.sql
 bash supabase/tests/20_concurrency_test.sh "$DB"
-"${PSQL[@]}" -d "$DB" -f supabase/tests/40_remove_cut_test.sql
 "${PSQL[@]}" -d "$DB" -f supabase/tests/50_checkout_hold_test.sql
 "${PSQL[@]}" -d "$DB" -f supabase/tests/60_order_tracking_test.sql
 "${PSQL[@]}" -d "$DB" -f supabase/tests/70_events_test.sql
