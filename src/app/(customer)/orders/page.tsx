@@ -5,7 +5,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
-import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow } from "@/components/customer/useMyOrders";
+import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow, lineCode, lineCut, lineHref, lineMedia } from "@/components/customer/useMyOrders";
 import { Button, EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, formatDateTime, mediaUrl } from "@/lib/cut-helpers";
@@ -61,17 +61,17 @@ function MyOrders() {
                   <Link href={`/orders/${k.id}`} className="flex flex-col items-center gap-2 py-5 active:bg-ivory/[0.03]">
                     <div className="flex justify-center gap-1.5">
                       {items.slice(0, 3).map((i) => {
-                        const cover = coverOf(i.cuts.cut_media);
+                        const cover = coverOf(lineMedia(i));
                         return (
                           <div key={i.id} className="size-16 overflow-hidden rounded-md bg-ink-3">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${cutTitle(i.cuts, breeds)} ${i.cuts.code}`} className="h-full w-full object-cover" loading="lazy" />}
+                            {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${cutTitle(lineCut(i), breeds)} ${lineCode(i)}`} className="h-full w-full object-cover" loading="lazy" />}
                           </div>
                         );
                       })}
                     </div>
                     <p className="font-display text-lg font-bold text-ivory">
-                      {first ? cutTitle(first.cuts, breeds) : ""}{items.length > 1 && <span className="text-sm font-medium text-stone"> {he.orders.moreItems(items.length - 1)}</span>}
+                      {first ? cutTitle(lineCut(first), breeds) : ""}{items.length > 1 && <span className="text-sm font-medium text-stone"> {he.orders.moreItems(items.length - 1)}</span>}
                     </p>
                     <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
                       {k.orders.map((o) => (

@@ -173,12 +173,11 @@ select close_parent(current_setting('t.w')::uuid);
 
 -- ═════════ customers: one page per parent (T2, T5) ═════════
 set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000c1';
-select pg_temp.check((select count(*) from catalog_items where parent_id = current_setting('t.p')::uuid) = 3
-                 and (select bool_and(cut_type = 'entrecote' and breed_key = 'black_angus' and aging_days = 28 and video_path is null)
-                      from catalog_items where parent_id = current_setting('t.p')::uuid),
-                     'T2/T5: three items on one page, all with the parent''s details, the video kept back');
-select pg_temp.check((select code from catalog_items where id = current_setting('t.u1')::uuid) = 'SOL-' || current_setting('t.code') || '-1',
-                     'displayed as SOL-code-1');
+select pg_temp.check((select count(*) from items where parent_id = current_setting('t.p')::uuid) = 3
+                 and (select cut_type = 'entrecote' and breed_key = 'black_angus' and aging_days = 28 and not video_published
+                      from parents where id = current_setting('t.p')::uuid),
+                     'T2/T5: three items on one page, the parent''s details readable once, the video kept off the feed');
+select pg_temp.check((select label from items where id = current_setting('t.u1')::uuid) = current_setting('t.code') || '-1', 'labelled code-1');
 select pg_temp.check((select count(*) from items where status = 'draft') = 0, 'customers see no drafts');
 update items set weight_g = 1 where id = current_setting('t.r')::uuid;              -- filtered out by RLS
 select pg_temp.check((select weight_g from items where id = current_setting('t.r')::uuid) = 1100, 'a customer cannot change an item');
@@ -277,7 +276,8 @@ select pg_temp.check((select weight_g = 0 and status = 'sold_out' from items whe
 select withdraw_item(current_setting('t.wr')::uuid);
 select pg_temp.expect_error(format('select withdraw_item(%L)', current_setting('t.wr')), 'INVALID_TRANSITION');
 set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000c1';
-select pg_temp.check((select status from catalog_items where id = current_setting('t.wr')::uuid) = 'withdrawn', 'a withdrawn item is still readable');
+select pg_temp.check((select status from items where id = current_setting('t.wr')::uuid) = 'withdrawn'
+                 and (select count(*) from parents where id = current_setting('t.w')::uuid) = 1, 'a withdrawn item is still readable');
 select pg_temp.expect_error(format('select pg_temp.buy(%L, ''remainder_all'', null, gen_random_uuid(), null)', current_setting('t.wr')), 'ITEM_NOT_AVAILABLE');
 
 \echo 'Butcher flow tests passed'
@@ -404,9 +404,9 @@ select pg_temp.check(price_for_weight(1240, 22000) = 27280 and price_for_weight(
 -- ═════════ guests (anon): public catalogue only ═════════
 set role anon;
 select set_config('request.jwt.claim.sub', '', false);
-select pg_temp.check((select count(*) from catalog_items where status = 'draft') = 0, 'anon sees no drafts');
-select pg_temp.check((select count(*) from catalog_items where status = 'published') > 0, 'anon sees live items');
-select pg_temp.check((select count(*) from parents) = (select count(distinct parent_id) from catalog_items), 'anon sees only parents with something public');
+select pg_temp.check((select count(*) from items where status = 'draft') = 0, 'anon sees no drafts');
+select pg_temp.check((select count(*) from items where status = 'published') > 0, 'anon sees live items');
+select pg_temp.check((select count(*) from parents) = (select count(distinct parent_id) from items), 'anon sees only parents with something public');
 select pg_temp.check((select count(*) from butchers) = 2, 'anon sees both shops');
 select pg_temp.expect_error('select count(*) from profiles', '42501');
 select pg_temp.expect_error('select count(*) from orders', '42501');

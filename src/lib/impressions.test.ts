@@ -34,10 +34,11 @@ describe("personal sold-out rule (§13)", () => {
 
 describe("reserved (§13)", () => {
   it("is reserved only when nothing can be bought now", () => {
-    expect(isReserved({ sale_mode: "steaks", steaks_available: 3 }, undefined)).toBe(false);
-    expect(isReserved({ sale_mode: "steaks", steaks_available: 3 }, { steaks_held: 2, whole_held: false })).toBe(false);
-    expect(isReserved({ sale_mode: "steaks", steaks_available: 3 }, { steaks_held: 3, whole_held: false })).toBe(true);
-    expect(isReserved({ sale_mode: "both", steaks_available: 4 }, { steaks_held: 0, whole_held: true })).toBe(true);
-    expect(isReserved({ sale_mode: "whole", steaks_available: 0 }, { steaks_held: 0, whole_held: false })).toBe(true);
+    const rem = { kind: "remainder", status: "published", weight_g: 1000 } as const;
+    expect(isReserved(rem, undefined)).toBe(false);
+    expect(isReserved(rem, { held_g: 400, whole_held: false })).toBe(false);   // 600 free: a slice can still be asked
+    expect(isReserved(rem, { held_g: 850, whole_held: false })).toBe(true);
+    expect(isReserved(rem, { held_g: 0, whole_held: true })).toBe(true);
+    expect(isReserved({ ...rem, kind: "unit" }, { held_g: 0, whole_held: true })).toBe(true);
   });
 });

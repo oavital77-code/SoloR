@@ -13,16 +13,16 @@ import { ShopMark } from "@/components/ShopMark";
 import { useCartRows, type ShopGroup } from "@/components/customer/useCartRows";
 import { useToast } from "@/components/Toast";
 import { BottomSheet, EmptyState, ErrorState, Field, Ltr, Skeleton, Spinner, inputDarkClass } from "@/components/ui";
-import { cart } from "@/lib/cart";
+import { cart, type CartLine } from "@/lib/cart";
 import { deliveryArea, deliveryFee, formatCountdown, receiveOptions } from "@/lib/checkout";
-import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
+import { coverOf, cutTitle, mediaUrl, orderWhat } from "@/lib/cut-helpers";
 import { cartProblemsOf, errorCode, errorText, type CartProblem } from "@/lib/errors";
 import { formatWeek, isolateTimes } from "@/lib/hours";
 import { he } from "@/lib/i18n/he";
 import { useBreeds, useNow, useSession } from "@/lib/hooks";
 import { money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import type { Breed, Butcher, Checkout, Hold, ReceiveMethod } from "@/lib/types";
+import type { Breed, Butcher, Checkout, Hold, ReceiveMethod, SaleItem } from "@/lib/types";
 import { normalizePhone } from "@/lib/validation";
 import { track } from "@/lib/track";
 
@@ -105,7 +105,9 @@ export default function CheckoutPage() {
     busyRef.current = true;
     setBusy(true);
     const items = groups.flatMap((g) => g.rows.map(({ line }) => ({
-      cut_id: line.cutId, mode: line.mode, steaks_qty: line.mode === "steaks" ? line.qty : null,
+      item_id: line.itemId, mode: line.mode,
+      requested_g: line.mode === "remainder_slice" ? line.grams : null,
+      thickness_cm: line.mode === "remainder_slice" ? line.thicknessCm : null,
     })));
     const p_receive = Object.fromEntries(parts.map((p) => [p.g.butcherId, p.d.method === "delivery"
       ? { method: "delivery", window: p.d.window,
@@ -121,7 +123,7 @@ export default function CheckoutPage() {
     if (error) {
       const problems = cartProblemsOf(error);
       if (problems.length) {
-        problems.forEach((p) => track("reservation_failed", { cut_id: p.cut_id, reason: p.reason }));
+        problems.forEach((p) => track("reservation_failed", { item_id: p.item_id, reason: p.reason }));
         setServerProblems(problems);
         load();
         toast(he.errors.CART_UNAVAILABLE, { tone: "error" });
@@ -377,7 +379,7 @@ function Summary({ parts, breeds, itemsTotal, fees }: {
               const cover = cut ? coverOf(cut.cut_media) : undefined;
               const title = cut ? cutTitle(cut, breeds) : line.code;
               return (
-                <li key={line.cutId} className="flex items-center gap-3 py-3">
+                <li key={line.itemId} className="flex items-center gap-3 py-3">
                   <div className={clsx("size-14 shrink-0 overflow-hidden rounded-md bg-ink-3", problem && "opacity-50 grayscale")}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className="h-full w-full object-cover" />}
@@ -385,14 +387,14 @@ function Summary({ parts, breeds, itemsTotal, fees }: {
                   <div className="min-w-0 flex-1 text-start">
                     <p className="truncate font-semibold text-ivory">{title}</p>
                     <p className="text-xs text-stone">
-                      {line.mode === "whole" ? he.cut.whole : he.cut.steaksCount(line.qty ?? 1)} · <Ltr>{line.code}</Ltr>
+                      {lineWhat(line, cut)} · <Ltr>{line.code}</Ltr>
                     </p>
                     {problem && <p className="m-0 mt-0.5 text-xs font-semibold text-sold" role="alert">{problem}</p>}
                   </div>
                   <div className="flex shrink-0 flex-col items-end">
                     <span className={clsx("font-semibold", problem ? "text-stone line-through" : "text-ivory")}><Ltr>{money(price)}</Ltr></span>
                     {problem && (
-                      <button type="button" onClick={() => cart.remove(line.cutId)} className="min-h-9 text-sm text-gold underline-offset-4 hover:underline">
+                      <button type="button" onClick={() => cart.remove(line.itemId)} className="min-h-9 text-sm text-gold underline-offset-4 hover:underline">
                         {he.checkout.removeAndContinue}
                       </button>
                     )}
@@ -453,8 +455,8 @@ function PaySheet({ hold, busy, onPay, onBack, parts, breeds }: {
         {left <= 0 && <p className="m-0 text-center text-sm text-sold">{he.checkout.holdExpired}</p>}
         <div className="flex flex-col gap-2.5">
           {parts.flatMap(({ g }) => g.rows.filter((r) => !r.problem).map(({ line, cut, price }) => (
-            <div key={line.cutId} className="sr-rowline">
-              <span>{cut ? cutTitle(cut, breeds).split(" · ")[0] : line.code} · {line.mode === "whole" ? he.cut.whole : he.cut.steaksCount(line.qty ?? 1)} · <span className="code">{line.code}</span></span>
+            <div key={line.itemId} className="sr-rowline">
+              <span>{cut ? cutTitle(cut, breeds).split(" · ")[0] : line.code} · {lineWhat(line, cut)}</span>
               <Ltr>{money(price)}</Ltr>
             </div>
           )))}
@@ -472,4 +474,10 @@ function PaySheet({ hold, busy, onPay, onBack, parts, breeds }: {
       </div>
     </BottomSheet>
   );
+}
+
+/** What a cart line buys, in the words of the order (orderWhat). */
+function lineWhat(line: CartLine, cut: SaleItem | null): string {
+  return orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
+    cut ? { label: cut.label, steak_count: cut.steak_count } : null);
 }

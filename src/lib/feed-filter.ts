@@ -1,7 +1,7 @@
-// Search filters (customer spec §8.1): cut type, aging range, whole / steaks, price per kg, breed and origin.
-// Applied client-side. They live in the search URL, so the search tab keeps them and links can share them.
-import { canBuySteaks, canBuyWhole } from "./cut-helpers";
-import type { Cut, CutType, OriginCountry } from "./types";
+// Search filters (customer spec §8.1): cut type, aging range, ready units / by weight, price per kg, breed and
+// origin. Applied client-side. They live in the search URL, so the search tab keeps them and links can share them.
+import { isAvailable } from "./items";
+import type { CutType, OriginCountry, SaleItem } from "./types";
 
 export interface FeedFilter {
   cutTypes: CutType[];
@@ -10,12 +10,14 @@ export interface FeedFilter {
   aging: string[];           // AGING_PRESETS keys; a cut in any of them matches (not aged counts as 0 days)
   priceMin: number | null;   // agorot per kg
   priceMax: number | null;
-  canWhole: boolean;
-  canSteaks: boolean;
+  /** ready units (sold whole, BUTCHER_FLOW §2) */
+  units: boolean;
+  /** the remainder, sold by weight (all of it or sliced) */
+  byWeight: boolean;
 }
 
 export const EMPTY_FILTER: FeedFilter = {
-  cutTypes: [], breeds: [], origins: [], aging: [], priceMin: null, priceMax: null, canWhole: false, canSteaks: false,
+  cutTypes: [], breeds: [], origins: [], aging: [], priceMin: null, priceMax: null, units: false, byWeight: false,
 };
 
 export const PRICE_SLIDER = { min: 0, max: 100000, step: 1000 }; // ₪0–₪1,000 per kg, in agorot
@@ -28,17 +30,17 @@ export const AGING_PRESETS: { key: string; min: number | null; max: number | nul
   { key: "31+", min: 31, max: null },
 ];
 
-export function agingDays(cut: Pick<Cut, "is_aged" | "aging_days">): number {
+export function agingDays(cut: Pick<SaleItem, "is_aged" | "aging_days">): number {
   return cut.is_aged ? cut.aging_days ?? 0 : 0;
 }
 
 export function activeFilterCount(f: FeedFilter): number {
   return (f.cutTypes.length ? 1 : 0) + (f.breeds.length ? 1 : 0) + (f.origins.length ? 1 : 0)
     + (f.aging.length ? 1 : 0) + (f.priceMin != null || f.priceMax != null ? 1 : 0)
-    + (f.canWhole ? 1 : 0) + (f.canSteaks ? 1 : 0);
+    + (f.units ? 1 : 0) + (f.byWeight ? 1 : 0);
 }
 
-export function matchesFilter(cut: Cut, f: FeedFilter): boolean {
+export function matchesFilter(cut: SaleItem, f: FeedFilter): boolean {
   if (f.cutTypes.length && (!cut.cut_type || !f.cutTypes.includes(cut.cut_type))) return false;
   if (f.breeds.length) {
     const key = cut.breed_key ?? "other";
@@ -53,12 +55,13 @@ export function matchesFilter(cut: Cut, f: FeedFilter): boolean {
   const p = cut.price_per_kg_agorot ?? 0;
   if (f.priceMin != null && p < f.priceMin) return false;
   if (f.priceMax != null && f.priceMax < PRICE_SLIDER.max && p > f.priceMax) return false;
-  if (f.canWhole && !canBuyWhole(cut)) return false;
-  if (f.canSteaks && !canBuySteaks(cut)) return false;
+  if ((f.units || f.byWeight) && !isAvailable(cut)) return false;
+  if (f.units && !f.byWeight && cut.kind !== "unit") return false;
+  if (f.byWeight && !f.units && cut.kind !== "remainder") return false;
   return true;
 }
 
-// ───────── URL form: ?q=…&t=picanha,sinta&br=wagyu&o=AR&age=none,15-30&p=100-300&m=whole,steaks ─────────
+// ───────── URL form: ?q=…&t=picanha,sinta&br=wagyu&o=AR&age=none,15-30&p=100-300&m=units,weight ─────────
 
 const list = (v: string | null) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : []);
 const range = (v: string | null): [number | null, number | null] => {
@@ -80,8 +83,9 @@ export function filterFromParams(sp: URLSearchParams): FeedFilter {
     aging,
     priceMin: pMin == null ? null : pMin * 100,
     priceMax: pMax == null ? null : pMax * 100,
-    canWhole: modes.includes("whole"),
-    canSteaks: modes.includes("steaks"),
+    // older links: "steaks" were ready portions, "whole" the cut by weight
+    units: modes.includes("units") || modes.includes("steaks"),
+    byWeight: modes.includes("weight") || modes.includes("whole"),
   };
 }
 
@@ -95,6 +99,6 @@ export function filterToParams(f: FeedFilter, q: string): URLSearchParams {
   put("o", f.origins.join(","));
   put("age", AGING_PRESETS.filter((a) => f.aging.includes(a.key)).map((a) => a.key).join(","));
   put("p", rng(f.priceMin == null ? null : f.priceMin / 100, f.priceMax == null ? null : f.priceMax / 100));
-  put("m", [f.canWhole && "whole", f.canSteaks && "steaks"].filter(Boolean).join(","));
+  put("m", [f.units && "units", f.byWeight && "weight"].filter(Boolean).join(","));
   return sp;
 }

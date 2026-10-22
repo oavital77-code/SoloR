@@ -17,18 +17,6 @@ export const profileSchema = z.object({
   phone: z.string().transform(normalizePhone).pipe(z.string().regex(/^05\d-\d{7}$/, he.onboarding.invalidPhone)),
 });
 
-export const cutFieldSchemas = {
-  weight_g: z.number().int().min(100).max(20000),
-  price_per_kg_agorot: z.number().int().min(100).max(500000),
-  aging_days: z.number().int().min(1).max(365),
-  steak_weight_g: z.number().int().min(150).max(1000).multipleOf(10),
-  steak_thickness_cm: z.number().min(1).max(8).multipleOf(0.5),
-  butcher_marbling: z.number().int().min(1).max(10),
-  description: z.string().max(500),
-  breed_other: z.string().max(60),
-  customer_note: z.string().max(300),
-};
-
 export const MEDIA_LIMITS = {
   maxPhotos: 6,
   maxVideoSeconds: 90,

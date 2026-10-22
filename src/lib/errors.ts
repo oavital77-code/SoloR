@@ -8,9 +8,9 @@ export interface DbError {
 }
 
 export const ERROR_CODES = [
-  "CUT_NOT_AVAILABLE", "WHOLE_NOT_AVAILABLE", "NOT_ENOUGH_STEAKS", "INVALID_QTY", "MISSING_FIELDS",
-  "NOT_ALLOWED", "INVALID_TRANSITION", "HAS_ACTIVE_ORDERS", "STOCK_CHANGED", "REASON_REQUIRED",
-  "NOTE_TOO_LONG", "LAST_PHOTO", "CART_UNAVAILABLE", "INVALID_CART", "CUT_RESERVED",
+  "ITEM_NOT_AVAILABLE", "NOT_ENOUGH_WEIGHT", "INVALID_QTY", "MISSING_FIELDS",
+  "NOT_ALLOWED", "INVALID_TRANSITION", "HAS_ACTIVE_ORDERS", "HAS_UNITS", "HAS_DRAFTS", "PARENT_IN_PROGRESS",
+  "REASON_REQUIRED", "NOTE_TOO_LONG", "LAST_PHOTO", "CART_UNAVAILABLE", "INVALID_CART", "ITEM_RESERVED",
   "RECEIVE_NOT_AVAILABLE", "DELIVERY_NOT_ELIGIBLE", "INVALID_ADDRESS", "INVALID_WINDOW", "INVALID_CONTACT",
   "HOLD_RELEASED", "PRICE_CHANGED", "INVALID_WEIGHT",
 ] as const;
@@ -27,7 +27,7 @@ export function errorCode(err: DbError | null | undefined): ErrorCode | "PERMISS
 
 export function errorText(err: DbError | null | undefined): string {
   const code = errorCode(err);
-  if (code === "NOT_ENOUGH_STEAKS") return he.errors.NOT_ENOUGH_STEAKS(Number(err?.details ?? 0));
+  if (code === "NOT_ENOUGH_WEIGHT") return he.errors.NOT_ENOUGH_WEIGHT(Number(err?.details ?? 0));
   if (code === "MISSING_FIELDS" && err?.details) {
     const list = err.details.split(",").map((f) => he.missingFields[f] ?? f);
     return `${he.errors.MISSING_FIELDS}: ${list.join(", ")}`;
@@ -37,10 +37,11 @@ export function errorText(err: DbError | null | undefined): string {
 
 /** One line of the cart that could not be bought (reserve / pay → CART_UNAVAILABLE, details = JSON list). */
 export interface CartProblem {
-  cut_id: string;
-  code?: string;
-  reason: "CUT_NOT_AVAILABLE" | "WHOLE_NOT_AVAILABLE" | "NOT_ENOUGH_STEAKS" | "CUT_RESERVED";
-  available?: number;
+  item_id: string;
+  label?: string;
+  reason: "ITEM_NOT_AVAILABLE" | "NOT_ENOUGH_WEIGHT" | "ITEM_RESERVED";
+  /** NOT_ENOUGH_WEIGHT: the largest slice that can be asked for now */
+  available_g?: number;
 }
 
 export function cartProblemsOf(err: DbError | null | undefined): CartProblem[] {
@@ -53,8 +54,8 @@ export function cartProblemsOf(err: DbError | null | undefined): CartProblem[] {
   }
 }
 
-export function cartProblemText(p: Pick<CartProblem, "reason" | "available">): string {
-  if (p.reason === "NOT_ENOUGH_STEAKS") return he.errors.NOT_ENOUGH_STEAKS(p.available ?? 0);
+export function cartProblemText(p: Pick<CartProblem, "reason" | "available_g">): string {
+  if (p.reason === "NOT_ENOUGH_WEIGHT") return he.errors.NOT_ENOUGH_WEIGHT(p.available_g ?? 0);
   return he.errors[p.reason];
 }
 

@@ -4,10 +4,12 @@ export type UserRole = "customer" | "butcher";
 export type CutType = "sinta" | "entrecote" | "ontrib" | "asado" | "picanha" | "shaitel" | "denver";
 export type OriginCountry = "IL" | "AR" | "UY" | "PY" | "JP" | "AU";
 export type AgingMethod = "dry" | "wet";
-export type SaleMode = "whole" | "steaks" | "both";
 export type CutStatus = "draft" | "published" | "sold_out" | "withdrawn";
 export type MediaType = "photo" | "video";
-export type OrderMode = "whole" | "steaks";
+export type ItemKind = "unit" | "remainder";
+export type ParentStatus = "recording" | "details" | "splitting" | "closed";
+/** An order line: a unit, all of a remainder, or a slice of it ("פרוס לי"). */
+export type LineMode = "unit" | "remainder_all" | "remainder_slice";
 export type OrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
 
 export interface Profile {
@@ -44,6 +46,8 @@ export interface Butcher {
   /** time windows the shop offers for delivery; none = waiting for the shop to coordinate */
   delivery_windows: string[];
   status: "active" | "inactive";
+  /** how the shop's scale labels carry the weight (BUTCHER_FLOW §7, W1); null = not calibrated */
+  scale_barcode_config: import("./barcode").ScaleConfig | null;
 }
 
 export interface Breed {
@@ -54,11 +58,15 @@ export interface Breed {
   active: boolean;
 }
 
-export interface Cut {
+/** The cut taken out of the counter (BUTCHER_FLOW §2): its details, price and video. Never sold itself. */
+export interface Parent {
   id: string;
-  code: string;
+  /** running number given when the recording stops; null while recording */
+  code: number | null;
   butcher_id: string;
-  status: CutStatus;
+  status: ParentStatus;
+  /** true = split into units, false = sold whole by weight, null = not decided yet */
+  split: boolean | null;
   cut_type: CutType | null;
   breed_key: string | null;
   breed_other: string | null;
@@ -68,25 +76,42 @@ export interface Cut {
   aging_method: AgingMethod | null;
   butcher_marbling: number | null;
   description: string | null;
-  weight_g: number | null;
   price_per_kg_agorot: number | null;
-  sale_mode: SaleMode | null;
-  steak_weight_g: number | null;
-  steak_thickness_cm: number | null;
-  steaks_planned: number | null;
-  steaks_total: number;
-  steaks_available: number;
-  whole_available: boolean;
+  video_path: string | null;
+  video_poster_path: string | null;
+  video_published: boolean;
+  next_unit_no: number;
+  paused_at: string | null;
+  created_at: string;
+  updated_at: string;
+  closed_at: string | null;
+}
+
+/** What is sold: a unit ("523-1", whole at its weight) or the parent's remainder ("523", by weight). */
+export interface Item {
+  id: string;
+  parent_id: string;
+  butcher_id: string;
+  kind: ItemKind;
+  unit_no: number | null;
+  label: string;
+  steak_count: number | null;
+  /** unit: final; remainder: the balance left */
+  weight_g: number | null;
+  /** null = the parent's (fixed on the item when it goes live) */
+  price_per_kg_agorot: number | null;
+  weight_source: "scan" | "manual" | null;
+  status: CutStatus;
   published_at: string | null;
   sold_out_at: string | null;
-  archived_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
+/** A photo of an item (the video is on the parent; sale items carry it as a "video" entry, see toSaleItem). */
 export interface CutMedia {
   id: string;
-  cut_id: string;
+  item_id: string;
   type: MediaType;
   storage_path: string;
   thumb_path: string | null;
@@ -99,7 +124,24 @@ export interface CutMedia {
   created_at: string;
 }
 
-export interface CutWithMedia extends Cut {
+/**
+ * A sale item as the customer side shows it: the item with its parent's details (inherited, R10), its photos and
+ * the parent's video. `code` is the label as printed ("SOL-523-1").
+ */
+export interface SaleItem extends Omit<Item, "updated_at"> {
+  code: string;
+  parent_code: number;
+  split: boolean;
+  cut_type: CutType | null;
+  breed_key: string | null;
+  breed_other: string | null;
+  origin_country: OriginCountry | null;
+  is_aged: boolean | null;
+  aging_days: number | null;
+  aging_method: AgingMethod | null;
+  butcher_marbling: number | null;
+  description: string | null;
+  video_published: boolean;
   cut_media: CutMedia[];
 }
 
@@ -180,13 +222,16 @@ export interface Order {
 
 export type OrderItemStatus = "active" | "cancelled";
 
-/** A cut line inside an order. */
+/** A line inside an order: a unit, all of a remainder, or a slice of it. */
 export interface OrderItem {
   id: string;
   order_id: string;
-  cut_id: string;
-  mode: OrderMode;
-  steaks_qty: number | null;
+  item_id: string;
+  mode: LineMode;
+  /** slices only: the grams asked for (and the thickness, optional) */
+  requested_g: number | null;
+  slice_thickness_cm: number | null;
+  /** the line's weight: the unit's, the remainder's at purchase, or the slice asked for */
   est_weight_g: number;
   price_per_kg_agorot: number;
   total_agorot: number;
@@ -213,14 +258,9 @@ export interface OrderEvent {
   created_at: string;
 }
 
-/** Content columns the butcher may write directly (everything else goes through RPCs). */
-export const CUT_CONTENT_FIELDS = [
+/** Details the butcher writes once on the parent (R10); every item inherits them. */
+export const PARENT_DETAIL_FIELDS = [
   "cut_type", "breed_key", "breed_other", "origin_country", "is_aged", "aging_days", "aging_method",
-  "butcher_marbling", "description", "weight_g", "price_per_kg_agorot", "sale_mode",
-  "steak_weight_g", "steak_thickness_cm", "steaks_planned",
+  "butcher_marbling", "description", "price_per_kg_agorot",
 ] as const;
-export type CutContentField = (typeof CUT_CONTENT_FIELDS)[number];
-export type CutContent = Pick<Cut, CutContentField>;
-
-/** Fields that stay editable on a live cut even with active orders (SPEC §6.5). */
-export const ALWAYS_EDITABLE: CutContentField[] = ["description", "butcher_marbling"];
+export type ParentDetails = Pick<Parent, (typeof PARENT_DETAIL_FIELDS)[number]>;

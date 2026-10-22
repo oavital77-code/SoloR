@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CutPost } from "@/components/CutPost";
 import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
-import { useHeldCuts } from "@/components/customer/useHeldCuts";
+import { useHeldItems } from "@/components/customer/useHeldItems";
 import { ShopMark } from "@/components/ShopMark";
 import { Chip, ErrorState, Skeleton } from "@/components/ui";
 import { IconClose, IconSearch } from "@/components/icons";
@@ -23,7 +23,7 @@ import { CUT_TYPES, ORIGINS, cutTypeLabel } from "@/lib/labels";
 import { categoryCounts, isAvailable, searchScore, shopPath } from "@/lib/market";
 import { useScrollMemory } from "@/lib/scroll";
 import { track } from "@/lib/track";
-import type { Breed, Butcher, Cut } from "@/lib/types";
+import type { Breed, Butcher, SaleItem } from "@/lib/types";
 
 let lastLogged: string | null = null;
 /** the active filters as short keys, for measurement */
@@ -64,7 +64,7 @@ function SearchView() {
   const shopOf = (id: string) => butchers.find((b) => b.id === id);
   const onSale = useMemo(() => (cuts ?? []).filter(isAvailable), [cuts]);
   // a cut held at someone's checkout is not offered in search (spec §13)
-  const held = useHeldCuts(useMemo(() => onSale.map((c) => c.id), [onSale]));
+  const held = useHeldItems(useMemo(() => onSale.map((c) => c.id), [onSale]));
   const available = useMemo(() => onSale.filter((c) => !isReserved(c, held.get(c.id))), [onSale, held]);
   const searching = urlQuery.trim() !== "" || activeFilterCount(filter) > 0;
 
@@ -79,7 +79,7 @@ function SearchView() {
   }, [available, filter, urlQuery, breeds, butchers]);
 
   // under each result, more from the same counter (design: V3): what that shop still has, newest first
-  const relatedOf = (cut: Cut) => available.filter((c) => c.butcher_id === cut.butcher_id && c.id !== cut.id).slice(0, 4);
+  const relatedOf = (cut: SaleItem) => available.filter((c) => c.butcher_id === cut.butcher_id && c.id !== cut.id).slice(0, 4);
 
   useScrollMemory(`search?${params.toString()}`, cuts !== null);
 
@@ -164,9 +164,9 @@ function SearchView() {
                   <ul className="-mx-1 m-0 flex list-none flex-col gap-5 p-0 lg:mx-0">
                     {results.map((c, i) => (
                       <li key={c.id} onClickCapture={(e) => {
-                        if ((e.target as HTMLElement).closest("a")) track("search_result_click", { cut_id: c.id, position: i + 1 });
+                        if ((e.target as HTMLElement).closest("a")) track("search_result_click", { item_id: c.id, position: i + 1 });
                       }}>
-                        <CutPost cut={c} media={c.cut_media} breeds={breeds} shop={shopOf(c.butcher_id)} now={now} source="search" eager={i === 0}
+                        <CutPost cut={c} breeds={breeds} shop={shopOf(c.butcher_id)} now={now} source="search" eager={i === 0} held={held.get(c.id)}
                           related={relatedOf(c)} />
                       </li>
                     ))}
@@ -210,7 +210,7 @@ function Shops({ butchers }: { butchers: Butcher[] }) {
  * chosen, a bar above the tabs with "נקה הכל" and "הצג N נתחים". The rest of the filters are in the sheet.
  */
 function QuickFilters({ filter, onChange, types, cuts, shops, onMore }: {
-  filter: FeedFilter; onChange: (f: FeedFilter) => void; types: string[]; cuts: Cut[]; shops: React.ReactNode; onMore: () => void;
+  filter: FeedFilter; onChange: (f: FeedFilter) => void; types: string[]; cuts: SaleItem[]; shops: React.ReactNode; onMore: () => void;
 }) {
   const [draft, setDraft] = useState<FeedFilter>(filter);
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -235,8 +235,8 @@ function QuickFilters({ filter, onChange, types, cuts, shops, onMore }: {
         </Chip>
       )))}
       {section(he.search.howToBuy, <>
-        <Chip dark selected={draft.canWhole} onClick={() => setDraft({ ...draft, canWhole: !draft.canWhole })}>{he.filter.whole}</Chip>
-        <Chip dark selected={draft.canSteaks} onClick={() => setDraft({ ...draft, canSteaks: !draft.canSteaks })}>{he.filter.steaks}</Chip>
+        <Chip dark selected={draft.units} onClick={() => setDraft({ ...draft, units: !draft.units })}>{he.filter.units}</Chip>
+        <Chip dark selected={draft.byWeight} onClick={() => setDraft({ ...draft, byWeight: !draft.byWeight })}>{he.filter.byWeight}</Chip>
       </>)}
       <p className="-mt-2 m-0 text-xs text-stone">{he.search.multiHint} · <button type="button" onClick={onMore} className="sr-link !text-xs">{he.filter.more}</button></p>
       {shops}
@@ -258,8 +258,8 @@ function activeChips(f: FeedFilter, breeds: Breed[]): ActiveChip[] {
   const out: ActiveChip[] = [];
   f.cutTypes.forEach((t) => out.push({ key: `t-${t}`, label: cutTypeLabel(t), next: { ...f, cutTypes: f.cutTypes.filter((x) => x !== t) } }));
   f.aging.forEach((a) => out.push({ key: `age-${a}`, label: he.filter.agingPreset[a] ?? a, next: { ...f, aging: f.aging.filter((x) => x !== a) } }));
-  if (f.canWhole) out.push({ key: "whole", label: he.filter.whole, next: { ...f, canWhole: false } });
-  if (f.canSteaks) out.push({ key: "steaks", label: he.filter.steaks, next: { ...f, canSteaks: false } });
+  if (f.units) out.push({ key: "units", label: he.filter.units, next: { ...f, units: false } });
+  if (f.byWeight) out.push({ key: "weight", label: he.filter.byWeight, next: { ...f, byWeight: false } });
   if (f.priceMin != null || f.priceMax != null) {
     const lo = (f.priceMin ?? 0) / 100;
     const label = f.priceMax == null ? `₪${lo}+ ${he.feed.perKg}` : `₪${lo}–₪${f.priceMax / 100} ${he.feed.perKg}`;

@@ -1,5 +1,5 @@
 // enum → Hebrew labels
-import type { AgingMethod, CutStatus, CutType, OrderStatus, OriginCountry, SaleMode, ReceiveMethod } from "./types";
+import type { AgingMethod, CutStatus, CutType, OrderStatus, OriginCountry, ReceiveMethod } from "./types";
 
 export const CUT_TYPES: { key: CutType; label: string }[] = [
   { key: "sinta", label: "סינטה" },
@@ -23,12 +23,6 @@ export const ORIGINS: { key: OriginCountry; label: string }[] = [
 export const AGING_METHODS: { key: AgingMethod; label: string }[] = [
   { key: "dry", label: "יבש" },
   { key: "wet", label: "רטוב" },
-];
-
-export const SALE_MODES: { key: SaleMode; label: string }[] = [
-  { key: "whole", label: "נתח שלם" },
-  { key: "steaks", label: "סטייקים" },
-  { key: "both", label: "גם וגם" },
 ];
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {

@@ -1,17 +1,18 @@
 "use client";
 // Home = the feed (customer spec §4): every available cut from every shop as a post, newest first (rankFeed).
 // Live without jumping: new posts wait behind a pill; a sold cut is stamped only for whoever is looking at it or had
-// stopped on it (useLiveFeed); a cut held at someone's checkout shows "שוריין" until it is free again (useHeldCuts).
+// stopped on it (useLiveFeed); a cut held at someone's checkout shows "שוריין" until it is free again (useHeldItems).
 // Rendered in pages as the customer scrolls; pull down at the top to refresh; an honest end of the feed.
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CutPost } from "@/components/CutPost";
 import { useCatalog } from "@/components/customer/useCatalog";
-import { useHeldCuts } from "@/components/customer/useHeldCuts";
+import { useHeldItems } from "@/components/customer/useHeldItems";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { isReserved } from "@/lib/feed";
+import { parentPath } from "@/lib/items";
 import { clsx } from "clsx";
 import { ShopMark } from "@/components/ShopMark";
 import { Ltr } from "@/components/ui";
@@ -22,7 +23,7 @@ import { isAvailable, shopPath } from "@/lib/market";
 import { coverOf, mediaUrl } from "@/lib/cut-helpers";
 import { useScrollMemory } from "@/lib/scroll";
 import { track } from "@/lib/track";
-import type { Butcher, CutWithMedia } from "@/lib/types";
+import type { Butcher, SaleItem } from "@/lib/types";
 
 const PAGE = 8;
 const LIMIT_KEY = "solor.feed.limit";
@@ -59,7 +60,7 @@ export default function FeedPage() {
   }, [items.length, limit]);
 
   useScrollMemory("feed", ready);
-  const held = useHeldCuts(items.slice(0, limit).filter((i) => !i.gone).map((i) => i.cut.id));
+  const held = useHeldItems(items.slice(0, limit).filter((i) => !i.gone).map((i) => i.cut.id));
 
   const refresh = () => { showNew(); reload(); };
   const takeNew = () => { track("new_posts_pill_click", { count: pending }); showNew(); window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -77,7 +78,7 @@ export default function FeedPage() {
 
   const events = liveEvents(cuts ?? [], butchers, breeds);
   // more from the same counter, under each post: what that shop still has, newest first
-  const relatedOf = (cut: CutWithMedia) => items
+  const relatedOf = (cut: SaleItem) => items
     .filter((i) => !i.gone && i.cut.butcher_id === cut.butcher_id && i.cut.id !== cut.id && isAvailable(i.cut))
     .slice(0, 4).map((i) => i.cut);
 
@@ -128,8 +129,8 @@ export default function FeedPage() {
               <ul className="m-0 flex list-none flex-col gap-5 p-0 px-3 lg:px-0">
                 {items.slice(0, limit).map(({ cut, gone }, i) => (
                   <li key={cut.id}>
-                    <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}
-                      reserved={!gone && isReserved(cut, held.get(cut.id))} eager={i === 0} related={relatedOf(cut)} />
+                    <CutPost cut={cut} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}
+                      reserved={!gone && isReserved(cut, held.get(cut.id))} held={held.get(cut.id)} eager={i === 0} related={relatedOf(cut)} />
                   </li>
                 ))}
               </ul>
@@ -190,7 +191,7 @@ function LiveLog({ events }: { events: LiveEvent[] }) {
       <div data-theme="night" className="sticky top-24 flex flex-col gap-3 rounded-[20px] bg-ink p-[18px] text-start text-ivory">
         <h2 className="m-0 flex items-center gap-2 text-[17px] font-bold"><span className="live-dot" aria-hidden />{he.live.log}</h2>
         {events.length === 0 ? <p className="m-0 text-sm text-stone">{he.feed.emptyToday}</p> : events.map((e) => (
-          <Link key={e.id} href={`/cut/${e.code}`} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 text-[13px] leading-[19px]">
+          <Link key={e.id} href={parentPath(e.parentCode)} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 text-[13px] leading-[19px]">
             <span className={clsx(e.kind === "sold" ? "text-stone" : "text-brand")}><Ltr>{clock(e.at)}</Ltr></span>
             <span>{e.text}</span>
           </Link>

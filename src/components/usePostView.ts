@@ -30,7 +30,7 @@ export function usePostView<T extends HTMLElement>(cutId: string, meta: { butche
       const ms = Date.now() - since;
       recordView(cutId, ms);
       if (ms >= MIN_IMPRESSION_MS) {
-        track("post_impression", { cut_id: cutId, butcher_id: metaRef.current.butcherId, dwell_ms: ms, source: metaRef.current.source });
+        track("post_impression", { item_id: cutId, butcher_id: metaRef.current.butcherId, dwell_ms: ms, source: metaRef.current.source });
       }
       since = null;
       inView.delete(cutId);

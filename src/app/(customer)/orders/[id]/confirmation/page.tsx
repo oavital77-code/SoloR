@@ -4,7 +4,7 @@
 // received, every line, the total, and the way on to tracking the order.
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CHECKOUT_SELECT, normalizeCheckout, type CheckoutRow } from "@/components/customer/useMyOrders";
+import { CHECKOUT_SELECT, normalizeCheckout, type CheckoutRow, lineCode, lineCut, lineHref, lineMedia } from "@/components/customer/useMyOrders";
 import { IconCheck, IconStore, IconTruck } from "@/components/icons";
 import { ShopMark } from "@/components/ShopMark";
 import { ErrorState, Ltr, Spinner } from "@/components/ui";
@@ -60,7 +60,7 @@ export default function ConfirmationPage({ params }: { params: Promise<{ id: str
                 {o.receive_method === "delivery" ? <IconTruck className="text-gold" /> : <IconStore className="text-gold" />}
                 <span>
                   {o.receive_method === "delivery" ? he.checkout.deliveryLabel : he.confirmation.pickupCounter}
-                  {" · "}{items.map((i) => `${cutTitle(i.cuts, breeds).split(" · ")[0]}, ${orderWhat(i)}`).join(" · ")}
+                  {" · "}{items.map((i) => `${cutTitle(lineCut(i), breeds).split(" · ")[0]}, ${orderWhat(i, i.items)}`).join(" · ")}
                 </span>
               </div>
               <p className="m-0 text-xs leading-relaxed text-stone">
@@ -71,7 +71,7 @@ export default function ConfirmationPage({ params }: { params: Promise<{ id: str
               <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
                 {items.map((i) => (
                   <li key={i.id} className="sr-rowline !text-sm">
-                    <span className="min-w-0 text-ivory/85">{cutTitle(i.cuts, breeds)} · <span className="code">{i.cuts.code}</span></span>
+                    <span className="min-w-0 text-ivory/85">{cutTitle(lineCut(i), breeds)} · <span className="code">{lineCode(i)}</span></span>
                     <Ltr className="shrink-0">{money(i.total_agorot)}</Ltr>
                   </li>
                 ))}

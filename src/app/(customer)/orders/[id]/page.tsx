@@ -9,7 +9,7 @@ import { clsx } from "clsx";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { ScreenHead } from "@/components/customer/market-ui";
 import { ShopMark } from "@/components/ShopMark";
-import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow, type ItemRow, type ShopOrderRow } from "@/components/customer/useMyOrders";
+import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow, type ItemRow, type ShopOrderRow, lineCode, lineCut, lineHref, lineMedia } from "@/components/customer/useMyOrders";
 import { useToast } from "@/components/Toast";
 import { ConfirmDialog, ErrorState, Ltr, Spinner } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
@@ -127,7 +127,7 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
 
       <ul className="m-0 flex list-none flex-col border-t border-line p-0">
         {o.order_items.map((i, n) => (
-          <ItemLine key={i.id} item={i} title={cutTitle(i.cuts, breeds)} last={n === o.order_items.length - 1}
+          <ItemLine key={i.id} item={i} title={cutTitle(lineCut(i), breeds)} last={n === o.order_items.length - 1}
             canCancel={open && i.status === "active"} onCancel={() => onCancelItem(i.id)} />
         ))}
       </ul>
@@ -177,17 +177,17 @@ function ShopOrder({ order: o, events, breeds, many, onCancelItem, onCancelOrder
 }
 
 function ItemLine({ item: i, title, canCancel, onCancel, last }: { item: ItemRow; title: string; canCancel: boolean; onCancel: () => void; last: boolean }) {
-  const cover = coverOf(i.cuts.cut_media);
+  const cover = coverOf(lineMedia(i));
   const cancelled = i.status === "cancelled";
   return (
     <li className={clsx("sr-cartrow !items-start", cancelled && "sr-cartrow--sold", last && "!border-b-0")}>
-      <Link href={`/cut/${i.cuts.code}`} className="block size-16 overflow-hidden rounded-lg bg-ink-3">
+      <Link href={lineHref(i)} className="block size-16 overflow-hidden rounded-lg bg-ink-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${i.cuts.code}`} />}
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${lineCode(i)}`} />}
       </Link>
       <div className="flex min-w-0 flex-col gap-1">
-        <Link href={`/cut/${i.cuts.code}`} className={clsx("sr-cartrow__title", cancelled && "text-stone line-through")}>{title}</Link>
-        <span className="sr-cartrow__sub">{orderWhat(i)} · <span className="code">{i.cuts.code}</span></span>
+        <Link href={lineHref(i)} className={clsx("sr-cartrow__title", cancelled && "text-stone line-through")}>{title}</Link>
+        <span className="sr-cartrow__sub">{orderWhat(i, i.items)} · <span className="code">{lineCode(i)}</span></span>
         {cancelled && i.cancelled_by && (
           <span className="sr-cartrow__warn">{he.orders.itemCancelledBy(i.cancelled_by)}{i.cancel_reason && `  ·  ${i.cancel_reason}`}</span>
         )}

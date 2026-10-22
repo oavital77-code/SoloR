@@ -1,5 +1,5 @@
 "use client";
-// The cart (customer spec §9, design: Cart): every chosen cut, grouped by shop in a card, with live price and stock. Adding reserves
+// The cart (customer spec §9, design: Cart): every chosen item, grouped by shop in a card, with live price and stock. Adding reserves
 // nothing; a line that was sold meanwhile (or is held by someone at checkout) is marked and blocks the way on.
 // Guests fill the cart freely; signing in is asked for only on the way to the checkout.
 import Link from "next/link";
@@ -10,10 +10,11 @@ import { ShopMark } from "@/components/ShopMark";
 import { useCartRows, type Row } from "@/components/customer/useCartRows";
 import { EmptyState, ErrorState, Ltr, Skeleton, Stepper } from "@/components/ui";
 import { cart } from "@/lib/cart";
-import { coverOf, cutTitle, mediaUrl } from "@/lib/cut-helpers";
+import { coverOf, cutTitle, mediaUrl, orderWhat } from "@/lib/cut-helpers";
+import { parentPath, SLICE_MIN_G, SLICE_STEP_G, sliceCapG } from "@/lib/items";
 import { he } from "@/lib/i18n/he";
 import { useBreeds, useSession } from "@/lib/hooks";
-import { formatWeight, money } from "@/lib/pricing";
+import { money } from "@/lib/pricing";
 import { track } from "@/lib/track";
 import { useEffect, useRef } from "react";
 
@@ -57,7 +58,7 @@ export default function CartPage() {
                   </div>
                   <ul className="flex flex-col">
                     {shopRows.map((r, i) => (
-                      <CartRow key={r.line.cutId} row={r} last={i === shopRows.length - 1} title={r.cut ? cutTitle(r.cut, breeds) : r.line.code} />
+                      <CartRow key={r.line.itemId} row={r} last={i === shopRows.length - 1} title={r.cut ? cutTitle(r.cut, breeds) : r.line.code} />
                     ))}
                   </ul>
                 </section>
@@ -81,38 +82,37 @@ export default function CartPage() {
   );
 }
 
-/** One line (design: Cart): photo, cut, what was chosen and the code, the price and "הסר". A sold line greys out. */
+/** One line (design: Cart): photo, cut, what was chosen and the code, the price and "הסר". A sold line greys out.
+ * A slice can be changed here in steps of 50 g. */
 function CartRow({ row: { line, cut, price, problem }, title, last }: { row: Row; title: string; last: boolean }) {
   const cover = cut ? coverOf(cut.cut_media) : undefined;
-  const maxQty = Math.max(1, cut?.steaks_available ?? 1);
+  const href = parentPath(line.parentCode, line.code.replace(/^SOL-/, ""));
+  const cap = cut ? sliceCapG(cut.weight_g ?? 0) : 0;
+  const what = orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
+    cut ? { label: cut.label, steak_count: cut.steak_count } : null);
   return (
     <li className={clsx("sr-cartrow", problem && "sr-cartrow--sold", last && "!border-b-0")}>
-      <Link href={`/cut/${line.code}`} className="block size-16 overflow-hidden rounded-lg bg-ink-3">
+      <Link href={href} className="block size-16 overflow-hidden rounded-lg bg-ink-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${line.code}`} />}
       </Link>
       <div className="flex min-w-0 flex-col gap-1">
-        <Link href={`/cut/${line.code}`} className={clsx("sr-cartrow__title", problem && "text-stone line-through")}>{title}</Link>
+        <Link href={href} className={clsx("sr-cartrow__title", problem && "text-stone line-through")}>{title}</Link>
         {problem ? (
           <span className="sr-cartrow__warn" role="alert">{problem} · <span className="code !text-inherit">{line.code}</span></span>
         ) : (
-          <span className="sr-cartrow__sub">
-            {line.mode === "steaks" && cut?.steak_weight_g
-              ? he.cut.steaksSummary(line.qty ?? 1, cut.steak_weight_g, formatWeight(cut.steak_weight_g * (line.qty ?? 1)))
-              : <>{he.cut.whole}{cut?.weight_g ? <> · <Ltr>{formatWeight(cut.weight_g)}</Ltr></> : null}</>}
-            {" · "}<span className="code">{line.code}</span>
-          </span>
+          <span className="sr-cartrow__sub">{what}{" · "}<span className="code">{line.code}</span></span>
         )}
-        {!problem && line.mode === "steaks" && cut?.steak_weight_g && maxQty > 1 ? (
+        {!problem && line.mode === "remainder_slice" && cap > SLICE_MIN_G ? (
           <div className="pt-1">
-            <Stepper dark value={Math.min(line.qty ?? 1, maxQty)} min={1} max={maxQty} label={he.cut.steaks}
-              onChange={(v) => cart.setQty(line.cutId, v)} />
+            <Stepper dark value={Math.min(line.grams ?? SLICE_MIN_G, cap)} min={SLICE_MIN_G} max={cap} step={SLICE_STEP_G} label={he.item.sliceMe}
+              format={(v) => he.units.g(v)} onChange={(v) => cart.setGrams(line.itemId, v)} />
           </div>
         ) : null}
       </div>
       <div className="flex flex-col items-end">
-        {!problem && <Ltr className="font-semibold">{money(price)}</Ltr>}
-        <button type="button" onClick={() => cart.remove(line.cutId)}
+        {!problem && <Ltr className="font-semibold">{line.mode === "remainder_slice" ? he.item.approx(money(price)) : money(price)}</Ltr>}
+        <button type="button" onClick={() => cart.remove(line.itemId)}
           className={problem ? "sr-btn sr-btn--quiet !min-h-10 !px-3.5 !text-sm" : "min-h-11 text-[13px] font-medium text-stone"}>
           {he.cart.remove}
         </button>

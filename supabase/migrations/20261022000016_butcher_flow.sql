@@ -1023,22 +1023,12 @@ begin
   return o;
 end $$;
 
--- ───────── what customers read: one row per item with its parent's details ─────────
-create view catalog_items with (security_invoker = true) as
-select i.id, i.parent_id, i.butcher_id, i.kind, i.unit_no, i.label, 'SOL-' || i.label as code, p.code as parent_code,
-       i.steak_count, i.weight_g, i.price_per_kg_agorot, i.status, i.published_at, i.sold_out_at, i.created_at,
-       p.split, p.cut_type, p.breed_key, p.breed_other, p.origin_country, p.is_aged, p.aging_days, p.aging_method,
-       p.butcher_marbling, p.description,
-       case when p.video_published then p.video_path end        as video_path,
-       case when p.video_published then p.video_poster_path end as video_poster_path
-from items i join parents p on p.id = i.parent_id;
-
 -- ───────── RLS + grants ─────────
 alter table parents enable row level security;
 alter table items   enable row level security;
-revoke all on parents, items, catalog_items from anon, authenticated;
+revoke all on parents, items from anon, authenticated;
 
-grant select on parents, items, catalog_items to anon, authenticated;
+grant select on parents, items to anon, authenticated;
 grant update (cut_type, breed_key, breed_other, origin_country, is_aged, aging_days, aging_method, butcher_marbling,
               description, price_per_kg_agorot, video_published) on parents to authenticated;
 grant update (steak_count, weight_g, price_per_kg_agorot, weight_source) on items to authenticated;

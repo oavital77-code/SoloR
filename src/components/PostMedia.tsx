@@ -53,24 +53,24 @@ export function PostMedia({ media, title, code, href, eager, state, children, vi
   }, []);
 
   // measurement (§15): which slide was swiped to, and how long the video played
-  const cutId = media[0]?.cut_id;
+  const itemId = media[0]?.item_id;
   const lastSlide = useRef(0);
   useEffect(() => {
-    if (!cutId || active === lastSlide.current) return;
+    if (!itemId || active === lastSlide.current) return;
     lastSlide.current = active;
-    logEvent("media_swipe", { cut_id: cutId, index: active });
-  }, [active, cutId]);
+    logEvent("media_swipe", { item_id: itemId, index: active });
+  }, [active, itemId]);
 
   const playing = active === videoIndex && onScreen;
   const playedAt = useRef<number | null>(null);
   useEffect(() => {
-    if (!cutId) return;
+    if (!itemId) return;
     if (playing) { playedAt.current = Date.now(); return; }
     if (playedAt.current !== null) {
-      logEvent("video_play", { cut_id: cutId, index: videoIndex, watched_ms: Date.now() - playedAt.current });
+      logEvent("video_play", { item_id: itemId, index: videoIndex, watched_ms: Date.now() - playedAt.current });
       playedAt.current = null;
     }
-  }, [playing, cutId, videoIndex]);
+  }, [playing, itemId, videoIndex]);
   useEffect(() => {
     const v = videoEl.current;
     if (!v) return;

@@ -80,8 +80,9 @@ export function Toggle({ checked, onChange, label, dark, disabled }: {
   );
 }
 
-export function Stepper({ value, min, max, onChange, dark, size = "md", label }: {
+export function Stepper({ value, min, max, onChange, dark, size = "md", label, step = 1, format }: {
   value: number; min: number; max: number; onChange: (v: number) => void; dark?: boolean; size?: "md" | "lg"; label?: string;
+  step?: number; format?: (v: number) => React.ReactNode;
 }) {
   const btn = clsx(
     "grid place-items-center font-bold disabled:opacity-30",
@@ -90,13 +91,13 @@ export function Stepper({ value, min, max, onChange, dark, size = "md", label }:
   );
   return (
     <div className={clsx("items-center", dark ? "inline-flex gap-1 rounded-full bg-ink-3 p-1" : "flex gap-3")} role="group" aria-label={label}>
-      <button type="button" className={btn} aria-label={he.a11y.less} disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
+      <button type="button" className={btn} aria-label={he.a11y.less} disabled={value <= min} onClick={() => onChange(Math.max(min, value - step))}>
         <span className="text-2xl leading-none">−</span>
       </button>
       <span className={clsx("ltr min-w-8 text-center font-bold tabular-nums", size === "lg" ? "text-3xl" : dark ? "text-[17px]" : "text-2xl")} aria-live="polite">
-        {value}
+        {format ? format(value) : value}
       </span>
-      <button type="button" className={btn} aria-label={he.a11y.more} disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>
+      <button type="button" className={btn} aria-label={he.a11y.more} disabled={value >= max} onClick={() => onChange(Math.min(max, value + step))}>
         <span className="text-2xl leading-none">+</span>
       </button>
     </div>

@@ -8,6 +8,7 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useButcher } from "@/components/butcher/ButcherShell";
 import { BUTCHER_ORDER_SELECT, orderWhat, sortedItems, type ButcherItemRow, type ButcherOrderRow } from "@/components/butcher/OrderList";
+import { lineCode, lineCut, lineMedia } from "@/components/customer/useMyOrders";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { useToast } from "@/components/Toast";
@@ -82,7 +83,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
           <h2 className="sr-clabel m-0 mb-2 px-1">{he.butcherOrders.items} · {he.butcherOrders.itemsCount(items.filter((i) => i.status === "active").length)}</h2>
           <ul className="flex flex-col divide-y divide-line">
             {items.map((i) => (
-              <ItemRow key={i.id} item={i} title={cutTitle(i.cuts, breeds)}
+              <ItemRow key={i.id} item={i} title={cutTitle(lineCut(i), breeds)}
                 onCancel={canCancel && i.status === "active" ? () => setCancel({ item: i }) : undefined}
                 canWeigh={canCancel && i.status === "active"} onWeighed={load} />
             ))}
@@ -152,7 +153,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
         </footer>
       )}
 
-      <CancelSheet open={!!cancel} orderId={order.id} item={cancel?.item} title={cancel?.item ? cutTitle(cancel.item.cuts, breeds) : null}
+      <CancelSheet open={!!cancel} orderId={order.id} item={cancel?.item} title={cancel?.item ? cutTitle(lineCut(cancel.item), breeds) : null}
         key={cancel?.item?.id ?? "order"} onClose={() => setCancel(null)} onDone={() => { setCancel(null); load(); }} />
     </main>
   );
@@ -161,17 +162,17 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
 function ItemRow({ item: i, title, onCancel, canWeigh, onWeighed }: {
   item: ButcherItemRow; title: string; onCancel?: () => void; canWeigh: boolean; onWeighed: () => void;
 }) {
-  const cover = coverOf(i.cuts.cut_media);
+  const cover = coverOf(lineMedia(i));
   const cancelled = i.status === "cancelled";
   return (
     <li className="flex gap-3 py-3">
-      <Link href={`/butcher/cuts/${i.cuts.id}`} className={clsx("size-16 shrink-0 overflow-hidden rounded-xl bg-ink-3", cancelled && "opacity-40 grayscale")}>
+      <Link href={i.items ? `/butcher/parent/${i.items.parent_id}/summary` : "/butcher"} className={clsx("size-16 shrink-0 overflow-hidden rounded-xl bg-ink-3", cancelled && "opacity-40 grayscale")}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${i.cuts.code}`} className="h-full w-full object-cover" />}
+        {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt={`${title} ${lineCode(i)}`} className="h-full w-full object-cover" />}
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className={clsx("text-lg font-extrabold leading-tight", cancelled && "text-stone line-through")}>{orderWhat(i)}</p>
-        <p className="text-sm text-stone">{title} · <Ltr>{i.cuts.code}</Ltr> · <Ltr>{money(i.total_agorot)}</Ltr></p>
+        <p className={clsx("text-lg font-extrabold leading-tight", cancelled && "text-stone line-through")}>{orderWhat(i, i.items)}</p>
+        <p className="text-sm text-stone">{title} · <Ltr>{lineCode(i)}</Ltr> · <Ltr>{money(i.total_agorot)}</Ltr></p>
         {cancelled && (
           <p className="text-sm font-semibold text-sold">
             {he.butcherOrders.lineCancelled}{i.cancel_reason && ` · ${i.cancel_reason}`}
@@ -217,7 +218,7 @@ function CancelSheet({ open, orderId, item, title, onClose, onDone }: {
   return (
     <BottomSheet open={open} onClose={onClose} title={item ? he.butcherOrders.cancelItemTitle : he.butcherOrders.cancelReason}>
       <div className="flex flex-col gap-3">
-        {item && title && <p className="font-bold">{orderWhat(item)} · {title}</p>}
+        {item && title && <p className="font-bold">{orderWhat(item, item.items)} · {title}</p>}
         {item && <p className="text-sm font-semibold text-stone">{he.butcherOrders.cancelReason}</p>}
         <div className="flex flex-wrap gap-2">
           {reasons.map((r) => <Chip key={r} selected={reason === r} onClick={() => setReason(r)} className="min-h-12 text-lg">{r}</Chip>)}

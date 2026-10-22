@@ -1,19 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
-  agorotToShekelsInput, formatAgorot, weightOutcome, formatWeight, maxSteaks, plannedSteaks,
-  priceForWeight, shekelsToAgorot, steakPrice, steaksOrderPrice, wholePrice,
+  agorotToShekelsInput, formatAgorot, weightOutcome, formatWeight, priceForWeight, shekelsToAgorot,
 } from "./pricing";
 
-describe("pricing — SPEC §6.3 example", () => {
-  // אנטריקוט 2,400 גרם, 220 ₪ לק"ג, סטייק 300 גרם
-  const weight = 2400, ppk = 22000, steak = 300;
-  it("8 steaks available", () => expect(maxSteaks(weight, steak)).toBe(8));
-  it("whole price 528.00", () => expect(wholePrice(weight, ppk)).toBe(52800));
-  it("steak price 66.00", () => expect(steakPrice(steak, ppk)).toBe(6600));
-  it("3 steaks 198.00", () => expect(steaksOrderPrice(steak, ppk, 3)).toBe(19800));
+describe("pricing — BUTCHER_FLOW examples", () => {
+  // אנטריקוט, 220 ₪ לק"ג: יחידה של 1,240 גרם, פריסה של 600 גרם מהשארית
+  it("unit 1,240 g = 272.80", () => expect(priceForWeight(1240, 22000)).toBe(27280));
+  it("slice 600 g = 132.00", () => expect(priceForWeight(600, 22000)).toBe(13200));
   it("formats", () => {
-    expect(formatAgorot(52800)).toBe("528.00");
-    expect(formatAgorot(19800)).toBe("198.00");
+    expect(formatAgorot(27280)).toBe("272.80");
+    expect(formatAgorot(13200)).toBe("132.00");
   });
 });
 
@@ -25,12 +21,6 @@ describe("pricing — rounding and helpers", () => {
   });
   it("handles the max range without overflow", () => {
     expect(priceForWeight(20000, 500000)).toBe(10000000);
-  });
-  it("planned steaks can only lower the max", () => {
-    expect(plannedSteaks(2400, 300, null)).toBe(8);
-    expect(plannedSteaks(2400, 300, 5)).toBe(5);
-    expect(plannedSteaks(2400, 300, 12)).toBe(8);
-    expect(maxSteaks(100, 300)).toBe(0);
   });
   it("parses shekel input", () => {
     expect(shekelsToAgorot("220")).toBe(22000);

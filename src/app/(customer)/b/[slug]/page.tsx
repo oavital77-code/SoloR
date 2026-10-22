@@ -9,7 +9,7 @@ import { IconBack } from "@/components/icons";
 import { CutPost } from "@/components/CutPost";
 import { ShopMark } from "@/components/ShopMark";
 import { useCatalog } from "@/components/customer/useCatalog";
-import { useHeldCuts } from "@/components/customer/useHeldCuts";
+import { useHeldItems } from "@/components/customer/useHeldItems";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { isReserved } from "@/lib/feed";
 import { EmptyState, ErrorState, Ltr, Skeleton } from "@/components/ui";
@@ -33,7 +33,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
   const { items, pending, showNew, ready } = useLiveFeed(cuts);
   useScrollMemory(`shop:${slug}`, ready);
   useEffect(() => { if (shop) track("butcher_page_view", { butcher_id: shop.id, source: cameFrom() }); }, [shop?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const held = useHeldCuts(items.filter((i) => !i.gone).map((i) => i.cut.id));
+  const held = useHeldItems(items.filter((i) => !i.gone).map((i) => i.cut.id));
 
   const back = () => (window.history.length > 1 ? router.back() : router.push("/"));
   const backBtn = (
@@ -69,8 +69,8 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
               <ul className="m-0 flex list-none flex-col gap-5 p-0">
                 {items.map(({ cut, gone }, i) => (
                   <li key={cut.id}>
-                    <CutPost cut={cut} media={cut.cut_media} breeds={breeds} shop={shop} now={now} gone={gone} source="butcher"
-                      reserved={!gone && isReserved(cut, held.get(cut.id))} eager={i === 0} />
+                    <CutPost cut={cut} breeds={breeds} shop={shop} now={now} gone={gone} source="butcher"
+                      reserved={!gone && isReserved(cut, held.get(cut.id))} held={held.get(cut.id)} eager={i === 0} />
                   </li>
                 ))}
               </ul>

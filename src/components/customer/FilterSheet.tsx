@@ -5,14 +5,14 @@ import { BottomSheet, Button, Chip, Ltr } from "../ui";
 import { he } from "@/lib/i18n/he";
 import { CUT_TYPES, ORIGINS } from "@/lib/labels";
 import { AGING_PRESETS, EMPTY_FILTER, PRICE_SLIDER, matchesFilter, type FeedFilter } from "@/lib/feed-filter";
-import type { Breed, Cut } from "@/lib/types";
+import type { Breed, SaleItem } from "@/lib/types";
 
 function toggle<T>(list: T[], v: T): T[] {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 }
 
 export function FilterSheet({ open, onClose, value, onApply, cuts, breeds }: {
-  open: boolean; onClose: () => void; value: FeedFilter; onApply: (f: FeedFilter) => void; cuts: Cut[]; breeds: Breed[];
+  open: boolean; onClose: () => void; value: FeedFilter; onApply: (f: FeedFilter) => void; cuts: SaleItem[]; breeds: Breed[];
 }) {
   const [f, setF] = useState<FeedFilter>(value);
   useEffect(() => { if (open) setF(value); }, [open, value]);
@@ -64,8 +64,8 @@ export function FilterSheet({ open, onClose, value, onApply, cuts, breeds }: {
         </section>
 
         <Group title={he.filter.saleMode}>
-          <Chip dark selected={f.canWhole} onClick={() => setF({ ...f, canWhole: !f.canWhole })}>{he.filter.canWhole}</Chip>
-          <Chip dark selected={f.canSteaks} onClick={() => setF({ ...f, canSteaks: !f.canSteaks })}>{he.filter.canSteaks}</Chip>
+          <Chip dark selected={f.units} onClick={() => setF({ ...f, units: !f.units })}>{he.filter.units}</Chip>
+          <Chip dark selected={f.byWeight} onClick={() => setF({ ...f, byWeight: !f.byWeight })}>{he.filter.byWeight}</Chip>
         </Group>
 
         <div className="sticky bottom-0 -mx-5 flex gap-3 bg-ink-2 px-5 pt-3">

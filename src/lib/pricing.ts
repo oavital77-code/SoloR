@@ -1,14 +1,10 @@
 import { he } from "./i18n/he";
 
-// Price calculations — identical to the SQL helpers price_for_weight / max_steaks (SPEC §6.3).
+// Price calculations — identical to the SQL helper price_for_weight (SPEC §6.3).
 // All amounts are integer agorot. Rounding: half up (inputs are always positive).
 
 export function priceForWeight(weightG: number, pricePerKgAgorot: number): number {
   return Math.floor((weightG * pricePerKgAgorot + 500) / 1000);
-}
-
-export function wholePrice(weightG: number, pricePerKgAgorot: number): number {
-  return priceForWeight(weightG, pricePerKgAgorot);
 }
 
 /**
@@ -20,29 +16,6 @@ export function weightOutcome(orderedG: number, deliveredG: number, pricePerKgAg
   if (deliveredG * 100 < orderedG * 95) return { kind: "under", refund: priceForWeight(orderedG - deliveredG, pricePerKgAgorot) };
   if (deliveredG * 100 > orderedG * 105) return { kind: "over" };
   return { kind: "within" };
-}
-
-export function steakPrice(steakWeightG: number, pricePerKgAgorot: number): number {
-  return priceForWeight(steakWeightG, pricePerKgAgorot);
-}
-
-export function steaksOrderPrice(steakWeightG: number, pricePerKgAgorot: number, qty: number): number {
-  return steakPrice(steakWeightG, pricePerKgAgorot) * qty;
-}
-
-export function maxSteaks(weightG: number | null | undefined, steakWeightG: number | null | undefined): number {
-  if (!weightG || !steakWeightG) return 0;
-  return Math.floor(weightG / steakWeightG);
-}
-
-/** Steaks offered: the butcher's choice (can only lower), else the max. */
-export function plannedSteaks(
-  weightG: number | null | undefined,
-  steakWeightG: number | null | undefined,
-  planned: number | null | undefined,
-): number {
-  const mx = maxSteaks(weightG, steakWeightG);
-  return planned == null ? mx : Math.min(planned, mx);
 }
 
 /** 52800 → "528.00" */

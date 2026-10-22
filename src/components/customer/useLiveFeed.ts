@@ -9,15 +9,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { rankFeed } from "@/lib/feed";
 import { impressionOf, inView, soldOutFate } from "@/lib/impressions";
 import { isAvailable } from "@/lib/market";
-import type { CutWithMedia } from "@/lib/types";
+import type { SaleItem } from "@/lib/types";
 
-export type FeedItem = { cut: CutWithMedia; gone: boolean };
+export type FeedItem = { cut: SaleItem; gone: boolean };
 
-export function useLiveFeed(cuts: CutWithMedia[] | null) {
+export function useLiveFeed(cuts: SaleItem[] | null) {
   const available = useMemo(() => rankFeed((cuts ?? []).filter(isAvailable)), [cuts]);
   const sold = useMemo(() => new Map((cuts ?? []).filter((c) => !isAvailable(c) && c.status === "sold_out").map((c) => [c.id, c])), [cuts]);
   const [ids, setIds] = useState<string[] | null>(null);
-  const last = useRef(new Map<string, CutWithMedia>());
+  const last = useRef(new Map<string, SaleItem>());
   // the fate of each post that stopped being on sale, decided once — at the moment it happens, while the post is
   // still on screen (so "looked at right now" is known before it would unmount)
   const fate = useRef(new Map<string, "stamp" | "drop">());

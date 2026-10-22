@@ -11,19 +11,18 @@ export { orderWhat };
 import { useBreeds, useNow, useRefetchOnFocus } from "@/lib/hooks";
 import { money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import type { Cut, CutMedia, Order, OrderItem, OrderStatus } from "@/lib/types";
+import type { Order, OrderStatus } from "@/lib/types";
+import { lineCode, lineCut, lineMedia, ORDER_ITEMS_EMBED, type ItemRow } from "../customer/useMyOrders";
 
-export type ButcherItemRow = OrderItem & {
-  cuts: Pick<Cut, "id" | "code" | "cut_type" | "breed_key" | "breed_other" | "steak_weight_g"> & { cut_media: CutMedia[] };
-};
+/** An order line with its item and that item's parent (the same shape the customer side reads). */
+export type ButcherItemRow = ItemRow;
 /** A shop order with all its lines (stage 2: one order per shop per purchase). */
 export type ButcherOrderRow = Order & {
   order_items: ButcherItemRow[];
   profiles: { full_name: string; phone: string } | null;
 };
 
-export const BUTCHER_ORDER_SELECT =
-  "*, order_items(*, cuts(id, code, cut_type, breed_key, breed_other, steak_weight_g, cut_media(*))), profiles(full_name, phone)";
+export const BUTCHER_ORDER_SELECT = `*, ${ORDER_ITEMS_EMBED}, profiles(full_name, phone)`;
 
 /** Active lines first, then in the order they were bought. */
 export function sortedItems(o: ButcherOrderRow): ButcherItemRow[] {
@@ -83,8 +82,7 @@ function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: 
   const items = sortedItems(o);
   const active = items.filter((i) => i.status === "active");
   const shown = active.length ? active : items;
-  const first = shown[0]?.cuts;
-  const cover = first ? coverOf(first.cut_media) : undefined;
+  const cover = shown[0] ? coverOf(lineMedia(shown[0])) : undefined;
   const edge = o.status === "preparing" ? "sr-ocard--prep" : o.status === "ready" ? "sr-ocard--ready"
     : o.status === "new" ? "" : "!border-s-line";
   return (
@@ -105,7 +103,7 @@ function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: 
             </span>
             {shown.map((i) => (
               <span key={i.id} className={clsx("text-[17px]", i.status === "cancelled" && "text-stone line-through")}>
-                {cutTitle(i.cuts, breeds).split(" · ")[0]} · {orderWhat(i)} <span className="code !text-sm">{i.cuts.code}</span>
+                {cutTitle(lineCut(i), breeds).split(" · ")[0]} · {orderWhat(i, i.items)} <span className="code !text-sm">{lineCode(i)}</span>
               </span>
             ))}
             <Ltr className="text-sm font-semibold text-stone">{money(o.total_agorot)}</Ltr>
