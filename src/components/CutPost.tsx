@@ -28,8 +28,8 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", sourc
   variant?: "feed" | "full";
   /** the full post only: what follows the post on its page (the certificate, the purchase bar) */
   children?: React.ReactNode;
-  /** where the post is shown, for measurement (§15): feed / butcher / post */
-  source?: "feed" | "butcher" | "post";
+  /** where the post is shown, for measurement (§15): feed / butcher / search / post */
+  source?: "feed" | "butcher" | "search" | "post";
   /** sold while on screen: stays in place with the "אזל" stamp instead of vanishing (spec §4.3) */
   gone?: boolean;
   /** held by another customer at checkout right now: "שוריין", can't be added, may come back (spec §13) */
@@ -67,7 +67,7 @@ export function CutPost({ cut, media, breeds, shop, now, variant = "feed", sourc
   // the price with "הוסף לסל", then more from the same counter
   if (!full) {
     const factCells = [
-      { k: he.cut.aging, v: aged ?? he.post.notAged },
+      { k: he.cut.aging, v: cut.is_aged && cut.aging_days ? `${he.post.days(cut.aging_days)}${method ? ` · ${method}` : ""}` : he.post.notAged },
       { k: he.post.weightShort, v: cut.weight_g ? formatWeight(cut.weight_g) : "—" },
       { k: he.cut.pricePerKg, v: cut.price_per_kg_agorot ? money(cut.price_per_kg_agorot) : "—" },
       partlySold ? { k: he.post.leftShort, v: he.post.leftOf(cut.steaks_available, cut.steaks_total) } : { k: he.post.codeShort, v: <span className="code !text-[13px]">{cut.code}</span> },

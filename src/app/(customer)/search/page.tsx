@@ -1,12 +1,12 @@
 "use client";
 // Search (customer spec §8, design: Search). Before searching: the title, the field, the filters as chips and the shops.
 // Once there is a word or a filter: the field and the active filters stay on top as removable chips, and the
-// shops give way to a two-column grid of what can be bought now, best match first. Everything lives in the URL,
+// shops give way to what can be bought now as posts like the feed's, best match first. Everything lives in the URL,
 // so the search tab comes back exactly as it was left.
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CutTile } from "@/components/customer/CutTile";
+import { CutPost } from "@/components/CutPost";
 import { FilterSheet } from "@/components/customer/FilterSheet";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { useHeldCuts } from "@/components/customer/useHeldCuts";
@@ -18,7 +18,7 @@ import { isReserved, rankFeed } from "@/lib/feed";
 import {
   AGING_PRESETS, EMPTY_FILTER, activeFilterCount, filterFromParams, filterToParams, matchesFilter, type FeedFilter,
 } from "@/lib/feed-filter";
-import { useBreeds, useButchers } from "@/lib/hooks";
+import { useBreeds, useButchers, useNow } from "@/lib/hooks";
 import { CUT_TYPES, ORIGINS, cutTypeLabel } from "@/lib/labels";
 import { categoryCounts, isAvailable, searchScore, shopPath } from "@/lib/market";
 import { useScrollMemory } from "@/lib/scroll";
@@ -40,6 +40,7 @@ function SearchView() {
   const router = useRouter();
   const breeds = useBreeds();
   const butchers = useButchers();
+  const now = useNow(60000);
   const { cuts, error, reload } = useCatalog();
   const filter = useMemo(() => filterFromParams(new URLSearchParams(params.toString())), [params]);
   const urlQuery = params.get("q") ?? "";
@@ -135,7 +136,7 @@ function SearchView() {
           </header>
 
           {error && !cuts ? <ErrorState dark onRetry={reload} />
-            : !cuts ? <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[4/5]" />)}</div>
+            : !cuts ? <div className="mx-auto mt-2 flex max-w-[660px] flex-col gap-5">{[0, 1].map((i) => <Skeleton key={i} className="h-[560px] rounded-[22px]" />)}</div>
             : results.length === 0 ? (
               <div className="py-14 text-center">
                 <p className="font-display text-xl font-bold text-ivory">{he.search.noResults}</p>
@@ -154,13 +155,19 @@ function SearchView() {
               </div>
             ) : (
               <>
-                <p className="mb-4 text-[13px] tracking-wide text-stone">{he.search.results(results.length)}</p>
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-7 lg:grid-cols-4 lg:gap-x-6">
-                  {results.map((c, i) => (
-                    <CutTile key={c.id} cut={c} breeds={breeds} shop={shopOf(c.butcher_id)}
-                      onOpen={() => track("search_result_click", { cut_id: c.id, position: i + 1 })} />
-                  ))}
-                </ul>
+                <div className="mx-auto max-w-[660px]">
+                  <p className="mb-4 text-[13px] tracking-wide text-stone">{he.search.results(results.length)}</p>
+                  {/* the same social posts as the feed (design: V3); a tap on any link in a post counts as opening it */}
+                  <ul className="-mx-1 m-0 flex list-none flex-col gap-5 p-0 lg:mx-0">
+                    {results.map((c, i) => (
+                      <li key={c.id} onClickCapture={(e) => {
+                        if ((e.target as HTMLElement).closest("a")) track("search_result_click", { cut_id: c.id, position: i + 1 });
+                      }}>
+                        <CutPost cut={c} media={c.cut_media} breeds={breeds} shop={shopOf(c.butcher_id)} now={now} source="search" eager={i === 0} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </>
             )}
         </>

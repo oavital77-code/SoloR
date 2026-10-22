@@ -160,6 +160,7 @@ export const he = {
   post: {
     prevSlide: "לתמונה הקודמת",
     notAged: "ללא",
+    days: (n: number) => `${n} יום`,
     leftShort: "נותרו",
     codeShort: "קוד",
     weightShort: "משקל",
