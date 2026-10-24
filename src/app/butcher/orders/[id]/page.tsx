@@ -25,6 +25,7 @@ import { MEDIA_BUCKET } from "@/lib/cut-helpers";
 import { prepareImage, removeStorageObjects } from "@/lib/upload";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { OrderEvent, OrderStatus } from "@/lib/types";
+import { PageLoader } from "@/components/motion/Steak";
 
 const NEXT: Partial<Record<OrderStatus, OrderStatus>> = { new: "preparing", preparing: "ready", ready: "completed" };
 
@@ -65,7 +66,7 @@ export default function ButcherOrderPage({ params }: { params: Promise<{ id: str
   }
 
   if (error) return <ErrorState text={he.orders.notFound} onRetry={() => { setError(false); load(); }} />;
-  if (!order) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
+  if (!order) return <PageLoader />;
 
   const items = sortedItems(order);
   const next = NEXT[order.status];

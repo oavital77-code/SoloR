@@ -1,0 +1,26 @@
+/* Butcherplace motion (design: נייר קצבים × אפליקציה). GSAP drives the timelines (lib/motion.ts); this file holds the
+   starting states that must be right before any script runs, and the small loops that need no script. */
+
+/* the illustrated steak, three slices of one drawing */
+.bp-steak { position: relative; }
+.bp-sl { position: absolute; inset: 0; }
+
+/* the opening loader: hidden at once on a repeat visit (set by the inline script) or with reduced motion; if no
+   script ever runs it gets out of the way by itself */
+html[data-bp-seen] [data-bp-loader] { display: none; }
+[data-bp-loader] { animation: bp-loader-bail 0.3s 9s forwards; }
+@keyframes bp-loader-bail { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+[data-bp-loader] .bp-loader__logo { opacity: 0; visibility: hidden; transform: translateY(-30px) scale(0.9); }
+[data-bp-loader] .bp-steak { opacity: 0; visibility: hidden; transform: scale(0.01) rotate(-25deg); }
+[data-bp-loader] .bp-word { opacity: 0; visibility: hidden; transform: translateY(22px); }
+[data-bp-loader] .bp-crumb, [data-bp-loader] .bp-knife { opacity: 0; }
+[data-bp-loader] .bp-loader__paper { clip-path: inset(0% 0% 0% 0%); }
+@media (prefers-reduced-motion: reduce) { [data-bp-loader] { display: none; } }
+
+/* a slow page: the small steak cuts itself apart and closes again */
+.bp-steak--loop .bp-sl1 { animation: bp-cut-r 1.6s ease-in-out infinite; }
+.bp-steak--loop .bp-sl2 { animation: bp-cut-m 1.6s ease-in-out infinite; }
+.bp-steak--loop .bp-sl3 { animation: bp-cut-l 1.6s ease-in-out infinite; }
+@keyframes bp-cut-r { 0%, 20%, 100% { transform: none; } 45%, 75% { transform: translateX(10px) rotate(8deg); } }
+@keyframes bp-cut-m { 0%, 20%, 100% { transform: none; } 45%, 75% { transform: translateY(-5px) rotate(3deg); } }
+@keyframes bp-cut-l { 0%, 20%, 100% { transform: none; } 45%, 75% { transform: translateX(-10px) rotate(-8deg); } }

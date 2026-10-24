@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { BackLink } from "@/components/customer/market-ui";
 import { useToast } from "@/components/Toast";
-import { Button, Field, Spinner, inputDarkClass } from "@/components/ui";
+import { Button, Field, inputDarkClass } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { errorText } from "@/lib/errors";
 import { useSession } from "@/lib/hooks";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { profileSchema } from "@/lib/validation";
+import { PageLoader } from "@/components/motion/Steak";
 
 export default function ProfilePage() {
   const { user, profile, loading } = useSession();
@@ -39,7 +40,7 @@ export default function ProfilePage() {
     toast(he.profile.saved, { tone: "success" });
   }
 
-  if (loading) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
+  if (loading) return <PageLoader />;
 
   return (
     <main className="min-h-dvh px-5 pb-24 lg:mx-auto lg:w-full lg:max-w-[760px]">

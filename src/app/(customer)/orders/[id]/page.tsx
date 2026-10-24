@@ -12,7 +12,7 @@ import { ShopMark } from "@/components/ShopMark";
 import { CHECKOUT_SELECT, normalizeCheckout, useMyOrdersRealtime, type CheckoutRow, type ItemRow, type ShopOrderRow, lineCode, lineCut, lineCutNo, lineHref, lineMedia, lineParentHref, lineParentId, lineParentMedia } from "@/components/customer/useMyOrders";
 import { CutGroup, groupByCut } from "@/components/CutGroup";
 import { useToast } from "@/components/Toast";
-import { ConfirmDialog, ErrorState, Ltr, Spinner } from "@/components/ui";
+import { ConfirmDialog, ErrorState, Ltr } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { coverOf, cutTitle, formatDateTime, mediaUrl, orderWhat } from "@/lib/cut-helpers";
 import { errorText } from "@/lib/errors";
@@ -22,6 +22,7 @@ import { formatWeight, money, weightOutcome } from "@/lib/pricing";
 import { isolateTimes } from "@/lib/hours";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { OrderEvent } from "@/lib/types";
+import { PageLoader } from "@/components/motion/Steak";
 
 type Pending = { kind: "item"; id: string } | { kind: "order"; id: string };
 
@@ -65,7 +66,7 @@ export default function PurchasePage({ params }: { params: Promise<{ id: string 
   }
 
   if (error) return <div className="pt-20"><ErrorState dark text={he.orders.notFound} onRetry={() => { setError(false); load(); }} /></div>;
-  if (!k) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
+  if (!k) return <PageLoader />;
 
   return (
     <main className="min-h-dvh px-4 pb-12 text-start lg:mx-auto lg:w-full lg:max-w-[760px]">

@@ -3,11 +3,11 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "../Toast";
-import { Spinner } from "../ui";
 import { he } from "@/lib/i18n/he";
 import { safeStorage, useRefetchOnFocus } from "@/lib/hooks";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Butcher, Order, Profile } from "@/lib/types";
+import { PageLoader } from "@/components/motion/Steak";
 
 interface ButcherCtx {
   profile: Profile;
@@ -138,7 +138,7 @@ export function ButcherShell({ children }: { children: React.ReactNode }) {
   }, [newOrders]);
 
   if (!profile || !butcher) {
-    return <div className="grid min-h-dvh place-items-center bg-ink text-stone"><Spinner /></div>;
+    return <div className="bg-ink"><PageLoader /></div>;
   }
 
   return (

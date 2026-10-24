@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Heebo, IBM_Plex_Mono } from "next/font/google";
 import { ToastProvider } from "@/components/Toast";
 import { ServiceWorker } from "@/components/ServiceWorker";
-import { Splash } from "@/components/Splash";
+import { Loader, seenScript } from "@/components/motion/Loader";
 import { he } from "@/lib/i18n/he";
 import "./globals.css";
 
@@ -28,9 +28,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className={`${brand.variable} ${mono.variable}`}>
+    <html lang="he" dir="rtl" className={`${brand.variable} ${mono.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
-        <Splash />
+        <script dangerouslySetInnerHTML={{ __html: seenScript }} />
+        <Loader />
         <ToastProvider>{children}</ToastProvider>
         <ServiceWorker />
       </body>

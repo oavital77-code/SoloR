@@ -12,7 +12,7 @@ import { IconStore, IconTruck } from "@/components/icons";
 import { ShopMark } from "@/components/ShopMark";
 import { useCartRows, type ShopGroup } from "@/components/customer/useCartRows";
 import { useToast } from "@/components/Toast";
-import { BottomSheet, EmptyState, ErrorState, Field, Ltr, Skeleton, Spinner, inputDarkClass } from "@/components/ui";
+import { BottomSheet, EmptyState, ErrorState, Field, Ltr, Skeleton, inputDarkClass } from "@/components/ui";
 import { cart, type CartLine } from "@/lib/cart";
 import { deliveryArea, deliveryFee, formatCountdown, receiveOptions } from "@/lib/checkout";
 import { coverOf, cutTitle, mediaUrl, orderWhat } from "@/lib/cut-helpers";
@@ -25,6 +25,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Breed, Butcher, Checkout, Hold, ReceiveMethod, SaleItem } from "@/lib/types";
 import { normalizePhone } from "@/lib/validation";
 import { track } from "@/lib/track";
+import { PageLoader } from "@/components/motion/Steak";
 
 interface ReceiveDraft {
   method: ReceiveMethod | null;
@@ -171,7 +172,7 @@ export default function CheckoutPage() {
     setHold(null);
   }
 
-  if (done) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
+  if (done) return <PageLoader />;
 
   const step = hold ? 3 : tried && ready ? 2 : contactOk ? 1 : 0;
 

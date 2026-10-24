@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./solor.css";
+@import "./motion.css";
 
 /* Butcherplace (formerly SoloR) design tokens. Three themes of the same tokens: "customer" (light butcher paper, the default), "night"
    (the dark band: header, tab bar, entry screens) and "counter" (light, loud) for the butcher's screens. */

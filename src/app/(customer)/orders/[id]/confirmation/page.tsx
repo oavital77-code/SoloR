@@ -8,13 +8,14 @@ import { groupByCut } from "@/components/CutGroup";
 import { CHECKOUT_SELECT, normalizeCheckout, type CheckoutRow, lineCode, lineCut, lineCutNo, lineParentId, lineHref, lineMedia } from "@/components/customer/useMyOrders";
 import { IconCheck, IconStore, IconTruck } from "@/components/icons";
 import { ShopMark } from "@/components/ShopMark";
-import { ErrorState, Ltr, Spinner } from "@/components/ui";
+import { ErrorState, Ltr } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { cutTitle, orderWhat } from "@/lib/cut-helpers";
 import { isolateTimes } from "@/lib/hours";
 import { useBreeds } from "@/lib/hooks";
 import { money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { PageLoader } from "@/components/motion/Steak";
 
 export default function ConfirmationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -30,7 +31,7 @@ export default function ConfirmationPage({ params }: { params: Promise<{ id: str
   useEffect(() => { load(); }, [load]);
 
   if (error) return <div className="pt-20"><ErrorState dark text={he.confirmation.notFound} onRetry={() => { setError(false); load(); }} /></div>;
-  if (!k) return <div className="grid min-h-dvh place-items-center"><Spinner /></div>;
+  if (!k) return <PageLoader />;
 
   return (
     <main className="relative min-h-dvh pb-12 lg:mx-auto lg:w-full lg:max-w-[760px]">

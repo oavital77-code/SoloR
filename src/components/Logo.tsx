@@ -22,7 +22,7 @@ export function Emblem({ size = 44, className, alt = "" }: { size?: number; clas
 export function FullLogo({ size = 190, className }: { size?: number; className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src="/brand/bp-full.webp" alt={he.app.name} width={480} height={497}
+    <img src="/brand/bp-full.webp" alt={he.app.name} width={478} height={497}
       style={{ height: size, width: "auto" }} className={clsx("inline-block object-contain", className)} />
   );
 }

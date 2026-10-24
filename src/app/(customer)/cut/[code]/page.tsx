@@ -13,7 +13,7 @@ import { ShopMark } from "@/components/ShopMark";
 import { RemainderChooser } from "@/components/ItemBuy";
 import { useAddToCart } from "@/components/CutPost";
 import { useHeldItems } from "@/components/customer/useHeldItems";
-import { ErrorState, Ltr, Spinner } from "@/components/ui";
+import { ErrorState, Ltr } from "@/components/ui";
 import { IconAging, IconBack, IconCheck } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
@@ -29,6 +29,7 @@ import { useBreeds, useButchers, useNow, useRefetchOnFocus } from "@/lib/hooks";
 import { formatWeight, money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { CutMedia, Parent, SaleItem } from "@/lib/types";
+import { PageLoader } from "@/components/motion/Steak";
 
 const overlayBtn = "pointer-events-auto grid size-11 place-items-center rounded-full bg-scrim text-ivory";
 
@@ -138,7 +139,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
         )}
       </div>
 
-      {state === "loading" && <div className="grid min-h-dvh place-items-center"><Spinner /></div>}
+      {state === "loading" && <PageLoader />}
       {state === "error" && <div className="pt-20"><ErrorState dark onRetry={load} /></div>}
       {(state === "notfound" || (state === "ok" && items.length === 0)) && (
         <div className="pt-20"><ErrorState dark text={he.cut.notFound} /></div>
