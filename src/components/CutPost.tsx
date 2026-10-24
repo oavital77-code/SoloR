@@ -22,7 +22,7 @@ import { IconCheck, IconClock } from "./icons";
 import { useToast } from "./Toast";
 import { he } from "@/lib/i18n/he";
 import { cart, useCart } from "@/lib/cart";
-import { coverOf, cutTitle, mediaUrl, timeAgo } from "@/lib/cut-helpers";
+import { coverOf, cutTitle, mediaUrl, photosOf, timeAgo, videoOf } from "@/lib/cut-helpers";
 import { clipNo, displayCode, isAvailable, linePrice, parentPath, type Held } from "@/lib/items";
 import { agingMethodLabel } from "@/lib/labels";
 import { shopPath } from "@/lib/market";
@@ -57,6 +57,9 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
   const family = !preview && !!trays && trays.length > 0;
   const headless = family && cut.kind === "unit";
   const media = useMemo(() => (family ? familyMedia(cut, trays!) : cut.cut_media), [family, cut, trays]);
+  // the cutting video gets its own frame; the photos (the cut's own first) follow in theirs
+  const video = videoOf(media);
+  const photos = useMemo(() => photosOf(media), [media]);
   const [show, setShow] = useState<{ path: string; n: number } | null>(null);
   const showPhoto = (m: CutMedia | undefined) => { if (m) setShow((x) => ({ path: m.storage_path, n: (x?.n ?? 0) + 1 })); };
   const { ref, visible } = usePostView<HTMLElement>(cut.id, { butcherId: cut.butcher_id, source });
@@ -84,7 +87,9 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
     <article ref={ref} id={`post-${cut.id}`} onClickCapture={preview ? undefined : (e) => {
       // opening the cut's page: its picture grows from here into the page's frame
       const a = (e.target as HTMLElement).closest("a");
-      if (a?.pathname.startsWith("/cut/")) handOffFrom(e.currentTarget.querySelector<HTMLElement>("[data-media-frame]"));
+      if (a?.pathname.startsWith("/cut/")) {
+        handOffFrom(a.closest<HTMLElement>("[data-media-frame]") ?? e.currentTarget.querySelector<HTMLElement>("[data-cut-photo] [data-media-frame]"));
+      }
     }} className="overflow-hidden rounded-[26px] border-2 border-ivory bg-ink-2 text-start shadow-[var(--shadow-card)]">
       <div className="flex flex-col gap-2 px-4 pt-3.5 pb-3 lg:px-[18px]">
         <header className="flex items-center gap-2.5">
@@ -104,9 +109,25 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
         </p>
       </div>
 
-      <div data-reveal="photo">
-        <PostMedia media={media} title={title} code={cut.code} href={preview ? undefined : href} eager={eager} state={headless ? null : state}
-          videoFirst wide show={show}>
+      {/* founders 24.10.2026: the facts first, then the cutting video, then the cut's photo with its number */}
+      <dl className="m-0 grid grid-cols-4 border-y border-line">
+        {factCells.map((f) => (
+          <div key={f.k} className="min-w-0 border-s border-line px-3 py-2.5 first:border-s-0 lg:px-3.5">
+            <dt className="text-[11px] text-stone">{f.k}</dt>
+            <dd className="m-0 text-[15px] leading-5 font-bold">{f.v}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {video && (
+        <div data-reveal="photo" className="border-b-2 border-ivory">
+          <PostMedia media={[video]} title={title} code={cut.code} eager={eager} videoFirst wide />
+        </div>
+      )}
+
+      <div data-reveal="photo" data-cut-photo>
+        <PostMedia media={photos} title={title} code={cut.code} href={preview ? undefined : href} eager={eager && !video} state={headless ? null : state}
+          wide show={show}>
           {cut.parent_code != null && (
             <span data-reveal="sticker" className="pointer-events-none absolute top-3 left-3 z-[1] -rotate-6 border-2 border-[#1b1712] bg-sticker px-2.5 py-0.5 font-mono text-[13px] font-semibold text-[#1b1712]">
               {he.post.cutSticker(clipNo(cut.parent_code))}
@@ -115,15 +136,6 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
           {headless ? null : overlay}
         </PostMedia>
       </div>
-
-      <dl className="m-0 grid grid-cols-4 border-b border-line">
-        {factCells.map((f) => (
-          <div key={f.k} className="min-w-0 border-s border-line px-3 py-2.5 first:border-s-0 lg:px-3.5">
-            <dt className="text-[11px] text-stone">{f.k}</dt>
-            <dd className="m-0 text-[15px] leading-5 font-bold">{f.v}</dd>
-          </div>
-        ))}
-      </dl>
 
       {!headless && <div className="flex items-center gap-3 px-4 py-2.5 lg:px-[18px]">
         {onPriceTap
