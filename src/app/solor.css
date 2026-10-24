@@ -184,7 +184,7 @@
 @media (prefers-reduced-motion: reduce) { .sr-stamp--landing .sr-stamp__ink { animation: none; } .sr-media > img { transition: none; } }
 
 /* ---- screen pieces (design: SoloR מסכים) ---- */
-.sr-screen-title { font-family: var(--font-brand); font-weight: 700; font-size: 28px; line-height: 34px; margin: 0; }
+.sr-screen-title { font-family: var(--font-brand); font-weight: 900; font-size: 30px; line-height: 36px; margin: 0; }
 .sr-backbtn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); background: var(--scrim); border: 0; flex: none; }
 .sr-steps4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .sr-steps4 > div { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--ink-muted); }

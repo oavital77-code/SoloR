@@ -6,6 +6,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { IconBack, IconCheck, IconClose } from "@/components/icons";
 import { he } from "@/lib/i18n/he";
+import { Rise } from "@/components/motion/Rise";
 
 const SHOTS: { src: string; ok: boolean; title: string; text: string; style?: React.CSSProperties }[] = [
   { src: "/demo/d01/1.jpg", ok: true, ...he.photoGuide.shots[0] },
@@ -23,7 +24,7 @@ export default function PhotoGuidePage() {
         <Link href="/butcher" aria-label={he.app.back} className="sr-backbtn !bg-transparent"><IconBack /></Link>
         <div className="flex flex-col gap-1.5">
           <span className="sr-eyebrow">{he.photoGuide.eyebrow}</span>
-          <h1 className="m-0 font-display text-[28px] font-bold leading-9 lg:text-[38px] lg:leading-[44px]">{he.photoGuide.title}</h1>
+          <Rise lines={[he.photoGuide.title]} className="m-0 font-display text-[28px] font-black leading-9 lg:text-[38px] lg:leading-[44px]" />
           <p className="m-0 text-[15px] text-stone">{he.photoGuide.lead}</p>
         </div>
       </header>

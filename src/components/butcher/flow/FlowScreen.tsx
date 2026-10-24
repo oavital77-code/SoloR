@@ -8,6 +8,7 @@ import { Spinner } from "../../ui";
 import { RemoveParent } from "./RemoveParent";
 import { he } from "@/lib/i18n/he";
 import { retryVideoUpload, useVideoUpload } from "@/lib/video-upload";
+import { Rise } from "@/components/motion/Rise";
 
 export function FlowScreen({ title, sub, back = "/butcher", children, footer, wide, parent }: {
   title: React.ReactNode; sub?: React.ReactNode; back?: string | null; children: React.ReactNode;
@@ -26,7 +27,7 @@ export function FlowScreen({ title, sub, back = "/butcher", children, footer, wi
           </Link>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="m-0 truncate text-[22px] font-black leading-7">{title}</h1>
+          <Rise lines={[{ text: title, className: "truncate" }]} className="m-0 min-w-0 text-[22px] font-black leading-7" />
           {sub && <p className="m-0 truncate text-sm text-stone">{sub}</p>}
         </div>
         {parent && <RemoveParent parentId={parent.id} code={parent.code} />}

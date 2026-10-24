@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { useButchers } from "@/lib/hooks";
 import { isAvailable, shopPath } from "@/lib/market";
+import { Rise } from "@/components/motion/Rise";
 
 export default function ShopsPage() {
   const butchers = useButchers();
@@ -20,7 +21,7 @@ export default function ShopsPage() {
     <main className="min-h-dvh px-5 pb-28 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="pt-3 pb-5">
         <BackLink href="/" label={he.market.backToMarket} />
-        <h1 className="mt-2 font-display text-3xl font-bold text-ivory">{he.market.shops}</h1>
+        <Rise lines={[he.market.shops]} className="mt-2 font-display text-[32px] font-black leading-10 text-ivory" />
       </header>
       <ul className="divide-y divide-ivory/10 border-y border-ivory/10">
         {shops.length === 0

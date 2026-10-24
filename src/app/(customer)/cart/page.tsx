@@ -19,6 +19,7 @@ import { useBreeds, useSession } from "@/lib/hooks";
 import { money } from "@/lib/pricing";
 import { track } from "@/lib/track";
 import { useEffect, useRef } from "react";
+import { useStagger } from "@/components/motion/useStagger";
 
 export default function CartPage() {
   const breeds = useBreeds();
@@ -26,6 +27,7 @@ export default function CartPage() {
   const router = useRouter();
   const { lines, cuts, error, load, groups, total, blocked } = useCartRows();
   const loaded = cuts !== null;
+  const list = useStagger<HTMLDivElement>(loaded);
   const logged = useRef(false);
   useEffect(() => {
     if (!loaded || logged.current) return;
@@ -51,7 +53,7 @@ export default function CartPage() {
         : !cuts ? <div className="flex flex-col gap-3 pt-4">{[0, 1].map((i) => <Skeleton key={i} className="h-28 rounded-3xl" />)}</div>
         : (
           <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8">
-            <div className="flex flex-1 flex-col gap-5 pt-4 pb-6">
+            <div ref={list} className="flex flex-1 flex-col gap-5 pt-4 pb-6">
               {groups.map(({ shop, butcherId, rows: shopRows }) => (
                 <section key={butcherId} className="sr-card !gap-0 !border-line-gold">
                   <div className="flex items-center gap-2.5 pb-1">

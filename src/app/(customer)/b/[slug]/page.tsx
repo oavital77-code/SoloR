@@ -8,6 +8,8 @@ import { clsx } from "clsx";
 import { IconBack } from "@/components/icons";
 import { CutPost } from "@/components/CutPost";
 import { ShopMark } from "@/components/ShopMark";
+import { Rise } from "@/components/motion/Rise";
+import { RetroBanner } from "@/components/motion/RetroBanner";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { useHeldItems } from "@/components/customer/useHeldItems";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
@@ -50,8 +52,9 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
 
   return (
     <main className="relative min-h-dvh pb-28 text-start">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] [background:radial-gradient(110%_80%_at_50%_0%,rgb(200_32_44/0.35),transparent_75%)]" aria-hidden />
-      <div className="relative px-3 pt-3">{backBtn}</div>
+      {shop?.cover_path
+        ? <div className="relative px-3 pt-3">{backBtn}</div>
+        : <RetroBanner><div className="absolute top-3 right-3 lg:right-8">{backBtn}</div></RetroBanner>}
       {!shop ? <div className="px-4 pt-4"><Skeleton className="h-40" /></div> : <ShopHead shop={shop} now={now} />}
 
       <section className="relative mx-auto flex w-full max-w-[660px] flex-col gap-3.5 px-3 pt-7 lg:px-0">
@@ -98,9 +101,9 @@ function ShopHead({ shop, now }: { shop: Butcher; now: number }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={mediaUrl(shop.cover_path)} alt="" className="mt-3 aspect-[16/9] w-full object-cover" />
       )}
-      <section className={clsx("flex flex-col items-center gap-3 px-4 text-center", shop.cover_path ? "-mt-11" : "pt-2")}>
+      <section className="relative flex -mt-11 flex-col items-center gap-3 px-4 text-center">
         <ShopMark shop={shop} className="!size-[88px] !text-[38px]" />
-        <h1 className="m-0 font-display text-[28px] font-bold leading-[34px]">{shop.name}</h1>
+        <Rise lines={[shop.name]} className="m-0 font-display text-[32px] font-black leading-[38px]" />
         {open !== null && (
           <div className="flex items-center gap-2 text-sm">
             <span className={clsx("size-2 rounded-full", open ? "bg-success" : "bg-sold")} />

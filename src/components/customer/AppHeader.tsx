@@ -41,11 +41,11 @@ export function AppHeader() {
           <LiveNow />
           <div className="sr-header__actions">
             {lines.length > 0 && (
-              <Link href="/cart" className="hidden min-h-11 items-center rounded-full bg-brand px-5 text-[15px] font-bold text-on-brand lg:flex">
+              <Link href="/cart" data-cart-target className="hidden min-h-11 items-center rounded-full bg-brand px-5 text-[15px] font-bold text-on-brand lg:flex">
                 {he.cart.pill(lines.length, money(lines.reduce((t, l) => t + l.estAgorot, 0)))}
               </Link>
             )}
-            <Link href="/cart" aria-label={he.nav.cart(lines.length)} className={clsx("sr-iconbtn", lines.length > 0 && "lg:hidden")}>
+            <Link href="/cart" data-cart-target aria-label={he.nav.cart(lines.length)} className={clsx("sr-iconbtn", lines.length > 0 && "lg:hidden")}>
               <IconBag />
               {lines.length > 0 && <span className="sr-iconbtn__count"><Ltr>{lines.length}</Ltr></span>}
             </Link>

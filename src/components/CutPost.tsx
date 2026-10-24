@@ -13,6 +13,7 @@ import { ShopMark } from "./ShopMark";
 import { usePostView } from "./usePostView";
 import { useReveal } from "./motion/useReveal";
 import { handOffFrom } from "@/lib/handoff";
+import { flyToCart } from "@/lib/flyToCart";
 import { markSoldNotice } from "@/lib/impressions";
 import { track } from "@/lib/track";
 import { RemainderChooser, type OnOrder } from "./ItemBuy";
@@ -187,6 +188,10 @@ export function useAddToCart(source: "feed" | "post") {
     cart.put({ itemId: cut.id, code: cut.code, parentCode: cut.parent_code, parentId: cut.parent_id, butcherId: cut.butcher_id, mode, grams, thicknessCm, estAgorot: total });
     track("add_to_cart", { item_id: cut.id, mode, grams, source, price: total });
     toast(had ? he.cart.updated : he.cart.added, { tone: "success" });
+    if (!had) {
+      const cover = coverOf(cut.cut_media) ?? coverOf(cut.parent_media ?? []);
+      flyToCart(cover ? mediaUrl(cover.thumb_path ?? cover.storage_path) : null);
+    }
   };
 }
 

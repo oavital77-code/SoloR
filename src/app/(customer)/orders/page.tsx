@@ -12,6 +12,8 @@ import { coverOf, cutTitle, formatDateTime, mediaUrl } from "@/lib/cut-helpers";
 import { useBreeds, useRefetchOnFocus } from "@/lib/hooks";
 import { formatAgorot } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { Rise } from "@/components/motion/Rise";
+import { useStagger } from "@/components/motion/useStagger";
 
 const finished = (k: CheckoutRow) => k.orders.every((o) => o.status === "completed" || o.status === "cancelled");
 
@@ -23,6 +25,7 @@ function MyOrders() {
   const history = useSearchParams().get("view") === "history";
   const breeds = useBreeds();
   const [rows, setRows] = useState<CheckoutRow[] | null>(null);
+  const list = useStagger<HTMLUListElement>(!!rows?.length);
   const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
@@ -40,7 +43,7 @@ function MyOrders() {
   return (
     <main className="min-h-dvh pb-24 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="flex flex-col items-center bg-ink/90 px-4 pt-4 pb-3 backdrop-blur">
-        <h1 className="font-display text-3xl font-bold text-ivory">{history ? he.nav.history : he.orders.title}</h1>
+        <Rise lines={[history ? he.nav.history : he.orders.title]} className="m-0 font-display text-[32px] font-black leading-10 text-ivory" />
         <Link href={history ? "/orders" : "/orders?view=history"} className="min-h-10 py-2.5 text-sm text-ivory/70 underline-offset-4 hover:underline">
           {history ? he.orders.title : he.nav.history}
         </Link>
@@ -50,7 +53,7 @@ function MyOrders() {
         : rows.length === 0 ? (
           <EmptyState text={history ? he.orders.emptyHistory : he.orders.empty}><Link href="/"><Button variant="dark">{he.cart.toMarket}</Button></Link></EmptyState>
         ) : (
-          <ul className="mx-4 divide-y divide-ivory/10 border-y border-ivory/10">
+          <ul ref={list} className="mx-4 divide-y divide-ivory/10 border-y border-ivory/10">
             {rows.map((k) => {
               const items = k.orders.flatMap((o) => o.order_items);
               const live = k.orders.filter((o) => o.status !== "cancelled");

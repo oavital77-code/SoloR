@@ -25,6 +25,7 @@ import { categoryCounts, isAvailable, searchScore, shopPath } from "@/lib/market
 import { useScrollMemory } from "@/lib/scroll";
 import { track } from "@/lib/track";
 import type { Breed, Butcher, SaleItem } from "@/lib/types";
+import { Rise } from "@/components/motion/Rise";
 
 let lastLogged: string | null = null;
 /** the active filters as short keys, for measurement */
@@ -115,7 +116,7 @@ function SearchView() {
     <main className="min-h-dvh px-4 pb-24 text-start lg:px-8">
       {!searching ? (
         <div className="flex flex-col gap-5 pt-4 lg:mx-auto lg:max-w-[760px] lg:pt-8">
-          <h1 className="sr-screen-title">{he.market.search}</h1>
+          <Rise lines={[he.market.search]} className="sr-screen-title" />
           {field}
           {error && !cuts ? <ErrorState dark onRetry={reload} /> : (
             <QuickFilters filter={filter} onChange={setFilter} cuts={available}

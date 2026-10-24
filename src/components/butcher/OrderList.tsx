@@ -14,6 +14,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Order, OrderStatus } from "@/lib/types";
 import { lineCode, lineCut, lineCutNo, lineMedia, lineParentId, lineParentMedia, ORDER_ITEMS_EMBED, type ItemRow } from "../customer/useMyOrders";
 import { groupByCut } from "../CutGroup";
+import { useStagger } from "@/components/motion/useStagger";
 
 /** An order line with its item and that item's parent (the same shape the customer side reads). */
 export type ButcherItemRow = ItemRow;
@@ -39,6 +40,7 @@ export function OrderList() {
   const now = useNow();
   const [tab, setTab] = useState<"active" | "history">("active");
   const [rows, setRows] = useState<ButcherOrderRow[] | null>(null);
+  const list = useStagger<HTMLUListElement>(!!rows?.length);
   const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
@@ -68,7 +70,7 @@ export function OrderList() {
         : !rows ? <div className="flex flex-col gap-3 px-4">{[0, 1].map((i) => <Skeleton key={i} className="h-28" />)}</div>
         : rows.length === 0 ? <EmptyState text={tab === "active" ? he.butcherOrders.empty : he.butcherOrders.emptyHistory} />
         : (
-          <ul className="grid items-start gap-4 px-4 pb-8 lg:grid-cols-2 xl:grid-cols-3">
+          <ul ref={list} className="grid items-start gap-4 px-4 pb-8 lg:grid-cols-2 xl:grid-cols-3">
             {rows.map((o) => <OrderCard key={o.id} order={o} breeds={breeds} now={now} />)}
           </ul>
         )}

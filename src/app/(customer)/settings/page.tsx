@@ -10,6 +10,7 @@ import { useSession } from "@/lib/hooks";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { profileSchema } from "@/lib/validation";
 import { PageLoader } from "@/components/motion/Steak";
+import { Rise } from "@/components/motion/Rise";
 
 export default function ProfilePage() {
   const { user, profile, loading } = useSession();
@@ -46,7 +47,7 @@ export default function ProfilePage() {
     <main className="min-h-dvh px-5 pb-24 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <header className="pt-2 pb-6">
         <BackLink href="/" label={he.app.back} />
-        <h1 className="mt-1 font-display text-3xl font-bold text-ivory">{he.profile.title}</h1>
+        <Rise lines={[he.profile.title]} className="mt-1 font-display text-[32px] font-black leading-10 text-ivory" />
       </header>
       <form onSubmit={save} className="flex flex-col gap-5">
         <Field dark label={he.onboarding.fullName} htmlFor="name" error={errors.full_name}>

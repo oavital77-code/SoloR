@@ -2,6 +2,7 @@
 // Shared building blocks of the customer screens.
 import Link from "next/link";
 import { IconBack } from "../icons";
+import { Rise } from "../motion/Rise";
 
 /** Text-only back link ("חזרה" / "לפיד"). */
 export function BackLink({ href, label, onClick }: { href?: string; label: string; onClick?: () => void }) {
@@ -22,7 +23,7 @@ export function ScreenHead({ title, back, backLabel, sub, children }: {
         ? <Link href={back} aria-label={backLabel} className="sr-backbtn !bg-transparent">{icon}</Link>
         : <button type="button" onClick={back} aria-label={backLabel} className="sr-backbtn !bg-transparent">{icon}</button>}
       <div className="min-w-0 flex-1">
-        <h1 className="sr-screen-title">{title}</h1>
+        <Rise lines={[title]} className="sr-screen-title" />
         {sub}
       </div>
       {children}

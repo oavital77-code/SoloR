@@ -16,6 +16,7 @@ import { useBreeds } from "@/lib/hooks";
 import { money } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { PageLoader } from "@/components/motion/Steak";
+import { Rise } from "@/components/motion/Rise";
 
 export default function ConfirmationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -40,7 +41,7 @@ export default function ConfirmationPage({ params }: { params: Promise<{ id: str
         <span aria-hidden className="grid size-[88px] place-items-center rounded-full text-gold shadow-[inset_0_0_0_2px_var(--gold),0_0_0_10px_var(--gold-soft)]">
           <IconCheck className="!size-11 [stroke-width:1.6]" />
         </span>
-        <h1 className="m-0 font-display text-[36px] font-bold leading-[42px]">{he.confirmation.title}</h1>
+        <Rise lines={[he.confirmation.title]} className="m-0 font-display text-[38px] font-black leading-[42px]" />
         <span className="text-[15px] text-stone">{he.confirmation.numberLabel} <span className="code !text-[15px] !text-ivory">#{k.checkout_number}</span></span>
         <p className="m-0 max-w-[300px] text-[15px] leading-[22px]">{he.confirmation.next}</p>
         {k.is_demo && <span className="sr-proto">{he.confirmation.demo}</span>}
