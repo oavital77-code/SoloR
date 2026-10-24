@@ -50,7 +50,7 @@ export default function ShopPage({ params }: { params: Promise<{ slug: string }>
 
   return (
     <main className="relative min-h-dvh pb-28 text-start">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] [background:radial-gradient(110%_80%_at_50%_0%,rgb(163_18_42/0.35),transparent_75%)]" aria-hidden />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] [background:radial-gradient(110%_80%_at_50%_0%,rgb(200_32_44/0.35),transparent_75%)]" aria-hidden />
       <div className="relative px-3 pt-3">{backBtn}</div>
       {!shop ? <div className="px-4 pt-4"><Skeleton className="h-40" /></div> : <ShopHead shop={shop} now={now} />}
 

@@ -5,7 +5,7 @@ const clip = (code: number | string) => (code === "" ? "" : String(code).padStar
 
 export const he = {
   app: {
-    name: "SoloR",
+    name: "Butcherplace",
     tagline: "לראות את הבשר. להכיר את הקצב. לבחור את הנתח האמיתי.",
     prototypeBanner: "אב טיפוס — לא יבוצע חיוב",
     loading: "טוען…",
@@ -25,7 +25,7 @@ export const he = {
 
   auth: {
     demoNote: "אב טיפוס · בחירה זמנית לפיילוט",
-    title: "כניסה ל־SoloR",
+    title: "כניסה ל־\u2066Butcherplace\u2069",
     emailLabel: "אימייל",
     emailPlaceholder: "name@example.com",
     sendCode: "שלחו לי קוד",
@@ -285,7 +285,7 @@ export const he = {
     aging: "יישון",
     pricePerKg: "מחיר לק״ג",
     butcherScore: "הערכת שיוש של הקצב",
-    butcherScoreNote: "הערכה של הקצב, לא דירוג של SoloR",
+    butcherScoreNote: "הערכה של הקצב, לא דירוג של \u2066Butcherplace\u2069",
     description: "תיאור",
     openMap: "פתח במפה",
     priceNote: "המחיר לפי משקל משוער וננעל בהזמנה",
@@ -507,8 +507,8 @@ export const he = {
     logout: "התנתק",
     untitled: "נתח ללא פרטים",
     newOrderToast: (n: number) => `הזמנה חדשה #${n}`,
-    titleWithNew: (n: number) => `(${n}) SoloR — הזמנות חדשות`,
-    title: "SoloR — קצב",
+    titleWithNew: (n: number) => `(${n}) Butcherplace — הזמנות חדשות`,
+    title: "Butcherplace — קצב",
   },
 
   units: {
@@ -528,7 +528,7 @@ export const he = {
 
   photoGuide: {
     eyebrow: "לקצבים",
-    title: "איך מצלמים נתח ל־\u2066SoloR\u2069",
+    title: "איך מצלמים נתח ל־\u2066Butcherplace\u2069",
     lead: "הלקוח קונה את מה שבתמונה. תמונה טובה מוכרת את הנתח לפני שהוא מגיע לדלפק.",
     link: "איך מצלמים?",
     yes: "נכון",

@@ -1,6 +1,6 @@
 {
-  "name": "SoloR",
-  "short_name": "SoloR",
+  "name": "Butcherplace",
+  "short_name": "Butcherplace",
   "description": "לראות את הבשר. להכיר את הקצב. לבחור את הנתח האמיתי.",
   "lang": "he",
   "dir": "rtl",
@@ -8,8 +8,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0e0e0e",
-  "theme_color": "#0e0e0e",
+  "background_color": "#e9dfcc",
+  "theme_color": "#1b1712",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },

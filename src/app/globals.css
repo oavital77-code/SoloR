@@ -1,68 +1,80 @@
 @import "tailwindcss";
 @import "./solor.css";
 
-/* SoloR design tokens. Three themes of the same tokens: "customer" (light butcher paper, the default), "night"
+/* Butcherplace (formerly SoloR) design tokens. Three themes of the same tokens: "customer" (light butcher paper, the default), "night"
    (the dark band: header, tab bar, entry screens) and "counter" (light, loud) for the butcher's screens. */
+/* Butcherplace brand constants (design: נייר קצבים × אפליקציה, 24.10.2026): kraft paper, a cream sticker, near-black
+   ink and one butcher's red; the retro illustrations add teal, orange, cream and pink. Not themed. */
+:root {
+  --kraft: #e9dfcc;
+  --sticker: #fffdf7;
+  --bp-ink: #1b1712;
+  --bp-red: #c8202c;
+  --teal: #6fa79a;
+  --orange: #e8562a;
+  --cream: #f7d8c4;
+  --pink: #f4a3a8;
+}
 :root,
 [data-theme="customer"] {
-  /* customer (light, after Meat2Me): butcher-paper ground, cream cards, one strong red, near-black type */
-  --ground: #ebddc6;          /* page background: butcher paper */
-  --surface: #fbf7f0;         /* post cards, sheets, cart rows */
-  --surface-raised: #efe6d8;  /* image placeholder, chips, inputs */
-  --line: #e0d3bf;            /* hairlines */
-  --line-gold: #d8c7ad;       /* the thin frame of a card */
-  --ink: #161312;             /* text */
-  --ink-muted: #6e625a;       /* secondary text */
-  --gold: #9c5f12;            /* small accents: eyebrows, the aging chip, links */
-  --gold-soft: #9c5f121a;
-  --bordeaux: #e3262e;        /* the one action colour: strong red */
-  --bordeaux-press: #b81d24;
-  --bordeaux-glow: #e3262e;
-  --on-bordeaux: #ffffff;
-  --state-new: #161312;
-  --on-state-new: #ffffff;
-  --state-partial: #e3262e;
-  --state-reserved: #9c5f12;
-  --on-state-reserved: #ffffff;
-  --state-sold: #c4222b;
-  --state-error: #c4222b;
+  /* customer: kraft-paper ground, cream sticker cards framed in ink, one butcher's red, near-black type */
+  --ground: #e9dfcc;          /* page background: kraft paper */
+  --surface: #fffdf7;         /* post cards, sheets, cart rows: the sticker */
+  --surface-raised: #f1e8d6;  /* image placeholder, chips, inputs */
+  --line: #d6c8ae;            /* hairlines */
+  --line-gold: #cbb995;       /* the thin frame of a card */
+  --ink: #1b1712;             /* text */
+  --ink-muted: #5c5244;       /* secondary text */
+  --gold: #8f5a12;            /* small accents: eyebrows, the aging chip, links */
+  --gold-soft: #8f5a121a;
+  --bordeaux: #c8202c;        /* the one action colour: butcher's red */
+  --bordeaux-press: #9f1822;
+  --bordeaux-glow: #c8202c;
+  --on-bordeaux: #fffdf7;
+  --state-new: #1b1712;
+  --on-state-new: #fffdf7;
+  --state-partial: #c8202c;
+  --state-reserved: #8f5a12;
+  --on-state-reserved: #fffdf7;
+  --state-sold: #b81c27;
+  --state-error: #b81c27;
   --state-success: #2e7d4f;
-  --status-new: #e3262e;
+  --status-new: #c8202c;
   --status-prep: #9a6400;
   --status-ready: #2e7d4f;
-  --scrim: #16131299;
-  --shadow-card: 0 2px 10px rgba(22, 19, 18, 0.08);
-  --shadow-action: 0 6px 16px -6px rgba(227, 38, 46, 0.6);
+  --scrim: #1b171299;
+  --shadow-card: 0 2px 10px rgba(27, 23, 18, 0.08);
+  --shadow-action: 0 6px 16px -6px rgba(200, 32, 44, 0.6);
 }
-/* the dark band: header, tab bar, live panel, and the entry screens (design: Meat2Me's dark hero) */
+/* the dark band: header, tab bar, live panel, and the entry screens */
 [data-theme="night"] {
-  --ground: #161312;
-  --surface: #1a1411;         /* post cards, sheets, cart rows */
-  --surface-raised: #2a211c;  /* image placeholder, shop-mark disc, inputs */
-  --line: #f3ede41a;          /* hairlines, 10% ink; never for meaning */
-  --line-gold: #c9a96e66;     /* the thin gold frame of a post card */
-  --ink: #f3ede4;             /* text */
-  --ink-muted: #a99f93;       /* secondary text */
-  --gold: #c9a96e;            /* small accents only */
-  --gold-soft: #c9a96e1f;
-  --bordeaux: #e3262e;
-  --bordeaux-press: #b81d24;
-  --bordeaux-glow: #e3262e;
-  --on-bordeaux: #f8f2ea;
-  --state-new: #f3ede4;
-  --on-state-new: #0f0b09;
-  --state-partial: #a3122a;
-  --state-reserved: #c9a96e;
-  --on-state-reserved: #0f0b09;
-  --state-sold: #e8a0a8;
-  --state-error: #e8a0a8;
+  --ground: #1b1712;
+  --surface: #241e18;         /* post cards, sheets, cart rows */
+  --surface-raised: #2f271f;  /* image placeholder, shop-mark disc, inputs */
+  --line: #fffdf71a;          /* hairlines, 10% ink; never for meaning */
+  --line-gold: #e9dfcc4d;     /* the thin frame of a post card */
+  --ink: #fffdf7;             /* text */
+  --ink-muted: #b3a894;       /* secondary text */
+  --gold: #e3c48f;            /* small accents only */
+  --gold-soft: #e3c48f1f;
+  --bordeaux: #c8202c;
+  --bordeaux-press: #9f1822;
+  --bordeaux-glow: #e8562a;
+  --on-bordeaux: #fffdf7;
+  --state-new: #fffdf7;
+  --on-state-new: #1b1712;
+  --state-partial: #c8202c;
+  --state-reserved: #e3c48f;
+  --on-state-reserved: #1b1712;
+  --state-sold: #f4a3a8;
+  --state-error: #f4a3a8;
   --state-success: #93bb9c;
-  --status-new: #a3122a;
+  --status-new: #c8202c;
   --status-prep: #d9a441;
   --status-ready: #93bb9c;
-  --scrim: #0f0b09b3;
+  --scrim: #1b1712b3;
   --shadow-card: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
-  --shadow-action: 0 8px 22px -8px rgba(194, 26, 54, 0.75);
+  --shadow-action: 0 8px 22px -8px rgba(200, 32, 44, 0.75);
 }
 [data-theme="counter"] {
   --ground: #f7f3ec;
@@ -108,7 +120,13 @@
   --color-success: var(--state-success);
   --color-reserved: var(--state-reserved);
   --color-scrim: var(--scrim);
-  --color-live: #e0233f;
+  --color-live: #c8202c;
+  --color-kraft: var(--kraft);
+  --color-sticker: var(--sticker);
+  --color-teal: var(--teal);
+  --color-orange: var(--orange);
+  --color-cream: var(--cream);
+  --color-pink: var(--pink);
 }
 
 :root {
@@ -154,7 +172,7 @@ body {
 }
 /* the bordeaux wash at the top of the customer screens (feed, splash) */
 .wash {
-  background: radial-gradient(120% 70% at 50% -20%, rgb(163 18 42 / 0.22), transparent 70%);
+  background: radial-gradient(120% 70% at 50% -20%, rgb(200 32 44 / 0.2), transparent 70%);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -229,8 +247,8 @@ body {
 }
 
 @keyframes new-glow {
-  0% { box-shadow: 0 0 0 0 rgba(255, 31, 61, 0.8); }
-  100% { box-shadow: 0 0 0 14px rgba(255, 31, 61, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(200, 32, 44, 0.8); }
+  100% { box-shadow: 0 0 0 14px rgba(200, 32, 44, 0); }
 }
 .animate-new-glow {
   animation: new-glow 1.4s ease-out 3;
@@ -303,9 +321,9 @@ input[type="range"].big-range::-moz-range-thumb {
   animation: live-pulse 1.8s ease-out infinite;
 }
 @keyframes live-pulse {
-  0% { box-shadow: 0 0 0 0 rgb(227 38 46 / 0.55); }
-  100% { box-shadow: 0 0 0 9px rgb(227 38 46 / 0); }
+  0% { box-shadow: 0 0 0 0 rgb(200 32 44 / 0.55); }
+  100% { box-shadow: 0 0 0 9px rgb(200 32 44 / 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .live-dot { animation: none; box-shadow: 0 0 0 4px rgb(227 38 46 / 0.3); }
+  .live-dot { animation: none; box-shadow: 0 0 0 4px rgb(200 32 44 / 0.3); }
 }

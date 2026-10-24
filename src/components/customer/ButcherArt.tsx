@@ -19,7 +19,7 @@ export function ButcherArt() {
         <circle cx="60" cy="16" r="7" /><path d="M60 23v42a16 16 0 1 1-16 16" />
       </svg>
       <div className="absolute top-[56%] left-[7%] hidden size-32 -rotate-12 place-items-center rounded-full border-2 border-brand text-center text-xs leading-4 text-brand opacity-45 lg:grid">
-        <span>קצביות<br /><b className="text-xl">SoloR</b><br />שכונתיות</span>
+        <span>קצביות<br /><b className="text-[15px]">Butcherplace</b><br />שכונתיות</span>
       </div>
     </div>
   );

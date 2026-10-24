@@ -77,7 +77,7 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
     { k: he.post.codeShort, v: <span className="code !text-[12px] whitespace-nowrap">{headless ? displayCode(clipNo(cut.parent_code)) : cut.code}</span> },
   ];
   return (
-    <article ref={ref} id={`post-${cut.id}`} className="overflow-hidden rounded-[22px] bg-ink-2 text-start shadow-[var(--shadow-card)]">
+    <article ref={ref} id={`post-${cut.id}`} className="overflow-hidden rounded-[26px] border-2 border-ivory bg-ink-2 text-start shadow-[var(--shadow-card)]">
       <div className="flex flex-col gap-2 px-4 pt-3.5 pb-3 lg:px-[18px]">
         <header className="flex items-center gap-2.5">
           {shop && <Wrap href={shopPath(shop)} aria-label={shop.name}><ShopMark shop={shop} /></Wrap>}

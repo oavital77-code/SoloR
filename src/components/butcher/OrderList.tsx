@@ -89,7 +89,7 @@ function OrderCard({ order: o, breeds, now }: { order: ButcherOrderRow; breeds: 
   return (
     <li>
       <Link href={`/butcher/orders/${o.id}`}
-        className={clsx("sr-ocard active:opacity-90", edge, o.status === "new" && "shadow-[0_0_0_3px_rgb(163_18_42/0.18),var(--shadow-card)]")}>
+        className={clsx("sr-ocard active:opacity-90", edge, o.status === "new" && "shadow-[0_0_0_3px_rgb(200_32_44/0.18),var(--shadow-card)]")}>
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <OrderStatusBadge status={o.status} method={o.receive_method} />

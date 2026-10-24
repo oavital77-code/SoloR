@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { IconBag, IconHome, IconSearch, IconUser } from "../icons";
 import { Ltr } from "../ui";
+import { Emblem, Logo } from "../Logo";
 import { he } from "@/lib/i18n/he";
 import { useCart } from "@/lib/cart";
 import { isOpenNow } from "@/lib/hours";
@@ -30,10 +31,12 @@ export function AppHeader() {
 
   return (
     <>
-      <header data-theme="night" className={clsx("sticky top-0 z-40 bg-ink pt-[env(safe-area-inset-top)] text-ivory", onCut && "hidden lg:block")}>
+      <header data-theme="night" data-bp-header className={clsx("sticky top-0 z-40 rounded-b-[22px] bg-ink pt-[env(safe-area-inset-top)] text-ivory", onCut && "hidden lg:block")}>
         <div className="sr-header">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <Link href="/" onClick={toTop} aria-label="SoloR"><img src="/brand/wordmark-on-dark.svg" alt="SoloR" className="sr-header__logo" /></Link>
+          <Link href="/" onClick={toTop} aria-label={he.app.name} className="flex items-center gap-2">
+            <Emblem size={42} className="-my-1" />
+            <Logo height={20} />
+          </Link>
           <DesktopNav path={path} />
           <LiveNow />
           <div className="sr-header__actions">
