@@ -11,6 +11,7 @@ import { clsx } from "clsx";
 import { PostMedia } from "./PostMedia";
 import { ShopMark } from "./ShopMark";
 import { usePostView } from "./usePostView";
+import { useReveal } from "./motion/useReveal";
 import { markSoldNotice } from "@/lib/impressions";
 import { track } from "@/lib/track";
 import { RemainderChooser, type OnOrder } from "./ItemBuy";
@@ -57,6 +58,7 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
   const [show, setShow] = useState<{ path: string; n: number } | null>(null);
   const showPhoto = (m: CutMedia | undefined) => { if (m) setShow((x) => ({ path: m.storage_path, n: (x?.n ?? 0) + 1 })); };
   const { ref, visible } = usePostView<HTMLElement>(cut.id, { butcherId: cut.butcher_id, source });
+  useReveal(ref, !preview);
   // the one-time sold-out notice counts as given once the stamped post was actually in view
   useEffect(() => { if (gone && visible) markSoldNotice(cut.id); }, [gone, visible, cut.id]);
 
@@ -89,15 +91,24 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
             {!soldOut && !reserved && <span className="text-brand"> · <span className="inline-block size-1.5 rounded-full bg-brand align-middle" aria-hidden /> {he.live.fromCounter}</span>}
           </div>
         </header>
-        <p className="m-0 text-[15px] leading-[22px]">
+        <p data-reveal="title" className="m-0 text-[15px] leading-[22px]">
           <Wrap href={href} className="font-black">{kind}{breed && <> · {breed}</>}.</Wrap>{" "}
           <span className="font-medium">{part}.</span>
           {cut.description && <> {shortNote(cut.description)}</>}
         </p>
       </div>
 
-      <PostMedia media={media} title={title} code={cut.code} href={preview ? undefined : href} eager={eager} state={headless ? null : state}
-        videoFirst wide show={show}>{headless ? null : overlay}</PostMedia>
+      <div data-reveal="photo">
+        <PostMedia media={media} title={title} code={cut.code} href={preview ? undefined : href} eager={eager} state={headless ? null : state}
+          videoFirst wide show={show}>
+          {cut.parent_code != null && (
+            <span data-reveal="sticker" className="pointer-events-none absolute top-3 left-3 z-[1] -rotate-6 border-2 border-[#1b1712] bg-sticker px-2.5 py-0.5 font-mono text-[13px] font-semibold text-[#1b1712]">
+              {he.post.cutSticker(clipNo(cut.parent_code))}
+            </span>
+          )}
+          {headless ? null : overlay}
+        </PostMedia>
+      </div>
 
       <dl className="m-0 grid grid-cols-4 border-b border-line">
         {factCells.map((f) => (
@@ -253,7 +264,7 @@ function TrayRow({ cut, onShow }: { cut: SaleItem; onShow: (m: CutMedia | undefi
   const cover = coverOf(cut.cut_media);
   const price = linePrice(cut, "unit");
   return (
-    <li className="flex items-center gap-3 border-s-2 border-stone/40 ps-3">
+    <li data-reveal="tray" className="flex items-center gap-3 border-s-2 border-stone/40 ps-3">
       <button type="button" onClick={() => onShow(cover)} aria-label={he.cut.showPhoto(cut.code)}
         className="block size-12 shrink-0 overflow-hidden rounded-[10px] bg-ink-3 transition-transform active:scale-95">
         {/* eslint-disable-next-line @next/next/no-img-element */}

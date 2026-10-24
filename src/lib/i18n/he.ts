@@ -162,6 +162,7 @@ export const he = {
   // the post (customer spec §5) and the live feed around it (§4)
   post: {
     traysShort: "מגשים",
+    cutSticker: (n: string) => `נתח ${n}`,
     prevSlide: "לתמונה הקודמת",
     notAged: "ללא",
     days: (n: number) => `${n} יום`,
@@ -226,6 +227,7 @@ export const he = {
 
   feed: {
     onCounter: "מה עלה לדלפק",
+    headline: ["על הדלפק", "עכשיו."] as const,
     newPosts: (n: number) => (n === 1 ? "נתח חדש ↑" : `${n} נתחים חדשים ↑`),
     todaySummary: (n: number, shops: number) =>
       `${n === 1 ? "נתח אחד עלה" : `${n} נתחים עלו`} היום, ${shops === 1 ? "מקצבייה אחת" : shops === 2 ? "משתי קצביות" : `מ־${shops} קצביות`}`,

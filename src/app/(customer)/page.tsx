@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CutPost } from "@/components/CutPost";
+import { Rise, useShrinkOnScroll } from "@/components/motion/Rise";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { useHeldItems } from "@/components/customer/useHeldItems";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
@@ -67,6 +68,8 @@ export default function FeedPage() {
   const refresh = () => { showNew(); reload(); };
   const takeNew = () => { track("new_posts_pill_click", { count: pending }); showNew(); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const pull = usePullToRefresh(refresh);
+  const head = useRef<HTMLElement>(null);
+  useShrinkOnScroll(head);
   const shopOf = (id: string) => butchers.find((b) => b.id === id);
   // "12 נתחים עלו היום, משתי קצביות": what went live today (Israel time) and from how many shops
   const today = (() => {
@@ -113,13 +116,13 @@ export default function FeedPage() {
         <ShopsAside butchers={butchers} now={now} />
 
         <div className="min-w-0">
-          <header className="px-4 pt-5 pb-4 text-start lg:px-0 lg:pt-0">
-            <p className="sr-eyebrow">
+          <header ref={head} className="origin-top-right px-4 pt-5 pb-4 text-start lg:px-0 lg:pt-0">
+            <p className="m-0 font-mono text-xs tracking-[0.04em] text-stone">
               {he.feed.greeting(Math.floor(israelClock(new Date(now)).minutes / 60))}{firstName ? `, ${firstName}` : ""}
+              {today.cuts > 0 && <> · {he.feed.todaySummary(today.cuts, today.shops)}</>}
             </p>
-            <h1 className="m-0 mt-1 text-[28px] font-black leading-9 lg:text-[34px] lg:leading-10">
-              {today.cuts > 0 ? he.feed.todaySummary(today.cuts, today.shops) : he.feed.onCounter}
-            </h1>
+            <Rise lines={[he.feed.headline[0], { text: he.feed.headline[1], className: "text-brand" }]}
+              className="m-0 mt-1 text-[44px] font-black leading-[44px] lg:text-[56px] lg:leading-[56px]" />
           </header>
 
           {!ready ? (
