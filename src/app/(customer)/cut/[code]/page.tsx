@@ -9,6 +9,10 @@ import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { PostMedia } from "@/components/PostMedia";
+import { Rise } from "@/components/motion/Rise";
+import { BuyBar, SlicedCut } from "@/components/motion/SlicedCut";
+import { useGrowFromPost } from "@/components/motion/useGrowFromPost";
+import { takeHandoff } from "@/lib/handoff";
 import { ShopMark } from "@/components/ShopMark";
 import { RemainderChooser } from "@/components/ItemBuy";
 import { useAddToCart } from "@/components/CutPost";
@@ -96,7 +100,10 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
     scrolled.current = true;
     if (!want) return;
     const el = document.getElementById(`i-${want}`);
-    if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); setFocus(want); }
+    if (!el) return;
+    setFocus(want);
+    // the post's picture is growing into the frame at the top: stay there; the slicing below leads to the item
+    if (!takeHandoff()) el.scrollIntoView({ block: "center", behavior: "smooth" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
@@ -115,9 +122,31 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
     if (window.innerWidth < 1024) hero.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const allGone = items.length > 0 && !items.some(isAvailable);
+  const ready = state === "ok" && !!parent && items.length > 0;
+  useGrowFromPost(ready);
+  // a slice tapped: its row, highlighted
+  const pick = (label: string) => {
+    if (!label) return;
+    document.getElementById(`i-${label}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+    setFocus(label);
+  };
+  // the black buying bar (phones): what can be bought and from what price, gone while the family is on screen
+  const family = useRef<HTMLElement>(null);
+  const [familyInView, setFamilyInView] = useState(false);
+  useEffect(() => {
+    const el = family.current;
+    if (!ready || !el) return;
+    const io = new IntersectionObserver(([e]) => setFamilyInView(e.isIntersecting), { rootMargin: "0px 0px -15% 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ready]);
+  const buyable = items.filter((i) => i.status !== "withdrawn" && isAvailable(i));
+  const fromPrice = buyable.length
+    ? Math.min(...buyable.map((i) => linePrice(i, i.kind === "unit" ? "unit" : "remainder_all")))
+    : 0;
 
   return (
-    <main className="relative min-h-dvh pb-12">
+    <main className="relative min-h-dvh pb-32 lg:pb-12">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-between px-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden">
         <button type="button" aria-label={he.app.back}
           onClick={() => (window.history.length > 1 ? router.back() : router.push(butcher ? shopPath(butcher) : "/"))}
@@ -160,9 +189,8 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
               </div>
             </header>
 
-            <h1 className="m-0 font-display text-[30px] font-black leading-9">
-              {cutTypeLabel(parent.cut_type)}{breedLabel(parent, breeds) && <span className="font-normal text-stone"> · {breedLabel(parent, breeds)}</span>}
-            </h1>
+            <Rise lines={[cutTypeLabel(parent.cut_type), ...(breedLabel(parent, breeds) ? [{ text: breedLabel(parent, breeds), className: "text-brand" }] : [])]}
+              className="m-0 font-display text-[40px] font-black leading-10" />
             <Chips parent={parent} />
             {parent.description && (
               <div className="sr-note">
@@ -172,7 +200,14 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
             )}
             {parent.butcher_marbling ? <Marbling n={parent.butcher_marbling} /> : null}
 
-            <section aria-label={he.item.family(clipNo(parent.code))}
+            {units.length > 0 && (
+              <SlicedCut trays={units} onPick={pick}
+                lead={remainder
+                  ? { id: remainder.label ?? "", cover: coverOf(remainder.cut_media), label: `${he.item.blockLine(remainder.label ?? "", true).split(" · ")[0]} · ${formatWeight(remainder.weight_g ?? 0)}` }
+                  : { id: "", cover: coverOf(parent.cut_media ?? []), label: he.item.allTrays(clipNo(parent.code)) }} />
+            )}
+
+            <section ref={family} aria-label={he.item.family(clipNo(parent.code))}
               className="mt-2 flex flex-col rounded-2xl border-2 border-ivory bg-ink-2 p-3 lg:border-0 lg:bg-transparent lg:p-0">
               {remainder
                 ? <RemainderSection item={remainder} held={held.get(remainder.id)} focus={focus === remainder.label} onShow={showPhoto} />
@@ -203,6 +238,10 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
             <Credits media={media} />
           </div>
         </article>
+      )}
+      {ready && buyable.length > 0 && (
+        <BuyBar count={buyable.length} from={fromPrice} hidden={familyInView}
+          onGo={() => family.current?.scrollIntoView({ block: "start", behavior: "smooth" })} />
       )}
     </main>
   );

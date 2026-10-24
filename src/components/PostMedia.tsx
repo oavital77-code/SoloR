@@ -91,7 +91,7 @@ export function PostMedia({ media, title, code, href, eager, state, children, vi
   if (slides.length === 0) return <div ref={box} className={clsx("relative w-full bg-ink-3", wide ? "aspect-[16/10]" : "aspect-square")}>{children}</div>;
 
   return (
-    <div ref={box} className="relative overflow-hidden bg-ink-3">
+    <div ref={box} data-media-frame className="relative overflow-hidden bg-ink-3">
       {/* horizontal-only strip in a fixed-ratio box: a vertical swipe always scrolls the page (iOS) */}
       <div className={clsx("relative w-full", wide ? "aspect-[16/10]" : "aspect-square")}>
         <div ref={track} onScroll={onScroll} className={clsx("no-scrollbar absolute inset-0 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden transition-[filter] duration-[600ms]",

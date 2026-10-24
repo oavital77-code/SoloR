@@ -278,6 +278,10 @@ export const he = {
 
   cut: {
     showPhoto: (label: string) => `הצג את ${label} בתמונה הגדולה`,
+    sliceHint: "גללו — הנתח נפרס ↓",
+    buyBarTitle: (n: number) => (n === 1 ? "דבר אחד לקנות מהנתח" : `${n} לבחירה מהנתח`),
+    buyBarFrom: "החל מ־",
+    buyBarGo: "לבחירה",
     realPhoto: "צילום אמיתי של הנתח",
     demoPhoto: "תמונות הדגמה",
     photoCredits: "צילומים",
