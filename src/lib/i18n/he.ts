@@ -338,6 +338,8 @@ export const he = {
     soldOut: "אזל",
     reserved: "שוריין",
     perKg: "לק״ג",
+    kgShort: "ק״ג",
+    blockShort: (code: string) => `הגוש ${code}`,
     canSlice: "אפשר לבקש פריסה",
     tooLittle: "נשאר מעט מדי לפריסה — אפשר לקנות את כל הגוש",
     toPage: "לכל מה שיש מהנתח",

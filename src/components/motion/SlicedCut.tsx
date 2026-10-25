@@ -1,8 +1,10 @@
 "use client";
-// The cut, sliced as the page scrolls (design: נייר קצבים × אפליקציה, sketch 4): the block (or the cut itself) in
-// front, the trays cut from it hidden behind it; scrolling through, the trays come out of the block above and below
-// and their stickers pop up with number, weight and price. A tap on a slice goes to its row. Up to four trays are
-// drawn; all of them are listed below it anyway. With reduced motion the slices are simply apart.
+// The cut and what was cut from it — the whole buying block of the cut's page (design: נייר קצבים × אפליקציה,
+// sketch 4; founders 25.10.2026: the cut on top and bigger, the trays opening out of it, each with its own order
+// button; no second list under it). The block (or the cut itself, when all of it went into trays) is in front; the
+// trays start hidden behind it and, as the page scrolls, come down out of it into a column, their stickers popping
+// with number, weight and price. A tap on a photo shows it in the page's big frame. With reduced motion everything
+// is simply in place.
 import { useRef } from "react";
 import { clsx } from "clsx";
 import { he } from "@/lib/i18n/he";
@@ -12,72 +14,93 @@ import { motion, reducedMotion, useIsoLayoutEffect } from "@/lib/motion";
 import { formatWeight, money } from "@/lib/pricing";
 import type { CutMedia, SaleItem } from "@/lib/types";
 
-const MAX = 4;
-// where each tray ends up: alternately above and below the block, the first two furthest out
-const SPOT = [
-  { y: -132, x: 10, r: -8 }, { y: 132, x: -10, r: 7 },
-  { y: -66, x: -34, r: 4 }, { y: 66, x: 34, r: -5 },
-];
+const TILT = [-3, 2.5, -2, 3];
+const SHIFT = [10, -10, 6, -6];
 
-export function SlicedCut({ lead, trays, onPick }: {
-  lead: { cover?: CutMedia; label: string; id: string };
+export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy }: {
+  /** the block (id = its label, for #i-…) or the cut itself */
+  lead: { cover?: CutMedia; label: string; id?: string; sold?: boolean };
   trays: SaleItem[];
-  onPick: (id: string, cover?: CutMedia) => void;
+  /** the label opened from a post: ringed */
+  focus?: string | null;
+  onPhoto: (m: CutMedia | undefined) => void;
+  /** a tray's order button, or what stands in its place (sold, held, in the cart) */
+  trayAction: (t: SaleItem) => React.ReactNode;
+  /** the block's buying (all of it or a slice), under its photo */
+  leadBuy?: React.ReactNode;
 }) {
   const stage = useRef<HTMLDivElement>(null);
-  const shown = trays.slice(0, MAX);
-  const key = shown.map((t) => t.id).join(",");
+  const key = trays.map((t) => t.id).join(",");
 
   useIsoLayoutEffect(() => {
     const el = stage.current;
     if (!el) return;
     const { gsap } = motion();
-    const slices = el.querySelectorAll<HTMLElement>("[data-tray]");
-    const labels = el.querySelectorAll("[data-lbl]");
-    const to = (i: number) => ({ y: SPOT[i].y, x: SPOT[i].x, rotate: SPOT[i].r });
-    if (reducedMotion()) {
-      slices.forEach((s, i) => gsap.set(s, to(i)));
-      return;
-    }
+    const slices = Array.from(el.querySelectorAll<HTMLElement>("[data-tray]"));
+    if (!slices.length) return;
+    const pops = el.querySelectorAll("[data-pop]");
+    const done = (i: number) => ({ y: 0, x: SHIFT[i % 4], rotate: TILT[i % 4] });
+    if (reducedMotion()) { slices.forEach((s, i) => gsap.set(s, done(i))); return; }
     const ctx = gsap.context(() => {
-      slices.forEach((s, i) => gsap.set(s, { y: SPOT[i].y > 0 ? 8 : -8, rotate: SPOT[i].r > 0 ? 2 : -2 }));
-      gsap.set(labels, { opacity: 0, scale: 0.6 });
-      const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 85%", end: "center 40%", scrub: 0.7 } });
+      // each tray starts tucked behind the cut's photo
+      const photo = el.querySelector<HTMLElement>("[data-lead]")!.getBoundingClientRect();
+      const mid = photo.top + photo.height / 2;
+      slices.forEach((s, i) => {
+        const r = s.getBoundingClientRect();
+        gsap.set(s, { y: mid - (r.top + r.height / 2) + (i % 2 ? 8 : -8), x: 0, rotate: i % 2 ? 2 : -2, scale: 0.92 });
+      });
+      gsap.set(pops, { opacity: 0, scale: 0.6 });
+      const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 75%", end: "top 10%", scrub: 0.7 } });
       tl.to(el.querySelector("[data-hint]"), { opacity: 0, duration: 0.2 }, 0)
-        .to(el.querySelector("[data-lead]"), { rotate: -3, scale: 1.04, duration: 1 }, 0);
-      slices.forEach((s, i) => tl.to(s, { ...to(i), duration: 1, ease: "power2.out" }, 0));
-      tl.to(labels, { opacity: 1, scale: 1, stagger: 0.12, duration: 0.4, ease: "back.out(3)" }, 0.5);
+        .to(el.querySelector("[data-lead]"), { rotate: -2, scale: 1.03, duration: 0.6 }, 0);
+      slices.forEach((s, i) => tl.to(s, { ...done(i), scale: 1, duration: 1, ease: "power2.out" }, i * 0.12));
+      tl.to(pops, { opacity: 1, scale: 1, stagger: 0.08, duration: 0.4, ease: "back.out(3)" }, 0.45);
     }, el);
     return () => ctx.revert();
   }, [key]);
 
-  const slice = "absolute top-[150px] left-1/2 -ml-[130px] block h-[104px] w-[260px]";
-  const photo = "block size-full rounded-[52px/34px] border-4 border-sticker bg-ink-3 object-cover shadow-[0_18px_30px_-16px_rgba(27,23,18,0.6)]";
-  const sticker = "absolute -top-3 right-3 -rotate-[5deg] border-2 border-[#1b1712] bg-sticker px-2.5 py-0.5 font-mono text-[12px] font-semibold whitespace-nowrap text-[#1b1712]";
-  const leadCover = lead.cover;
+  const photo = "block size-full overflow-hidden rounded-[56px/38px] border-4 border-sticker bg-ink-3 shadow-[0_18px_30px_-16px_rgba(27,23,18,0.6)]";
+  const sticker = "absolute -top-3 right-3 z-[1] -rotate-[4deg] border-2 border-[#1b1712] bg-sticker px-2.5 py-0.5 font-mono text-[12px] font-semibold whitespace-nowrap text-[#1b1712]";
+  const img = (m?: CutMedia) => m
+    // eslint-disable-next-line @next/next/no-img-element
+    ? <img src={mediaUrl(m.thumb_path ?? m.storage_path)} alt="" className="size-full object-cover" />
+    : null;
 
   return (
-    <div ref={stage} className="relative mx-auto h-[404px] w-full max-w-[360px] overflow-hidden">
-      <p data-hint className="absolute inset-x-0 top-1 m-0 text-center font-mono text-[11px] tracking-[0.1em] text-stone">{he.cut.sliceHint}</p>
-      {shown.map((t) => {
-        const cover = coverOf(t.cut_media);
-        const sold = !isAvailable(t);
-        return (
-          <button key={t.id} type="button" data-tray onClick={() => onPick(t.label ?? "", cover)} aria-label={he.cut.showPhoto(t.code)}
-            className={clsx(slice, sold && "grayscale")}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {cover ? <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" className={photo} /> : <span className={photo} />}
-            <span data-lbl className={sticker}>
-              {t.label} · {formatWeight(t.weight_g ?? 0)} · {sold ? he.item.soldOut : money(linePrice(t, "unit"))}
-            </span>
+    <div ref={stage} className="relative mx-auto flex w-full max-w-[380px] flex-col">
+      <div id={lead.id ? `i-${lead.id}` : undefined} className="relative z-10 flex scroll-mt-24 flex-col gap-4">
+        <div data-lead className={clsx("relative mx-auto h-[176px] w-full max-w-[350px]", lead.sold && "grayscale")}>
+          <button type="button" onClick={() => onPhoto(lead.cover)} aria-label={he.cut.showPhoto(lead.label)} className={photo}>
+            {img(lead.cover)}
           </button>
-        );
-      })}
-      <button type="button" data-lead onClick={() => onPick(lead.id, leadCover)} aria-label={he.cut.showPhoto(lead.label)} className={slice}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {leadCover ? <img src={mediaUrl(leadCover.thumb_path ?? leadCover.storage_path)} alt="" className={photo} /> : <span className={photo} />}
-        <span data-lbl className={sticker}>{lead.label}</span>
-      </button>
+          <span className={clsx(sticker, "text-[13px]", focus && focus === lead.id && "ring-2 ring-brand")}>{lead.label}</span>
+        </div>
+        {leadBuy && <div className="rounded-2xl border-2 border-ivory bg-ink-2 p-3">{leadBuy}</div>}
+        {trays.length > 0 && (
+          <p data-hint className="m-0 text-center font-mono text-[11px] tracking-[0.1em] text-stone">{he.cut.sliceHint}</p>
+        )}
+      </div>
+      {trays.length > 0 && (
+        <ul className="relative z-0 m-0 mt-5 flex list-none flex-col gap-10 p-0 pb-4" aria-label={he.item.cutFrom(trays.length)}>
+          {trays.map((t) => {
+            const cover = coverOf(t.cut_media);
+            const sold = !isAvailable(t);
+            return (
+              <li key={t.id} id={`i-${t.label}`} data-tray
+                className={clsx("relative mx-auto h-[116px] w-[300px] max-w-[90%] scroll-mt-24", sold && "grayscale")}>
+                <button type="button" onClick={() => onPhoto(cover)} aria-label={he.cut.showPhoto(t.code)}
+                  className={clsx(photo, focus === t.label && "!border-brand")}>
+                  {img(cover)}
+                </button>
+                <span data-pop className={sticker}>
+                  {t.label}{t.steak_count ? ` · ${he.item.steaks(t.steak_count)}` : ""} · {formatWeight(t.weight_g ?? 0)} · {money(linePrice(t, "unit"))}
+                </span>
+                <div data-pop className="absolute -bottom-4 left-4 z-[2]">{trayAction(t)}</div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

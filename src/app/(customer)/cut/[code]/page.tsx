@@ -124,14 +124,8 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   const allGone = items.length > 0 && !items.some(isAvailable);
   const ready = state === "ok" && !!parent && items.length > 0;
   useGrowFromPost(ready);
-  // a slice tapped: its row, highlighted
-  const pick = (label: string) => {
-    if (!label) return;
-    document.getElementById(`i-${label}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
-    setFocus(label);
-  };
   // the black buying bar (phones): what can be bought and from what price, gone while the family is on screen
-  const family = useRef<HTMLElement>(null);
+  const family = useRef<HTMLDivElement>(null);
   const [familyInView, setFamilyInView] = useState(false);
   useEffect(() => {
     const el = family.current;
@@ -200,27 +194,16 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
             )}
             {parent.butcher_marbling ? <Marbling n={parent.butcher_marbling} /> : null}
 
-            {units.length > 0 && (
-              <SlicedCut trays={units} onPick={pick}
+            <div ref={family} aria-label={he.item.family(clipNo(parent.code))} className="mt-3">
+              <SlicedCut trays={units} focus={focus} onPhoto={showPhoto}
                 lead={remainder
-                  ? { id: remainder.label ?? "", cover: coverOf(remainder.cut_media), label: `${he.item.blockLine(remainder.label ?? "", true).split(" · ")[0]} · ${formatWeight(remainder.weight_g ?? 0)}` }
-                  : { id: "", cover: coverOf(parent.cut_media ?? []), label: he.item.allTrays(clipNo(parent.code)) }} />
-            )}
-
-            <section ref={family} aria-label={he.item.family(clipNo(parent.code))}
-              className="mt-2 flex flex-col rounded-2xl border-2 border-ivory bg-ink-2 p-3 lg:border-0 lg:bg-transparent lg:p-0">
-              {remainder
-                ? <RemainderSection item={remainder} held={held.get(remainder.id)} focus={focus === remainder.label} onShow={showPhoto} />
-                : <ParentHead parent={parent} onShow={showPhoto} />}
-              {units.length > 0 && (
-                <div className="mt-3 flex flex-col gap-2 border-t border-dashed border-stone/40 pt-3 lg:ms-11 lg:mt-2 lg:border-s-2 lg:border-t-0 lg:ps-4 lg:pt-2">
-                  <h2 className="sr-eyebrow m-0">{he.item.cutFrom(units.length)}</h2>
-                  <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                    {units.map((u) => <UnitRow key={u.id} item={u} reserved={isReserved(u, held.get(u.id))} focus={focus === u.label} onShow={showPhoto} />)}
-                  </ul>
-                </div>
-              )}
-            </section>
+                  ? { id: remainder.label ?? "", cover: coverOf(remainder.cut_media) ?? coverOf(parent.cut_media ?? []), sold: !isAvailable(remainder),
+                      label: [he.item.blockShort(clipNo(parent.code)), formatWeight(remainder.weight_g ?? 0),
+                        isAvailable(remainder) ? `${money(remainder.price_per_kg_agorot ?? 0)}/${he.item.kgShort}` : he.item.soldOut].join(" · ") }
+                  : { cover: coverOf(parent.cut_media ?? []), label: he.item.allTrays(clipNo(parent.code)) }}
+                leadBuy={remainder && isAvailable(remainder) ? <LeadBuy item={remainder} held={held.get(remainder.id)} /> : undefined}
+                trayAction={(u) => <TrayAction item={u} reserved={isReserved(u, held.get(u.id))} />} />
+            </div>
 
             <Certificate parent={parent} items={items} breeds={breeds} />
 
@@ -296,93 +279,30 @@ function Marbling({ n }: { n: number }) {
   );
 }
 
-/** One ready unit: its photo, label, steaks, weight and price, and [הזמן] — grey once sold (§6). */
-function UnitRow({ item, reserved, focus, onShow }: { item: SaleItem; reserved: boolean; focus: boolean; onShow: (m: CutMedia | undefined) => void }) {
+/** A tray's order button on its photo — or, in its place, sold / held by someone at checkout / already in the cart. */
+function TrayAction({ item, reserved }: { item: SaleItem; reserved: boolean }) {
   const inCart = useCart().some((l) => l.itemId === item.id);
   const add = useAddToCart("post");
-  const cover = coverOf(item.cut_media);
-  const sold = !isAvailable(item);
-  const price = linePrice(item, "unit");
+  const chip = "inline-flex min-h-9 items-center gap-1 rounded-full border-2 border-[#1b1712] bg-sticker px-3 text-[14px] font-bold";
+  if (!isAvailable(item)) return <span className={clsx(chip, "text-sold")}>{he.item.soldOut}</span>;
+  if (reserved) return <span className={clsx(chip, "text-gold")}>{he.item.reserved}</span>;
+  if (inCart) return <span className={clsx(chip, "text-success")}><IconCheck className="size-4" />{he.item.inCart}</span>;
   return (
-    <li id={`i-${item.label}`} className={clsx("flex scroll-mt-24 items-center gap-3 border-s-2 border-stone/40 py-1 ps-3 transition-shadow",
-      "lg:rounded-2xl lg:border-s-0 lg:bg-ink-2 lg:p-2 lg:pe-3", sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
-      <ThumbButton cover={cover} label={item.code} onShow={onShow} small />
-      <span className="min-w-0 flex-1 text-[15px] leading-5">
-        <span className="block font-bold"><span className="code !text-[14px]">{item.label}</span>{item.steak_count ? <> · {he.item.steaks(item.steak_count)}</> : null}</span>
-        <span className="text-stone"><Ltr>{formatWeight(item.weight_g ?? 0)}</Ltr> · <Ltr className="font-bold text-ivory">{money(price)}</Ltr></span>
-      </span>
-      {sold ? <span className="font-bold text-sold">{he.item.soldOut}</span>
-        : reserved ? <span className="font-bold text-gold">{he.item.reserved}</span>
-        : inCart ? <span className="inline-flex items-center gap-1 font-bold text-success"><IconCheck className="size-5" />{he.item.inCart}</span>
-        : (
-          <button type="button" className="sr-btn !min-h-11 !px-4" disabled={!canBuyUnit(item)}
-            onClick={() => add(item, "unit", null, null, price)}>
-            {he.item.order}
-          </button>
-        )}
-    </li>
+    <button type="button" className="sr-btn !min-h-11 !px-6" disabled={!canBuyUnit(item)}
+      onClick={() => add(item, "unit", null, null, linePrice(item, "unit"))}>
+      {he.item.order}
+    </button>
   );
 }
 
-/** The block — the mother card (sketches 1 and 5): the cut itself by weight, all of it or a slice. On a computer it is
- * a card of its own; on a phone the family section around it is the card. */
-function RemainderSection({ item, held, focus, onShow }: {
-  item: SaleItem; held?: import("@/lib/items").Held; focus: boolean; onShow: (m: CutMedia | undefined) => void;
-}) {
+/** The block on sale: all of it, or "פרוס לי" by weight (the chooser), under its photo. */
+function LeadBuy({ item, held }: { item: SaleItem; held?: import("@/lib/items").Held }) {
   const line = useCart().find((l) => l.itemId === item.id);
   const add = useAddToCart("post");
-  const cover = coverOf(item.cut_media);
-  const sold = !isAvailable(item);
   return (
-    <div id={`i-${item.label}`} aria-label={item.split ? he.item.fromRemainder : he.item.wholeByWeight}
-      className={clsx("flex scroll-mt-24 flex-col gap-3 rounded-2xl", "lg:border-2 lg:border-ivory lg:bg-ink-2 lg:p-4",
-        sold && "opacity-55 grayscale", focus && "ring-2 ring-brand")}>
-      <div className="flex items-center gap-3">
-        <ThumbButton cover={cover} label={item.code} onShow={onShow} />
-        <span className="min-w-0 text-[15px] leading-5">
-          <span className="sr-eyebrow block">{he.item.theCut}</span>
-          <span className="block text-[17px] font-bold">{he.item.blockLine(item.label, !!item.split)}</span>
-          <span className="text-stone">
-            {sold ? he.item.soldOut : <><Ltr>{formatWeight(item.weight_g ?? 0)}</Ltr> · <Ltr>{money(item.price_per_kg_agorot ?? 0)}</Ltr> {he.item.perKg}</>}
-          </span>
-        </span>
-      </div>
-      {!sold && (
-        <RemainderChooser compact item={item} held={held} inCart={!!line} initial={line}
-          key={line ? `${line.mode}-${line.grams}` : "new"}
-          onOrder={(...a) => add(item, ...a)} />
-      )}
-    </div>
-  );
-}
-
-/** No block (all of it went into trays): the cut itself heads its trays — its photo and number, nothing to buy. */
-function ParentHead({ parent, onShow }: { parent: Parent & { cut_media?: CutMedia[] }; onShow: (m: CutMedia | undefined) => void }) {
-  const code = clipNo(parent.code);
-  return (
-    <div className="flex items-center gap-3 rounded-2xl lg:border-2 lg:border-ivory lg:bg-ink-2 lg:p-4">
-      <ThumbButton cover={coverOf(parent.cut_media ?? [])} label={displayCode(code)} onShow={onShow} />
-      <span className="min-w-0 text-[15px] leading-5">
-        <span className="sr-eyebrow block">{he.item.theCut}</span>
-        <span className="block text-[17px] font-bold">{he.item.allTrays(code)}</span>
-        {parent.weight_g ? <span className="text-stone"><Ltr>{formatWeight(parent.weight_g)}</Ltr></span> : null}
-      </span>
-    </div>
-  );
-}
-
-/** A tray's (or the block's) photo: a tap shows it in the big frame. */
-function ThumbButton({ cover, label, onShow, small }: {
-  cover: CutMedia | undefined; label: string; onShow: (m: CutMedia | undefined) => void;
-  /** a tray's: smaller on a phone */
-  small?: boolean;
-}) {
-  return (
-    <button type="button" onClick={() => onShow(cover)} aria-label={he.cut.showPhoto(label)}
-      className={clsx("block shrink-0 overflow-hidden rounded-xl bg-ink-3 transition-transform active:scale-95", small ? "size-14 lg:size-[72px]" : "size-[72px]")}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      {cover && <img src={mediaUrl(cover.thumb_path ?? cover.storage_path)} alt="" loading="lazy" className="h-full w-full object-cover" />}
-    </button>
+    <RemainderChooser compact item={item} held={held} inCart={!!line} initial={line}
+      key={line ? `${line.mode}-${line.grams}` : "new"}
+      onOrder={(...a) => add(item, ...a)} />
   );
 }
 
