@@ -131,7 +131,7 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
       {/* founders 25.10.2026: as on the cut's page — the cut on top, its trays opening out of it, each with its add */}
       <div className="px-3 pt-5 pb-4 lg:px-4">
         <SlicedCut trays={family ? trays! : []} onPhoto={() => {}} href={preview ? undefined : (label) => parentPath(cut.parent_id, label ?? cut.label)}
-          lead={{ cover: photos[0], id: headless ? undefined : cut.label ?? undefined, label: leadLabel }}
+          lead={{ cover: photos[0], id: headless ? undefined : cut.label ?? undefined, label: leadLabel, no: clip, block: !headless && cut.kind === "remainder" }}
           leadOverlay={headless ? null : overlay}
           leadBuy={headless ? undefined : (
             <div className="flex items-center gap-3">

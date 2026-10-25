@@ -282,6 +282,8 @@ export const he = {
   cut: {
     showPhoto: (label: string) => `הצג את ${label} בתמונה הגדולה`,
     sliceHint: "גללו — הנתח נפרס ↓",
+    partOfMe: "חלק ממני",
+    partSub: (code: string, block: boolean) => `בחרו את הנתחים הספציפיים ${block ? "מהגוש" : "מנתח"} ${code} ↓`,
     buyBarTitle: (n: number) => (n === 1 ? "דבר אחד לקנות מהנתח" : `${n} לבחירה מהנתח`),
     buyBarFrom: "החל מ־",
     buyBarGo: "לבחירה",

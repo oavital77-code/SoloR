@@ -19,8 +19,8 @@ const TILT = [-3, 2.5, -2, 3];
 const SHIFT = [10, -10, 6, -6];
 
 export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy, href, leadOverlay }: {
-  /** the block (id = its label, for #i-…) or the cut itself */
-  lead: { cover?: CutMedia; label: string; id?: string; sold?: boolean };
+  /** the block (id = its label, for #i-…) or the cut itself; `no` is the cut's number, `block` whether it is the block */
+  lead: { cover?: CutMedia; label: string; id?: string; sold?: boolean; no: string; block: boolean };
   trays: SaleItem[];
   /** the label opened from a post: ringed */
   focus?: string | null;
@@ -56,8 +56,7 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy, hr
       });
       gsap.set(pops, { opacity: 0, scale: 0.6 });
       const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 75%", end: "top 10%", scrub: 0.7 } });
-      tl.to(el.querySelector("[data-hint]"), { opacity: 0, duration: 0.2 }, 0)
-        .to(el.querySelector("[data-lead]"), { rotate: -2, scale: 1.03, duration: 0.6 }, 0);
+      tl.to(el.querySelector("[data-lead]"), { rotate: -2, scale: 1.03, duration: 0.6 }, 0);
       slices.forEach((s, i) => tl.to(s, { ...done(i), scale: 1, duration: 1, ease: "power2.out" }, i * 0.12));
       tl.to(pops, { opacity: 1, scale: 1, stagger: 0.08, duration: 0.4, ease: "back.out(3)" }, 0.45);
     }, el);
@@ -84,9 +83,7 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy, hr
           <span className={clsx(sticker, "text-[13px]", focus && focus === lead.id && "ring-2 ring-brand")}>{lead.label}</span>
         </div>
         {leadBuy && <div className="rounded-2xl border-2 border-ivory bg-ink-2 p-3">{leadBuy}</div>}
-        {trays.length > 0 && (
-          <p data-hint className="m-0 text-center font-mono text-[11px] tracking-[0.1em] text-stone">{he.cut.sliceHint}</p>
-        )}
+        {trays.length > 0 && <PartOfMe no={lead.no} block={lead.block} />}
       </div>
       {trays.length > 0 && (
         <ul className="relative z-0 m-0 mt-5 flex list-none flex-col gap-10 p-0 pb-4" aria-label={he.item.cutFrom(trays.length)}>
@@ -106,6 +103,48 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy, hr
           })}
         </ul>
       )}
+    </div>
+  );
+}
+
+/** Between the cut and its trays (founders' pick, 25.10.2026): a knife runs along a dashed cutting line, then the red
+ * "חלק ממני" sticker pops on it and "pick the very pieces of cut 109" appears under it. Once, as it scrolls in. */
+function PartOfMe({ no, block }: { no: string; block: boolean }) {
+  const root = useRef<HTMLDivElement>(null);
+  useIsoLayoutEffect(() => {
+    const el = root.current;
+    if (!el || reducedMotion()) return;
+    const { gsap } = motion();
+    const q = gsap.utils.selector(el);
+    const ctx = gsap.context(() => {
+      gsap.set(q("[data-knife]"), { x: 0, opacity: 1 });
+      gsap.set(q("[data-line]"), { opacity: 0.2 });
+      gsap.set(q("[data-sticker]"), { scale: 0, rotate: -30 });
+      gsap.set(q("[data-sub]"), { opacity: 0, y: 10 });
+      gsap.timeline({ scrollTrigger: { trigger: el, start: "top 85%", once: true } })
+        .to(q("[data-knife]"), { x: () => -(el.offsetWidth - 64), duration: 1.1, ease: "power2.inOut" })
+        .to(q("[data-line]"), { opacity: 1, duration: 1.1, ease: "none" }, 0)
+        .to(q("[data-knife]"), { opacity: 0, duration: 0.2 })
+        .to(q("[data-sticker]"), { scale: 1, rotate: -3, duration: 0.5, ease: "back.out(3)" }, "-=0.1")
+        .to(q("[data-sub]"), { opacity: 1, y: 0, duration: 0.4 }, "-=0.2");
+    }, el);
+    return () => ctx.revert();
+  }, []);
+  return (
+    <div ref={root} className="relative h-[92px]">
+      <svg aria-hidden className="absolute inset-x-0 top-[18px] h-1 w-full overflow-visible">
+        <line data-line x1="2%" y1="2" x2="98%" y2="2" stroke="var(--color-ivory)" strokeWidth="2.5" strokeDasharray="8 6" />
+      </svg>
+      <svg data-knife viewBox="0 0 60 24" aria-hidden className="absolute top-2 right-1 h-6 w-[60px] opacity-0">
+        <path d="M2 12 L36 4 L40 12 L36 20 Z" fill="#D8DEE0" stroke="#1B1712" strokeWidth="2" />
+        <rect x="38" y="8" width="20" height="8" rx="3" fill="#8B5A2B" stroke="#1B1712" strokeWidth="2" />
+      </svg>
+      <div className="absolute inset-x-0 top-0 flex justify-center">
+        <span data-sticker className="-rotate-3 rounded-[10px] border-2 border-[#1b1712] bg-[#c8202c] px-3.5 py-0.5 text-[20px] font-black text-sticker">
+          {he.cut.partOfMe}
+        </span>
+      </div>
+      <p data-sub className="absolute inset-x-0 top-[54px] m-0 text-center text-[14px] font-bold">{he.cut.partSub(no, block)}</p>
     </div>
   );
 }

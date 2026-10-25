@@ -197,10 +197,10 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
             <div ref={family} aria-label={he.item.family(clipNo(parent.code))} className="mt-3">
               <SlicedCut trays={units} focus={focus} onPhoto={showPhoto}
                 lead={remainder
-                  ? { id: remainder.label ?? "", cover: coverOf(remainder.cut_media) ?? coverOf(parent.cut_media ?? []), sold: !isAvailable(remainder),
+                  ? { no: clipNo(parent.code), block: true, id: remainder.label ?? "", cover: coverOf(remainder.cut_media) ?? coverOf(parent.cut_media ?? []), sold: !isAvailable(remainder),
                       label: [he.item.blockShort(clipNo(parent.code)), formatWeight(remainder.weight_g ?? 0),
                         isAvailable(remainder) ? `${money(remainder.price_per_kg_agorot ?? 0)}/${he.item.kgShort}` : he.item.soldOut].join(" · ") }
-                  : { cover: coverOf(parent.cut_media ?? []), label: he.item.allTrays(clipNo(parent.code)) }}
+                  : { no: clipNo(parent.code), block: false, cover: coverOf(parent.cut_media ?? []), label: he.item.allTrays(clipNo(parent.code)) }}
                 leadBuy={remainder && isAvailable(remainder) ? <LeadBuy item={remainder} held={held.get(remainder.id)} trays={units} /> : undefined}
                 trayAction={(u) => <TrayAction item={u} reserved={isReserved(u, held.get(u.id))} />} />
             </div>
