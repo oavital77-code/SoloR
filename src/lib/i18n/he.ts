@@ -227,7 +227,10 @@ export const he = {
 
   feed: {
     onCounter: "מה עלה לדלפק",
-    headline: ["על הדלפק", "עכשיו."] as const,
+    headline: ["על הדלפק", "עכשיו"] as const,
+    signOpen: "פתוח",
+    signClosed: "סגור עכשיו",
+    ding: "דינג!",
     newPosts: (n: number) => (n === 1 ? "נתח חדש ↑" : `${n} נתחים חדשים ↑`),
     todaySummary: (n: number, shops: number) =>
       `${n === 1 ? "נתח אחד עלה" : `${n} נתחים עלו`} היום, ${shops === 1 ? "מקצבייה אחת" : shops === 2 ? "משתי קצביות" : `מ־${shops} קצביות`}`,

@@ -6,7 +6,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CutPost } from "@/components/CutPost";
-import { Rise, useShrinkOnScroll } from "@/components/motion/Rise";
+import { useShrinkOnScroll } from "@/components/motion/Rise";
+import { HangingSign } from "@/components/motion/HangingSign";
 import { useCatalog } from "@/components/customer/useCatalog";
 import { useHeldItems } from "@/components/customer/useHeldItems";
 import { useLiveFeed } from "@/components/customer/useLiveFeed";
@@ -71,6 +72,7 @@ export default function FeedPage() {
   const head = useRef<HTMLElement>(null);
   useShrinkOnScroll(head);
   const shopOf = (id: string) => butchers.find((b) => b.id === id);
+  const openNow = butchers.filter((b) => b.status !== "inactive" && isOpenNow(b.opening_hours, new Date(now))).length;
   // "12 נתחים עלו היום, משתי קצביות": what went live today (Israel time) and from how many shops
   const today = (() => {
     const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" }) : "");
@@ -116,13 +118,11 @@ export default function FeedPage() {
         <ShopsAside butchers={butchers} now={now} />
 
         <div className="min-w-0">
-          <header ref={head} className="origin-top-right px-4 pt-5 pb-4 text-start lg:px-0 lg:pt-0">
-            <p className="m-0 font-mono text-xs tracking-[0.04em] text-stone">
+          <header ref={head} className="origin-top px-4 pb-5 lg:px-0">
+            <HangingSign ring={pending} open={openNow > 0} eyebrow={<>
               {he.feed.greeting(Math.floor(israelClock(new Date(now)).minutes / 60))}{firstName ? `, ${firstName}` : ""}
               {today.cuts > 0 && <> · {he.feed.todaySummary(today.cuts, today.shops)}</>}
-            </p>
-            <Rise lines={[he.feed.headline[0], { text: he.feed.headline[1], className: "text-brand" }]}
-              className="m-0 mt-1 text-[44px] font-black leading-[44px] lg:text-[56px] lg:leading-[56px]" />
+            </>} />
           </header>
 
           {!ready ? (
