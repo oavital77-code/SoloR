@@ -67,6 +67,7 @@ begin
 end $$;
 
 revoke all on function hold_cart(jsonb, uuid) from public;
+revoke execute on function hold_cart(jsonb, uuid) from anon;
 grant execute on function hold_cart(jsonb, uuid) to authenticated;
 
 -- reserve_checkout (as in 0016): check stock and hold the whole cart, all or nothing; now on the cart's clock
