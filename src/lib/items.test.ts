@@ -81,3 +81,12 @@ describe("steaks in a slice", () => {
     expect(sliceSteaks(200, 4, 115)).toEqual({ count: 1, each: 200 });
   });
 });
+
+describe("upload content type", () => {
+  it("drops the codecs Safari adds to a recording", async () => {
+    const { bareType } = await import("./upload");
+    expect(bareType("video/mp4; codecs=avc1.4d401f,mp4a.40.2")).toBe("video/mp4");
+    expect(bareType("video/webm;codecs=vp8")).toBe("video/webm");
+    expect(bareType("image/jpeg")).toBe("image/jpeg");
+  });
+});

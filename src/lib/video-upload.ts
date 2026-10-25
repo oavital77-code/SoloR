@@ -3,7 +3,7 @@
 // uploads; the screens show a small progress bar. Kept outside React so moving between screens does not stop it.
 import { useSyncExternalStore } from "react";
 import { supabaseBrowser } from "./supabase/client";
-import { extOf, inspectVideo, mediaPath, tusUpload } from "./upload";
+import { bareType, extOf, inspectVideo, mediaPath, tusUpload } from "./upload";
 
 export interface VideoUpload { parentId: string; pct: number; status: "uploading" | "done" | "error" }
 
@@ -15,7 +15,7 @@ const set = (v: VideoUpload | null) => { current = v; listeners.forEach((l) => l
 export function uploadParentVideo(blob: Blob, butcherId: string, parentId: string) {
   // a recording made in the browser is a Blob without a name; the phone's camera gives a File
   const file = blob instanceof File ? blob
-    : new File([blob], `rec.${blob.type.includes("mp4") ? "mp4" : "webm"}`, { type: blob.type || "video/webm", lastModified: Date.now() });
+    : new File([blob], `rec.${blob.type.includes("mp4") ? "mp4" : "webm"}`, { type: bareType(blob.type) || "video/webm", lastModified: Date.now() });
   const run = async () => {
     set({ parentId, pct: 0, status: "uploading" });
     try {
@@ -26,7 +26,8 @@ export function uploadParentVideo(blob: Blob, butcherId: string, parentId: strin
         poster = path.replace(/\.[a-z0-9]+$/, "_poster.jpg");
         await tusUpload(info.poster, poster, "image/jpeg", () => {}).promise.catch(() => { poster = null; });
       }
-      await tusUpload(file, path, file.type || "video/mp4", (pct) => set({ parentId, pct, status: "uploading" })).promise;
+      const type = bareType(file.type) || (path.endsWith(".webm") ? "video/webm" : path.endsWith(".mov") ? "video/quicktime" : "video/mp4");
+      await tusUpload(file, path, type, (pct) => set({ parentId, pct, status: "uploading" })).promise;
       const { error } = await supabaseBrowser().rpc("set_parent_video", { p_parent_id: parentId, p_video_path: path, p_poster_path: poster });
       if (error) throw error;
       set({ parentId, pct: 100, status: "done" });

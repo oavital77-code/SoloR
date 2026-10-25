@@ -11,8 +11,13 @@ export interface UploadHandle {
   abort: () => void;
 }
 
+/** "video/mp4; codecs=avc1.4d401f,mp4a.40.2" → "video/mp4": Storage matches the bucket's allowed types exactly, and a
+ * recording made in Safari carries its codecs in the type (it was refused with 415) */
+export const bareType = (type: string) => type.split(";")[0].trim().toLowerCase();
+
 /** Resumable upload with progress; retries automatically when the connection drops. */
 export function tusUpload(file: Blob, objectPath: string, contentType: string, onProgress: (pct: number) => void): UploadHandle {
+  contentType = bareType(contentType);
   let upload: tus.Upload | null = null;
   let aborted = false;
   const promise = (async () => {
