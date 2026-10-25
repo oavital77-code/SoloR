@@ -160,6 +160,44 @@ reset role;
 update butchers set delivery_enabled = false, delivery_areas = '{}', delivery_pricing = '{}', delivery_windows = '{}'
 where id = '00000000-0000-4000-8000-000000000001';
 
+-- ── the cart is held from the first add (0021) ──
+set role authenticated;
+set request.jwt.claim.sub = '10000000-0000-4000-8000-00000000000b';
+select set_config('t.citem', pg_temp.remainder(1000)::text, false);
+create or replace function pg_temp.ccart() returns jsonb language sql as $$
+  select jsonb_build_array(jsonb_build_object('item_id', current_setting('t.citem'), 'mode', 'remainder_all')) $$;
+grant execute on function pg_temp.ccart() to authenticated;
+set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000c1';
+select set_config('t.cexp', (select hold_cart(pg_temp.ccart(), 'aaaaaaaa-0000-4000-8000-000000000001')->>'expires_at'), false);
+select pg_temp.check(current_setting('t.cexp')::timestamptz between now() + interval '9 minutes' and now() + interval '11 minutes',
+                     'the first add holds the cart for ten minutes');
+-- another customer sees it held, both at checkout and when putting it in their own cart
+set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000c2';
+select pg_temp.check(pg_temp.reasons(format('select reserve_checkout(%L::jsonb, gen_random_uuid())', pg_temp.ccart())) = 'ITEM_RESERVED',
+                     'a cart hold keeps others out');
+select pg_temp.check((select r->>'expires_at' is null and r->'problems'->0->>'reason' = 'ITEM_RESERVED'
+                      from hold_cart(pg_temp.ccart(), 'aaaaaaaa-0000-4000-8000-000000000002') r), 'their cart is told it is held');
+-- the same cart again keeps its clock; the checkout keeps it too
+set request.jwt.claim.sub = '10000000-0000-4000-8000-0000000000c1';
+select pg_temp.check((hold_cart(pg_temp.ccart(), 'aaaaaaaa-0000-4000-8000-000000000001')->>'expires_at')::timestamptz
+                     = current_setting('t.cexp')::timestamptz, 'a change keeps the running clock');
+select pg_temp.check((select count(*) = 1 from holds where customer_id = '10000000-0000-4000-8000-0000000000c1'
+                      and status = 'active' and notes->>'cart_device' = 'aaaaaaaa-0000-4000-8000-000000000001'), 'one cart hold per device');
+select set_config('t.ckh', (select id::text from reserve_checkout(pg_temp.ccart(), gen_random_uuid())), false);
+select pg_temp.check((select expires_at = current_setting('t.cexp')::timestamptz from holds where id = current_setting('t.ckh')::uuid),
+                     'checkout runs on the cart''s clock');
+select pg_temp.check((select count(*) = 0 from holds where status = 'active' and notes->>'cart_device' is not null
+                      and customer_id = '10000000-0000-4000-8000-0000000000c1'), 'checkout takes over the cart hold');
+select release_hold(current_setting('t.ckh')::uuid);
+-- an emptied cart lets go
+select hold_cart(pg_temp.ccart(), 'aaaaaaaa-0000-4000-8000-000000000001');
+select pg_temp.check((hold_cart('[]'::jsonb, 'aaaaaaaa-0000-4000-8000-000000000001')->>'expires_at') is null, 'empty cart');
+select pg_temp.check((select count(*) = 0 from holds where status = 'active' and notes->>'cart_device' is not null
+                      and customer_id = '10000000-0000-4000-8000-0000000000c1'), 'an empty cart holds nothing');
+set request.jwt.claim.sub = '10000000-0000-4000-8000-00000000000b';
+select pg_temp.expect_error(format('select hold_cart(%L::jsonb, gen_random_uuid())', pg_temp.ccart()), 'NOT_ALLOWED');
+reset role;
+
 -- ── guests and butchers cannot hold ──
 set role anon;
 select pg_temp.expect_error(format('select reserve_checkout(%L::jsonb, gen_random_uuid())', pg_temp.live()), '42501');

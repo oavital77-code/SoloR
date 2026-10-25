@@ -28,6 +28,7 @@ import { track } from "@/lib/track";
 import type { Butcher, SaleItem } from "@/lib/types";
 
 const PAGE = 8;
+const SHOW_TICKER = false;
 const LIMIT_KEY = "solor.feed.limit";
 const PULL = 70;
 
@@ -112,7 +113,8 @@ export default function FeedPage() {
         </button>
       )}
 
-      <LiveTicker events={events} />
+      {/* the red "עכשיו" strip is off while the pilot has one or two shops (founders 26.10.2026) */}
+      {SHOW_TICKER && <LiveTicker events={events} />}
 
       <div className="lg:grid lg:grid-cols-[270px_minmax(0,660px)_290px] lg:justify-center lg:gap-8 lg:px-8 lg:pt-7">
         <ShopsAside butchers={butchers} now={now} />

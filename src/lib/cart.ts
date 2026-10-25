@@ -1,7 +1,7 @@
 // The cart lives on the device (localStorage): guests can fill it, and it survives moving between shops and
 // signing in. Once signed in it is also kept on the account (table `carts`) and merged with what the account
 // already had (customer spec §9.1), so it follows the customer to another device.
-// Adding to the cart reserves nothing — stock is checked for the whole cart at checkout.
+// A signed-in customer's cart is held from the first cut put in it (lib/cartHold); stock is checked again at checkout.
 // One line per sale item; adding the same item again replaces its line (all of it / a slice, the grams).
 import { useSyncExternalStore } from "react";
 import { SLICE_MIN_G, SLICE_STEP_G } from "./items";

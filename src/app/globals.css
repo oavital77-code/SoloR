@@ -2,15 +2,15 @@
 @import "./solor.css";
 @import "./motion.css";
 
-/* Butcherplace (formerly SoloR) design tokens. Three themes of the same tokens: "customer" (light butcher paper, the default), "night"
-   (the dark band: header, tab bar, entry screens) and "counter" (light, loud) for the butcher's screens. */
-/* Butcherplace brand constants (design: נייר קצבים × אפליקציה, 24.10.2026): kraft paper, a cream sticker, near-black
-   ink and one butcher's red; the retro illustrations add teal, orange, cream and pink. Not themed. */
+/* Butcherplace (formerly SoloR) design tokens. Three themes of the same tokens: "customer" (white, the default), "night"
+   (the black band: header, tab bar, entry screens) and "counter" (light, loud) for the butcher's screens. */
+/* Butcherplace brand constants (founders 26.10.2026: plain white ground; dark bordeaux, black and white lead). The
+   retro illustrations keep their teal, orange, cream and pink. Not themed. */
 :root {
-  --kraft: #e9dfcc;
-  --sticker: #fffdf7;
-  --bp-ink: #1b1712;
-  --bp-red: #c8202c;
+  --kraft: #ffffff;           /* the loader's paper: white now (the name stays for the classes that use it) */
+  --sticker: #ffffff;         /* stickers and cards */
+  --bp-ink: #111111;
+  --bp-red: #7a1020;          /* dark bordeaux */
   --teal: #6fa79a;
   --orange: #e8562a;
   --cream: #f7d8c4;
@@ -18,64 +18,64 @@
 }
 :root,
 [data-theme="customer"] {
-  /* customer: kraft-paper ground, cream sticker cards framed in ink, one butcher's red, near-black type */
-  --ground: #e9dfcc;          /* page background: kraft paper */
-  --surface: #fffdf7;         /* post cards, sheets, cart rows: the sticker */
-  --surface-raised: #f1e8d6;  /* image placeholder, chips, inputs */
-  --line: #d6c8ae;            /* hairlines */
-  --line-gold: #cbb995;       /* the thin frame of a card */
-  --ink: #1b1712;             /* text */
-  --ink-muted: #5c5244;       /* secondary text */
-  --gold: #8f5a12;            /* small accents: eyebrows, the aging chip, links */
-  --gold-soft: #8f5a121a;
-  --bordeaux: #c8202c;        /* the one action colour: butcher's red */
-  --bordeaux-press: #9f1822;
-  --bordeaux-glow: #c8202c;
-  --on-bordeaux: #fffdf7;
-  --state-new: #1b1712;
-  --on-state-new: #fffdf7;
-  --state-partial: #c8202c;
-  --state-reserved: #8f5a12;
-  --on-state-reserved: #fffdf7;
-  --state-sold: #b81c27;
-  --state-error: #b81c27;
+  /* customer: plain white ground, white cards framed in black, one dark bordeaux */
+  --ground: #ffffff;          /* page background */
+  --surface: #ffffff;         /* post cards, sheets, cart rows */
+  --surface-raised: #f3f3f3;  /* image placeholder, chips, inputs */
+  --line: #e2e2e2;            /* hairlines */
+  --line-gold: #cfcfcf;       /* the thin frame of a card */
+  --ink: #111111;             /* text */
+  --ink-muted: #5e5e5e;       /* secondary text */
+  --gold: #7a1020;            /* small accents: eyebrows, the aging chip, links — bordeaux too */
+  --gold-soft: #7a10200f;
+  --bordeaux: #7a1020;        /* the one action colour: dark bordeaux */
+  --bordeaux-press: #5a0b17;
+  --bordeaux-glow: #7a1020;
+  --on-bordeaux: #ffffff;
+  --state-new: #111111;
+  --on-state-new: #ffffff;
+  --state-partial: #7a1020;
+  --state-reserved: #8a6a2f;
+  --on-state-reserved: #ffffff;
+  --state-sold: #9b1b30;
+  --state-error: #9b1b30;
   --state-success: #2e7d4f;
-  --status-new: #c8202c;
+  --status-new: #7a1020;
   --status-prep: #9a6400;
   --status-ready: #2e7d4f;
-  --scrim: #1b171299;
-  --shadow-card: 0 2px 10px rgba(27, 23, 18, 0.08);
-  --shadow-action: 0 6px 16px -6px rgba(200, 32, 44, 0.6);
+  --scrim: #11111199;
+  --shadow-card: 0 2px 10px rgba(17, 17, 17, 0.08);
+  --shadow-action: 0 6px 16px -6px rgba(122, 16, 32, 0.6);
 }
-/* the dark band: header, tab bar, live panel, and the entry screens */
+/* the black band: header, tab bar, live panel, and the entry screens */
 [data-theme="night"] {
-  --ground: #1b1712;
-  --surface: #241e18;         /* post cards, sheets, cart rows */
-  --surface-raised: #2f271f;  /* image placeholder, shop-mark disc, inputs */
-  --line: #fffdf71a;          /* hairlines, 10% ink; never for meaning */
-  --line-gold: #e9dfcc4d;     /* the thin frame of a post card */
-  --ink: #fffdf7;             /* text */
-  --ink-muted: #b3a894;       /* secondary text */
-  --gold: #e3c48f;            /* small accents only */
-  --gold-soft: #e3c48f1f;
-  --bordeaux: #c8202c;
-  --bordeaux-press: #9f1822;
-  --bordeaux-glow: #e8562a;
-  --on-bordeaux: #fffdf7;
-  --state-new: #fffdf7;
-  --on-state-new: #1b1712;
-  --state-partial: #c8202c;
+  --ground: #111111;
+  --surface: #1c1c1c;         /* post cards, sheets, cart rows */
+  --surface-raised: #2a2a2a;  /* image placeholder, shop-mark disc, inputs */
+  --line: #ffffff1a;          /* hairlines, 10% ink; never for meaning */
+  --line-gold: #ffffff40;     /* the thin frame of a post card */
+  --ink: #ffffff;             /* text */
+  --ink-muted: #a8a8a8;       /* secondary text */
+  --gold: #e7b7bf;            /* small accents only: a light bordeaux on black */
+  --gold-soft: #e7b7bf1f;
+  --bordeaux: #9b1b30;        /* a step lighter than the ground's bordeaux, to read on black */
+  --bordeaux-press: #7a1020;
+  --bordeaux-glow: #c2334a;
+  --on-bordeaux: #ffffff;
+  --state-new: #ffffff;
+  --on-state-new: #111111;
+  --state-partial: #9b1b30;
   --state-reserved: #e3c48f;
-  --on-state-reserved: #1b1712;
+  --on-state-reserved: #111111;
   --state-sold: #f4a3a8;
   --state-error: #f4a3a8;
   --state-success: #93bb9c;
-  --status-new: #c8202c;
+  --status-new: #9b1b30;
   --status-prep: #d9a441;
   --status-ready: #93bb9c;
-  --scrim: #1b1712b3;
+  --scrim: #111111b3;
   --shadow-card: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
-  --shadow-action: 0 8px 22px -8px rgba(200, 32, 44, 0.75);
+  --shadow-action: 0 8px 22px -8px rgba(122, 16, 32, 0.75);
 }
 [data-theme="counter"] {
   --ground: #f7f3ec;
@@ -121,7 +121,7 @@
   --color-success: var(--state-success);
   --color-reserved: var(--state-reserved);
   --color-scrim: var(--scrim);
-  --color-live: #c8202c;
+  --color-live: #7a1020;
   --color-kraft: var(--kraft);
   --color-sticker: var(--sticker);
   --color-teal: var(--teal);
@@ -173,7 +173,7 @@ body {
 }
 /* the bordeaux wash at the top of the customer screens (feed, splash) */
 .wash {
-  background: radial-gradient(120% 70% at 50% -20%, rgb(200 32 44 / 0.2), transparent 70%);
+  background: radial-gradient(120% 70% at 50% -20%, rgb(122 16 32 / 0.12), transparent 70%);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -248,8 +248,8 @@ body {
 }
 
 @keyframes new-glow {
-  0% { box-shadow: 0 0 0 0 rgba(200, 32, 44, 0.8); }
-  100% { box-shadow: 0 0 0 14px rgba(200, 32, 44, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(122, 16, 32, 0.8); }
+  100% { box-shadow: 0 0 0 14px rgba(122, 16, 32, 0); }
 }
 .animate-new-glow {
   animation: new-glow 1.4s ease-out 3;
@@ -322,9 +322,9 @@ input[type="range"].big-range::-moz-range-thumb {
   animation: live-pulse 1.8s ease-out infinite;
 }
 @keyframes live-pulse {
-  0% { box-shadow: 0 0 0 0 rgb(200 32 44 / 0.55); }
-  100% { box-shadow: 0 0 0 9px rgb(200 32 44 / 0); }
+  0% { box-shadow: 0 0 0 0 rgb(122 16 32 / 0.55); }
+  100% { box-shadow: 0 0 0 9px rgb(122 16 32 / 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .live-dot { animation: none; box-shadow: 0 0 0 4px rgb(200 32 44 / 0.3); }
+  .live-dot { animation: none; box-shadow: 0 0 0 4px rgb(122 16 32 / 0.3); }
 }

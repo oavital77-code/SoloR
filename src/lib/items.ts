@@ -4,6 +4,8 @@
 import { priceForWeight } from "./pricing";
 import type { CutMedia, Item, LineMode, Parent, SaleItem } from "./types";
 
+/** how long a cart (and a checkout) is held — as checkout_hold_minutes() in the database */
+export const HOLD_MINUTES = 10;
 export const SLICE_MIN_G = 200;
 export const SLICE_STEP_G = 50;
 export const SLICE_THICKNESS_CM = [1.5, 2, 2.5, 3, 4];

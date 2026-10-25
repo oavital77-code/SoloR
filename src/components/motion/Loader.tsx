@@ -86,22 +86,22 @@ export function Loader() {
   if (!on) return null;
   return (
     <div ref={root} data-bp-loader aria-hidden className="bp-loader fixed inset-0 z-[200] cursor-pointer select-none">
-      <div className="bp-loader__paper absolute inset-0 flex flex-col items-center overflow-hidden bg-kraft text-[#1b1712]">
+      <div className="bp-loader__paper absolute inset-0 flex flex-col items-center overflow-hidden bg-kraft text-[#111111]">
         <div className="h-[calc(236px+env(safe-area-inset-top))] shrink-0" />
         <div className="relative mt-6 h-[170px] w-[240px]">
           <SteakSlices className="size-full" />
-          <span className="bp-crumb absolute top-[10px] left-[30px] size-2.5 rounded-full bg-[#c8202c]" />
+          <span className="bp-crumb absolute top-[10px] left-[30px] size-2.5 rounded-full bg-[#7a1020]" />
           <span className="bp-crumb absolute top-[140px] left-3 size-[7px] rounded-full bg-pink" />
           <span className="bp-crumb absolute top-1 right-9 size-2 rounded-full bg-pink" />
-          <span className="bp-crumb absolute top-[150px] right-5 size-[11px] rounded-full bg-[#c8202c]" />
-          <span className="bp-knife absolute -top-5 left-1/2 -ml-px h-[210px] w-[3px] rounded-sm bg-[#1b1712]" />
+          <span className="bp-crumb absolute top-[150px] right-5 size-[11px] rounded-full bg-[#7a1020]" />
+          <span className="bp-knife absolute -top-5 left-1/2 -ml-px h-[210px] w-[3px] rounded-sm bg-[#111111]" />
         </div>
         <div className="mt-7 flex gap-2 text-[22px] font-extrabold">
           <span className="bp-word">פורסים</span><span className="bp-word">לך</span><span className="bp-word">את</span>
-          <span className="bp-word text-[#c8202c]">הנתח</span>
+          <span className="bp-word text-[#7a1020]">הנתח</span>
         </div>
-        <span className="bp-word mt-2 font-mono text-xs tracking-[0.1em] text-[#5c5244]">BUTCHERPLACE · חי מהדלפק</span>
-        <div className="bp-loader__band absolute inset-x-0 bottom-0 h-[120px] overflow-hidden border-t-[3px] border-[#1b1712] bg-teal">
+        <span className="bp-word mt-2 font-mono text-xs tracking-[0.1em] text-[#5e5e5e]">BUTCHERPLACE · חי מהדלפק</span>
+        <div className="bp-loader__band absolute inset-x-0 bottom-0 h-[120px] overflow-hidden border-t-[3px] border-[#111111] bg-teal">
           <div className="bp-band absolute right-0 flex h-full w-max items-center gap-[26px]">
             {[...band, ...band].map((b, i) => (
               <RetroIcon key={i} kind={b.kind} className="h-[62px] w-[88px] shrink-0" style={{ transform: `rotate(${b.tilt}deg)` }} />

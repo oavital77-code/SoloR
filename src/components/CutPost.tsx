@@ -277,7 +277,7 @@ function TrayAdd({ cut }: { cut: SaleItem }) {
   const add = useAddToCart("feed");
   if (inCart) {
     return (
-      <span className="inline-flex min-h-9 items-center gap-1 rounded-full border-2 border-[#1b1712] bg-sticker px-3 text-[14px] font-bold text-success">
+      <span className="inline-flex min-h-9 items-center gap-1 rounded-full border-2 border-[#111111] bg-sticker px-3 text-[14px] font-bold text-success">
         <IconCheck className="size-4" />{he.post.inCart}
       </span>
     );

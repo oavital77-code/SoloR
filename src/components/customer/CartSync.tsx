@@ -1,14 +1,15 @@
 "use client";
 // Keeps the cart on the account while signed in (customer spec §9.1): on sign-in the device's cart is merged into
 // the account's, and later changes are saved back. The shared demo customer is left out — every founder signs in
-// as the same account there, and their carts must not mix.
+// as the same account there, and their carts must not mix. It also keeps the cart's cuts held (lib/cartHold).
 import { useEffect } from "react";
 import { cart, mergeCarts, sanitizeCart } from "@/lib/cart";
+import { syncCartHold } from "@/lib/cartHold";
 import { useSession } from "@/lib/hooks";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 export function CartSync() {
-  const { user } = useSession();
+  const { user, loading } = useSession();
   const userId = user && !user.email?.endsWith("@solor.example") ? user.id : null;
 
   useEffect(() => {
@@ -31,6 +32,17 @@ export function CartSync() {
     });
     return () => { alive = false; window.clearTimeout(timer); unsubscribe(); };
   }, [userId]);
+
+  // the hold on the cart's cuts (0021): sent again on every change, a moment after it settles
+  const signedIn = !!user;
+  useEffect(() => {
+    if (loading) return;
+    let t: number | undefined;
+    const run = () => { window.clearTimeout(t); t = window.setTimeout(() => { syncCartHold(signedIn); }, 400); };
+    run();
+    const unsubscribe = cart.subscribe(run);
+    return () => { window.clearTimeout(t); unsubscribe(); };
+  }, [signedIn, loading]);
 
   return null;
 }

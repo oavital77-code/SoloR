@@ -1,6 +1,6 @@
 // Minimal service worker: makes Butcherplace installable ("add to home screen").
 // No offline caching of data — the feed must always be live. Static icons are cached.
-const CACHE = "solor-static-v2";
+const CACHE = "solor-static-v3";
 const STATIC = ["/icons/icon-192.png", "/icons/icon-512.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

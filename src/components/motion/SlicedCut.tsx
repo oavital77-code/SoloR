@@ -63,8 +63,8 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy, hr
     return () => ctx.revert();
   }, [key]);
 
-  const photo = "block size-full overflow-hidden rounded-[56px/38px] border-4 border-sticker bg-ink-3 shadow-[0_18px_30px_-16px_rgba(27,23,18,0.6)]";
-  const sticker = "absolute -top-3 right-3 z-[1] -rotate-[4deg] border-2 border-[#1b1712] bg-sticker px-2.5 py-0.5 font-mono text-[12px] font-semibold whitespace-nowrap text-[#1b1712]";
+  const photo = "block size-full overflow-hidden rounded-[56px/38px] border-4 border-sticker bg-ink-3 shadow-[0_18px_30px_-16px_rgba(17,17,17,0.6)]";
+  const sticker = "absolute -top-3 right-3 z-[1] -rotate-[4deg] border-2 border-[#111111] bg-sticker px-2.5 py-0.5 font-mono text-[12px] font-semibold whitespace-nowrap text-[#111111]";
   // a photo: a link to the cut's page (feed), or a button that shows it in the page's big frame
   const shot = (m: CutMedia | undefined, label: string, anchor: string | undefined, extra?: string) => href
     ? <Link href={href(anchor)} data-media-frame aria-label={label} className={clsx(photo, extra)}>{img(m)}</Link>
@@ -136,11 +136,11 @@ function PartOfMe({ no, block }: { no: string; block: boolean }) {
         <line data-line x1="2%" y1="2" x2="98%" y2="2" stroke="var(--color-ivory)" strokeWidth="2.5" strokeDasharray="8 6" />
       </svg>
       <svg data-knife viewBox="0 0 60 24" aria-hidden className="absolute top-2 right-1 h-6 w-[60px] opacity-0">
-        <path d="M2 12 L36 4 L40 12 L36 20 Z" fill="#D8DEE0" stroke="#1B1712" strokeWidth="2" />
-        <rect x="38" y="8" width="20" height="8" rx="3" fill="#8B5A2B" stroke="#1B1712" strokeWidth="2" />
+        <path d="M2 12 L36 4 L40 12 L36 20 Z" fill="#D8DEE0" stroke="#111111" strokeWidth="2" />
+        <rect x="38" y="8" width="20" height="8" rx="3" fill="#8B5A2B" stroke="#111111" strokeWidth="2" />
       </svg>
       <div className="absolute inset-x-0 top-0 flex justify-center">
-        <span data-sticker className="-rotate-3 rounded-[10px] border-2 border-[#1b1712] bg-[#c8202c] px-3.5 py-0.5 text-[20px] font-black text-sticker">
+        <span data-sticker className="-rotate-3 rounded-[10px] border-2 border-[#111111] bg-[#7a1020] px-3.5 py-0.5 text-[20px] font-black text-sticker">
           {he.cut.partOfMe}
         </span>
       </div>

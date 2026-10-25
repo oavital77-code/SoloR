@@ -15,7 +15,7 @@ export function DemoChooser({ shops, next, failed }: { shops: Shop[]; next: stri
 
   return (
     <main data-theme="night" className="relative mx-auto flex min-h-dvh max-w-[480px] flex-col overflow-hidden bg-ink px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] text-center text-ivory">
-      <div className="absolute inset-0 [background:radial-gradient(90%_55%_at_50%_0%,rgb(200_32_44/0.38),transparent_70%)]" aria-hidden />
+      <div className="absolute inset-0 [background:radial-gradient(90%_55%_at_50%_0%,rgb(122_16_32/0.38),transparent_70%)]" aria-hidden />
       <div className="relative flex flex-1 flex-col items-center justify-center gap-7 py-10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/bp-emblem.webp" alt="" className="h-32 w-auto" />

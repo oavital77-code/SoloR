@@ -21,8 +21,8 @@ export function flyToCart(src?: string | null) {
   if (dot instanceof HTMLImageElement && src) { dot.src = src; dot.alt = ""; }
   Object.assign(dot.style, {
     position: "fixed", left: `${from.x - 28}px`, top: `${from.y - 28}px`, width: "56px", height: "56px", borderRadius: "50%",
-    objectFit: "cover", border: "3px solid #fffdf7", background: "#c8202c", zIndex: "300", pointerEvents: "none",
-    boxShadow: "0 8px 20px -8px rgba(27,23,18,.6)",
+    objectFit: "cover", border: "3px solid #ffffff", background: "#7a1020", zIndex: "300", pointerEvents: "none",
+    boxShadow: "0 8px 20px -8px rgba(17,17,17,.6)",
   });
   document.body.appendChild(dot);
   gsap.timeline({ onComplete: () => dot.remove() })

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { ScreenHead } from "@/components/customer/market-ui";
+import { HoldBanner } from "@/components/customer/HoldClock";
 import { CutGroup, groupByCut } from "@/components/CutGroup";
 import { ShopMark } from "@/components/ShopMark";
 import { useCartRows, type Row } from "@/components/customer/useCartRows";
@@ -44,6 +45,7 @@ export default function CartPage() {
   return (
     <main className="flex min-h-dvh flex-col px-4 text-start lg:mx-auto lg:w-full lg:max-w-[1040px] lg:px-8">
       <ScreenHead title={he.cart.yours} back={back} backLabel={he.app.back} />
+      {lines.length > 0 && <HoldBanner count={lines.length} signedIn={!!user} />}
 
       {lines.length === 0 ? (
         <EmptyState text={he.cart.empty}>

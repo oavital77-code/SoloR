@@ -283,7 +283,7 @@ function Marbling({ n }: { n: number }) {
 function TrayAction({ item, reserved }: { item: SaleItem; reserved: boolean }) {
   const inCart = useCart().some((l) => l.itemId === item.id);
   const add = useAddToCart("post");
-  const chip = "inline-flex min-h-9 items-center gap-1 rounded-full border-2 border-[#1b1712] bg-sticker px-3 text-[14px] font-bold";
+  const chip = "inline-flex min-h-9 items-center gap-1 rounded-full border-2 border-[#111111] bg-sticker px-3 text-[14px] font-bold";
   if (!isAvailable(item)) return <span className={clsx(chip, "text-sold")}>{he.item.soldOut}</span>;
   if (reserved) return <span className={clsx(chip, "text-gold")}>{he.item.reserved}</span>;
   if (inCart) return <span className={clsx(chip, "text-success")}><IconCheck className="size-4" />{he.item.inCart}</span>;

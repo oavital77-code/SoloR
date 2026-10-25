@@ -1,8 +1,8 @@
 "use client";
-// The feed's headline as a sign hanging over the counter (founders' pick of three sketches, 25.10.2026): a cream
-// enamel sign on two chains, "על הדלפק / עכשיו" in the middle, an "open" sticker, and under it the wooden counter
-// with a bell. It swings in once the loader is gone and settles into a slow sway; the bell rings then, and again
-// whenever new cuts come in. With reduced motion it simply hangs there.
+// The feed's headline as a sign hanging over the counter (founders' pick of three sketches, 25.10.2026; text and colours
+// 26.10.2026): a white enamel sign on two chains, "עכשיו נחתך / על הבוצ׳ר" in the middle, an "open" sticker, and under
+// it the black counter with a bell. It swings in once the loader is gone and settles into a slow sway; the bell rings
+// then, and again whenever new cuts come in. With reduced motion it simply hangs there.
 import { useEffect, useRef } from "react";
 import { clsx } from "clsx";
 import { he } from "@/lib/i18n/he";
@@ -57,28 +57,28 @@ export function HangingSign({ eyebrow, open, ring }: {
           <circle cx="60" cy="49" r="5" fill="none" stroke="var(--color-ivory)" strokeWidth="3" />
           <circle cx="240" cy="49" r="5" fill="none" stroke="var(--color-ivory)" strokeWidth="3" />
         </svg>
-        <div className="relative rounded-[24px] border-4 border-ivory bg-sticker p-2 text-[#1b1712] shadow-[0_14px_0_-6px_rgba(27,23,18,0.25)]">
-          <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-[#cbb995] px-3 pt-3 pb-2 text-center">
-            <p className="m-0 font-mono text-[11px] leading-4 tracking-[0.04em] text-[#5c5244]">{eyebrow}</p>
+        <div className="relative rounded-[24px] border-4 border-ivory bg-sticker p-2 text-[#111111] shadow-[0_14px_0_-6px_rgba(17,17,17,0.25)]">
+          <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-[#cfcfcf] px-3 pt-3 pb-2 text-center">
+            <p className="m-0 font-mono text-[11px] leading-4 tracking-[0.04em] text-[#5e5e5e]">{eyebrow}</p>
             <h1 className="m-0 mt-1 text-[48px] leading-[48px] font-black lg:text-[56px] lg:leading-[56px]">
               <span className="block overflow-hidden pb-1"><span data-line className="block">{he.feed.headline[0]}</span></span>
-              <span className="block overflow-hidden pb-1"><span data-line className="block text-[#c8202c]">{he.feed.headline[1]}</span></span>
+              <span className="block overflow-hidden pb-1"><span data-line className="block text-[#7a1020]">{he.feed.headline[1]}</span></span>
             </h1>
           </div>
-          <span className={clsx("absolute -top-3.5 left-3.5 flex -rotate-[8deg] items-center gap-1.5 rounded-full border-2 border-[#1b1712] px-3 py-0.5 text-[13px] font-extrabold",
-            open ? "bg-[#c8202c] text-sticker" : "bg-kraft text-[#5c5244]")}>
+          <span className={clsx("absolute -top-3.5 left-3.5 flex -rotate-[8deg] items-center gap-1.5 rounded-full border-2 border-[#111111] px-3 py-0.5 text-[13px] font-extrabold",
+            open ? "bg-[#7a1020] text-sticker" : "bg-kraft text-[#5e5e5e]")}>
             {open && <span className="size-2 animate-pulse rounded-full bg-sticker" aria-hidden />}
             {open ? he.feed.signOpen : he.feed.signClosed}
           </span>
         </div>
       </div>
       {/* the counter under the sign, and its bell */}
-      <div aria-hidden className="relative mt-10 h-[30px] border-y-[3px] border-[#1b1712] bg-[#8b5a2b] max-lg:-mx-4">
+      <div aria-hidden className="relative mt-10 h-[30px] bg-[#111111] max-lg:-mx-4">
         <svg data-bell viewBox="0 0 40 36" className="absolute -top-[33px] right-6 h-9 w-10">
-          <path d="M6 30 C6 14 12 8 20 8 C28 8 34 14 34 30 Z" fill="#E3C48F" stroke="#1B1712" strokeWidth="2.5" />
-          <rect x="2" y="29" width="36" height="5" rx="2" fill="#1B1712" /><circle cx="20" cy="6" r="3" fill="#1B1712" />
+          <path d="M6 30 C6 14 12 8 20 8 C28 8 34 14 34 30 Z" fill="#ffffff" stroke="#111111" strokeWidth="2.5" />
+          <rect x="2" y="29" width="36" height="5" rx="2" fill="#111111" /><circle cx="20" cy="6" r="3" fill="#111111" />
         </svg>
-        <span data-ding className="absolute -top-[22px] right-[72px] font-mono text-[13px] font-semibold text-[#c8202c] opacity-0">{he.feed.ding}</span>
+        <span data-ding className="absolute -top-[22px] right-[72px] font-mono text-[13px] font-semibold text-[#7a1020] opacity-0">{he.feed.ding}</span>
       </div>
     </div>
   );
