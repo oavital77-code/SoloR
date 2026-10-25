@@ -11,6 +11,9 @@ export function motion() {
   if (!registered && typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
     registered = true;
+    // the feed grows and shifts (pages of posts, new posts above, images): scroll positions are measured again
+    let t: number | undefined;
+    new ResizeObserver(() => { window.clearTimeout(t); t = window.setTimeout(() => ScrollTrigger.refresh(), 250); }).observe(document.body);
   }
   return { gsap, ScrollTrigger };
 }

@@ -201,7 +201,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
                       label: [he.item.blockShort(clipNo(parent.code)), formatWeight(remainder.weight_g ?? 0),
                         isAvailable(remainder) ? `${money(remainder.price_per_kg_agorot ?? 0)}/${he.item.kgShort}` : he.item.soldOut].join(" · ") }
                   : { cover: coverOf(parent.cut_media ?? []), label: he.item.allTrays(clipNo(parent.code)) }}
-                leadBuy={remainder && isAvailable(remainder) ? <LeadBuy item={remainder} held={held.get(remainder.id)} /> : undefined}
+                leadBuy={remainder && isAvailable(remainder) ? <LeadBuy item={remainder} held={held.get(remainder.id)} trays={units} /> : undefined}
                 trayAction={(u) => <TrayAction item={u} reserved={isReserved(u, held.get(u.id))} />} />
             </div>
 
@@ -296,11 +296,11 @@ function TrayAction({ item, reserved }: { item: SaleItem; reserved: boolean }) {
 }
 
 /** The block on sale: all of it, or "פרוס לי" by weight (the chooser), under its photo. */
-function LeadBuy({ item, held }: { item: SaleItem; held?: import("@/lib/items").Held }) {
+function LeadBuy({ item, held, trays }: { item: SaleItem; held?: import("@/lib/items").Held; trays: SaleItem[] }) {
   const line = useCart().find((l) => l.itemId === item.id);
   const add = useAddToCart("post");
   return (
-    <RemainderChooser compact item={item} held={held} inCart={!!line} initial={line}
+    <RemainderChooser compact item={item} held={held} inCart={!!line} initial={line} trays={trays}
       key={line ? `${line.mode}-${line.grams}` : "new"}
       onOrder={(...a) => add(item, ...a)} />
   );

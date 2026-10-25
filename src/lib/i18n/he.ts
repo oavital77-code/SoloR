@@ -332,6 +332,9 @@ export const he = {
     sliceNote: "המחיר משוער לפי הגרמים וננעל בהזמנה. החיתוך בפועל עשוי לסטות מעט.",
     thickness: "עובי",
     thicknessAny: "לבחירת הקצב",
+    steaksHow: "כמה סטייקים",
+    steaksEach: (count: number, each: number, cm: number) =>
+      `≈ ${count === 1 ? "סטייק אחד" : `${count} סטייקים`} בעובי ${cm} ס״מ · כ־${each} גר׳ כל אחד`,
     approx: (price: string) => `≈ ${price}`,
     order: "הזמן",
     inCart: "בסל",

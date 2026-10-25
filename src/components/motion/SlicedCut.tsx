@@ -6,6 +6,7 @@
 // with number, weight and price. A tap on a photo shows it in the page's big frame. With reduced motion everything
 // is simply in place.
 import { useRef } from "react";
+import Link from "next/link";
 import { clsx } from "clsx";
 import { he } from "@/lib/i18n/he";
 import { coverOf, mediaUrl } from "@/lib/cut-helpers";
@@ -17,7 +18,7 @@ import type { CutMedia, SaleItem } from "@/lib/types";
 const TILT = [-3, 2.5, -2, 3];
 const SHIFT = [10, -10, 6, -6];
 
-export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy }: {
+export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy, href, leadOverlay }: {
   /** the block (id = its label, for #i-…) or the cut itself */
   lead: { cover?: CutMedia; label: string; id?: string; sold?: boolean };
   trays: SaleItem[];
@@ -28,6 +29,10 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy }: 
   trayAction: (t: SaleItem) => React.ReactNode;
   /** the block's buying (all of it or a slice), under its photo */
   leadBuy?: React.ReactNode;
+  /** in the feed: a photo opens the cut's page (at that tray) instead of showing it in a big frame */
+  href?: (label?: string) => string;
+  /** over the cut's photo: the sold stamp, the held badge */
+  leadOverlay?: React.ReactNode;
 }) {
   const stage = useRef<HTMLDivElement>(null);
   const key = trays.map((t) => t.id).join(",");
@@ -61,6 +66,10 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy }: 
 
   const photo = "block size-full overflow-hidden rounded-[56px/38px] border-4 border-sticker bg-ink-3 shadow-[0_18px_30px_-16px_rgba(27,23,18,0.6)]";
   const sticker = "absolute -top-3 right-3 z-[1] -rotate-[4deg] border-2 border-[#1b1712] bg-sticker px-2.5 py-0.5 font-mono text-[12px] font-semibold whitespace-nowrap text-[#1b1712]";
+  // a photo: a link to the cut's page (feed), or a button that shows it in the page's big frame
+  const shot = (m: CutMedia | undefined, label: string, anchor: string | undefined, extra?: string) => href
+    ? <Link href={href(anchor)} data-media-frame aria-label={label} className={clsx(photo, extra)}>{img(m)}</Link>
+    : <button type="button" onClick={() => onPhoto(m)} aria-label={he.cut.showPhoto(label)} className={clsx(photo, extra)}>{img(m)}</button>;
   const img = (m?: CutMedia) => m
     // eslint-disable-next-line @next/next/no-img-element
     ? <img src={mediaUrl(m.thumb_path ?? m.storage_path)} alt="" className="size-full object-cover" />
@@ -68,11 +77,10 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy }: 
 
   return (
     <div ref={stage} className="relative mx-auto flex w-full max-w-[380px] flex-col">
-      <div id={lead.id ? `i-${lead.id}` : undefined} className="relative z-10 flex scroll-mt-24 flex-col gap-4">
+      <div id={lead.id && !href ? `i-${lead.id}` : undefined} className="relative z-10 flex scroll-mt-24 flex-col gap-4">
         <div data-lead className={clsx("relative mx-auto h-[176px] w-full max-w-[350px]", lead.sold && "grayscale")}>
-          <button type="button" onClick={() => onPhoto(lead.cover)} aria-label={he.cut.showPhoto(lead.label)} className={photo}>
-            {img(lead.cover)}
-          </button>
+          {shot(lead.cover, lead.label, lead.id)}
+          {leadOverlay && <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[56px/38px]">{leadOverlay}</div>}
           <span className={clsx(sticker, "text-[13px]", focus && focus === lead.id && "ring-2 ring-brand")}>{lead.label}</span>
         </div>
         {leadBuy && <div className="rounded-2xl border-2 border-ivory bg-ink-2 p-3">{leadBuy}</div>}
@@ -86,12 +94,9 @@ export function SlicedCut({ lead, trays, focus, onPhoto, trayAction, leadBuy }: 
             const cover = coverOf(t.cut_media);
             const sold = !isAvailable(t);
             return (
-              <li key={t.id} id={`i-${t.label}`} data-tray
+              <li key={t.id} id={href ? undefined : `i-${t.label}`} data-tray
                 className={clsx("relative mx-auto h-[116px] w-[300px] max-w-[90%] scroll-mt-24", sold && "grayscale")}>
-                <button type="button" onClick={() => onPhoto(cover)} aria-label={he.cut.showPhoto(t.code)}
-                  className={clsx(photo, focus === t.label && "!border-brand")}>
-                  {img(cover)}
-                </button>
+                {shot(cover, t.code, t.label ?? undefined, focus === t.label ? "!border-brand" : undefined)}
                 <span data-pop className={sticker}>
                   {t.label}{t.steak_count ? ` · ${he.item.steaks(t.steak_count)}` : ""} · {formatWeight(t.weight_g ?? 0)} · {money(linePrice(t, "unit"))}
                 </span>

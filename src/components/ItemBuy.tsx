@@ -7,14 +7,16 @@ import { useEffect, useState } from "react";
 import { clsx } from "clsx";
 import { Ltr, Stepper } from "./ui";
 import { he } from "@/lib/i18n/he";
-import { canBuyAll, canSlice, freeG, linePrice, SLICE_MIN_G, SLICE_STEP_G, SLICE_THICKNESS_CM, sliceCapG, type Held } from "@/lib/items";
+import { canBuyAll, canSlice, DEFAULT_STEAK_CM, freeG, linePrice, SLICE_MIN_G, SLICE_STEP_G, SLICE_THICKNESS_CM, sliceCapG, sliceSteaks, steakGPerCm, type Held } from "@/lib/items";
 import { formatWeight, money } from "@/lib/pricing";
 import type { LineMode, SaleItem } from "@/lib/types";
 
 export type OnOrder = (mode: LineMode, grams: number | null, thicknessCm: number | null, total: number) => void;
 
-export function RemainderChooser({ item, held, preview, onOrder, initial, inCart, compact }: {
+export function RemainderChooser({ item, held, preview, onOrder, initial, inCart, compact, trays }: {
   item: SaleItem; held?: Held; preview?: boolean; onOrder?: OnOrder;
+  /** the trays cut from the same cut: their steaks tell how heavy one steak of it is */
+  trays?: Pick<SaleItem, "steak_count" | "weight_g">[];
   /** the line already in the cart, if any */
   initial?: { mode: LineMode; grams: number | null; thicknessCm: number | null } | null;
   inCart?: boolean;
@@ -40,6 +42,15 @@ export function RemainderChooser({ item, held, preview, onOrder, initial, inCart
   const total = linePrice(item, mode, grams);
   const can = preview || (mode === "remainder_all" ? allOk : sliceOk);
   const whole = !item.split;
+  // the same slice in steaks: how many, about how heavy each; choosing a count sets the grams
+  const cm = thick ?? DEFAULT_STEAK_CM;
+  const gPerCm = steakGPerCm(item, trays);
+  const steaks = sliceSteaks(grams, cm, gPerCm);
+  const maxSteaks = Math.max(1, Math.floor(Math.max(SLICE_MIN_G, cap) / (gPerCm * cm)));
+  const toGrams = (n: number) => {
+    const g = Math.round((n * gPerCm * cm) / SLICE_STEP_G) * SLICE_STEP_G;
+    return Math.max(SLICE_MIN_G, Math.min(Math.max(SLICE_MIN_G, cap), g));
+  };
 
   return (
     <div className={clsx("flex flex-col gap-3 text-start", !compact && "pt-1")}>
@@ -73,6 +84,12 @@ export function RemainderChooser({ item, held, preview, onOrder, initial, inCart
               </button>
             ))}
           </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-semibold">{he.item.steaksHow}</span>
+            <Stepper dark value={Math.min(steaks.count, maxSteaks)} min={1} max={maxSteaks} onChange={(n) => setGrams(toGrams(n))}
+              label={he.item.steaksHow} format={(v) => <Ltr>{v}</Ltr>} />
+          </div>
+          <p className="m-0 text-[14px] font-semibold text-ivory/90">{he.item.steaksEach(steaks.count, steaks.each, cm)}</p>
           <div className="flex items-baseline justify-between">
             <span className="text-[13px] text-stone">{he.cut.estimatedWeight}</span>
             <span className="text-lg font-black"><Ltr>{he.item.approx(money(total))}</Ltr></span>

@@ -61,3 +61,23 @@ describe("onePerParent", () => {
     expect(posts[0].trays.map((t) => t.id)).toEqual(["b"]);
   });
 });
+
+describe("steaks in a slice", () => {
+  it("weighs a steak from the cut's own trays when they say", async () => {
+    const { steakGPerCm } = await import("./items");
+    // 2 steaks in 520 g → 260 g a steak at 2.5 cm → 104 g/cm
+    expect(steakGPerCm({ cut_type: "entrecote" }, [{ steak_count: 2, weight_g: 520 }, { steak_count: null, weight_g: 300 }])).toBeCloseTo(104);
+  });
+  it("falls back to the cut type's typical steak", async () => {
+    const { steakGPerCm } = await import("./items");
+    expect(steakGPerCm({ cut_type: "entrecote" })).toBe(115);
+    expect(steakGPerCm({ cut_type: null })).toBe(100);
+    // 2 "steaks" in 1.24 kg is not a steak: the typical figure wins
+    expect(steakGPerCm({ cut_type: "entrecote" }, [{ steak_count: 2, weight_g: 1240 }])).toBe(115);
+  });
+  it("counts the steaks and their weight", async () => {
+    const { sliceSteaks } = await import("./items");
+    expect(sliceSteaks(700, 2, 115)).toEqual({ count: 3, each: 230 });
+    expect(sliceSteaks(200, 4, 115)).toEqual({ count: 1, each: 200 });
+  });
+});

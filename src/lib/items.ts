@@ -7,6 +7,29 @@ import type { CutMedia, Item, LineMode, Parent, SaleItem } from "./types";
 export const SLICE_MIN_G = 200;
 export const SLICE_STEP_G = 50;
 export const SLICE_THICKNESS_CM = [1.5, 2, 2.5, 3, 4];
+/** the thickness a steak is cut at when the customer leaves it to the butcher */
+export const DEFAULT_STEAK_CM = 2.5;
+
+// grams per centimetre of thickness of one steak across the cut — typical cross-sections, used when the cut's own
+// trays don't tell (founders 25.10.2026: "how many steaks is that?")
+const G_PER_CM: Record<string, number> = { entrecote: 115, ontrib: 140, sinta: 90, asado: 120, picanha: 90, shaitel: 100, denver: 70 };
+
+/** grams per cm of one steak of this cut: from the trays cut from it (their steaks, at the usual thickness) when they
+ * say something believable (a steak of 125–450 g at 2.5 cm), else the cut type's typical figure */
+export function steakGPerCm(item: { cut_type: string | null }, trays: { steak_count: number | null; weight_g: number | null }[] = []): number {
+  const known = trays.filter((t) => t.steak_count && t.weight_g);
+  const steaks = known.reduce((n, t) => n + (t.steak_count ?? 0), 0);
+  const fromTrays = steaks > 0 ? known.reduce((g, t) => g + (t.weight_g ?? 0), 0) / steaks / DEFAULT_STEAK_CM : 0;
+  if (fromTrays >= 50 && fromTrays <= 180) return fromTrays;
+  return G_PER_CM[item.cut_type ?? ""] ?? 100;
+}
+
+/** how many steaks a slice of `grams` makes at `cm`, and about how much each weighs */
+export function sliceSteaks(grams: number, cm: number, gPerCm: number): { count: number; each: number } {
+  const each = Math.max(1, gPerCm * cm);
+  const count = Math.max(1, Math.round(grams / each));
+  return { count, each: Math.round(grams / count / 10) * 10 };
+}
 
 /** the most of a balance a slice may take (95%) */
 export function sliceMaxG(freeG: number): number {
