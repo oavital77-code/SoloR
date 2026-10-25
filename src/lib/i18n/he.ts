@@ -333,6 +333,8 @@ export const he = {
     thickness: "עובי",
     thicknessAny: "לבחירת הקצב",
     steaksHow: "כמה סטייקים",
+    steaksMoreAt: (n: number, cm: number) => `ל־${n} סטייקים: עובי ${cm} ס״מ ←`,
+    steaksAllLeft: "זה כל מה שנשאר בגוש",
     steaksEach: (count: number, each: number, cm: number) =>
       `≈ ${count === 1 ? "סטייק אחד" : `${count} סטייקים`} בעובי ${cm} ס״מ · כ־${each} גר׳ כל אחד`,
     approx: (price: string) => `≈ ${price}`,

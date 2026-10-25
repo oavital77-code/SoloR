@@ -46,9 +46,12 @@ export function RemainderChooser({ item, held, preview, onOrder, initial, inCart
   const cm = thick ?? DEFAULT_STEAK_CM;
   const gPerCm = steakGPerCm(item, trays);
   const steaks = sliceSteaks(grams, cm, gPerCm);
-  const maxSteaks = Math.max(1, Math.floor(Math.max(SLICE_MIN_G, cap) / (gPerCm * cm)));
-  const toGrams = (n: number) => {
-    const g = Math.round((n * gPerCm * cm) / SLICE_STEP_G) * SLICE_STEP_G;
+  const fits = (c: number) => Math.max(1, Math.floor(Math.max(SLICE_MIN_G, cap) / (gPerCm * c)));
+  const maxSteaks = fits(cm);
+  // at the most that fits: the thickest thinner cut that gives one steak more, if any
+  const thinner = [...SLICE_THICKNESS_CM].reverse().find((c) => c < cm && fits(c) > maxSteaks);
+  const toGrams = (n: number, at = cm) => {
+    const g = Math.round((n * gPerCm * at) / SLICE_STEP_G) * SLICE_STEP_G;
     return Math.max(SLICE_MIN_G, Math.min(Math.max(SLICE_MIN_G, cap), g));
   };
 
@@ -90,6 +93,10 @@ export function RemainderChooser({ item, held, preview, onOrder, initial, inCart
               label={he.item.steaksHow} format={(v) => <Ltr>{v}</Ltr>} />
           </div>
           <p className="m-0 text-[14px] font-semibold text-ivory/90">{he.item.steaksEach(steaks.count, steaks.each, cm)}</p>
+          {steaks.count >= maxSteaks && (thinner
+            ? <button type="button" className="sr-link !min-h-0 self-start text-[13px] after:!content-none"
+                onClick={() => { setThick(thinner); setGrams(toGrams(maxSteaks + 1, thinner)); }}>{he.item.steaksMoreAt(maxSteaks + 1, thinner)}</button>
+            : <span className="text-[13px] text-stone">{he.item.steaksAllLeft}</span>)}
           <div className="flex items-baseline justify-between">
             <span className="text-[13px] text-stone">{he.cut.estimatedWeight}</span>
             <span className="text-lg font-black"><Ltr>{he.item.approx(money(total))}</Ltr></span>
