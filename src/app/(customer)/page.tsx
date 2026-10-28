@@ -14,7 +14,7 @@ import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { isReserved } from "@/lib/feed";
-import { onePerParent, parentPath } from "@/lib/items";
+import { onePerParent } from "@/lib/items";
 import { clsx } from "clsx";
 import { ShopMark } from "@/components/ShopMark";
 import { Ltr } from "@/components/ui";
@@ -147,7 +147,8 @@ export default function FeedPage() {
           )}
         </div>
 
-        <LiveLog events={events} />
+        {/* founders 28.10.2026: the live log is off; what goes in this column is still to be chosen */}
+        <div aria-hidden className="hidden lg:block" />
       </div>
     </main>
   );
@@ -190,25 +191,6 @@ function ShopsAside({ butchers, now }: { butchers: Butcher[]; now: number }) {
     </aside>
   );
 }
-
-/** "מה קורה בדלפקים" (design: V3): the dark live panel beside the feed, with the time of each thing. */
-function LiveLog({ events }: { events: LiveEvent[] }) {
-  return (
-    <aside aria-label={he.live.log} className="hidden lg:block">
-      <div data-theme="night" className="sticky top-24 flex flex-col gap-3 rounded-[20px] bg-ink p-[18px] text-start text-ivory">
-        <h2 className="m-0 flex items-center gap-2 text-[17px] font-bold"><span className="live-dot" aria-hidden />{he.live.log}</h2>
-        {events.length === 0 ? <p className="m-0 text-sm text-stone">{he.feed.emptyToday}</p> : events.map((e) => (
-          <Link key={e.id} href={parentPath(e.parentId)} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 text-[13px] leading-[19px]">
-            <span className={clsx(e.kind === "sold" ? "text-stone" : "text-brand")}><Ltr>{clock(e.at)}</Ltr></span>
-            <span>{e.text}</span>
-          </Link>
-        ))}
-      </div>
-    </aside>
-  );
-}
-
-const clock = (iso: string) => new Date(iso).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
 
 /** End of the feed (and the empty feed): say so, and offer the shops' pages (spec §2.2, §4.4). */
 function FeedEnd({ title, hint, butchers }: { title: string; hint?: string; butchers: Butcher[] }) {

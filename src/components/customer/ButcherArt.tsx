@@ -6,7 +6,7 @@ export function ButcherArt() {
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       {/* the butcher of the logo, in grey */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/bp-emblem.webp" alt="" width={256} height={271}
+      <img src="/brand/bp-emblem.webp" alt="" width={320} height={376}
         className="absolute -bottom-10 -left-16 h-[340px] w-auto -rotate-[8deg] opacity-[.07] grayscale lg:-left-10 lg:h-[620px]" />
       {/* our cleaver: a broad blade with its hole, the wooden handle and its rivets */}
       <svg viewBox="0 0 200 90" className="absolute top-[30%] -right-24 w-[300px] rotate-[24deg] opacity-[.08] lg:-right-16 lg:w-[540px]">

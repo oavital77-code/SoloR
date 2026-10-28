@@ -87,17 +87,17 @@ export function Loader() {
         <span className="bp-loader__spread absolute top-[calc(18vh+env(safe-area-inset-top)+130px)] left-1/2 -ml-2.5 size-5 rounded-full border-[3px] border-[#7a1020]/35" />
         <div className="h-[230px] shrink-0" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/bp-wordmark.webp" alt="" width={598} height={153} className="bp-word mt-10 h-[51px] w-auto" />
+        <img src="/brand/bp-wordmark.webp" alt="" width={640} height={158} className="bp-word mt-10 h-[50px] w-auto" />
         <span className="bp-word mt-3 font-mono text-[11px] tracking-[0.12em] text-[#5e5e5e]">BUTCHERPLACE · {he.live.fromCounter}</span>
       </div>
       {/* the logo is above the paper, so it can fly into the header as the paper lifts */}
       <div className="pointer-events-none absolute inset-x-0 top-[calc(18vh+env(safe-area-inset-top))] flex justify-center">
-        <div className="bp-loader__butcher relative h-[230px] w-[217px]">
+        <div className="bp-loader__butcher relative h-[230px] w-[196px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/bp-butcher-body.webp" alt="" width={465} height={492} className="size-full" />
+          <img src="/brand/bp-butcher-body.webp" alt="" width={392} height={460} className="size-full" />
           {/* the same logo in bordeaux ink, fading as it dries */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/bp-butcher-body.webp" alt="" width={465} height={492} className="bp-loader__ink absolute inset-0 size-full [filter:url(#bp-red-ink)_contrast(1.25)]" />
+          <img src="/brand/bp-butcher-body.webp" alt="" width={392} height={460} className="bp-loader__ink absolute inset-0 size-full [filter:url(#bp-red-ink)_contrast(1.25)]" />
         </div>
       </div>
       <svg width="0" height="0" className="absolute" aria-hidden>
