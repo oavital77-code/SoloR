@@ -4,10 +4,9 @@
 // with its photo, number, steaks, weight, price and its own add. Once, as the row comes on screen, a butcher's cleaver
 // comes down on the dashed line: the page splits there (what is above jumps up, the row drops and settles), a cut
 // runs along the line, the sticker pops and the cards come out of the cut. With reduced motion everything is in place.
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { PhotoViewer } from "../PhotoViewer";
 import { he } from "@/lib/i18n/he";
 import { coverOf, mediaUrl } from "@/lib/cut-helpers";
 import { isAvailable, linePrice } from "@/lib/items";
@@ -15,7 +14,7 @@ import { motion, reducedMotion, useIsoLayoutEffect } from "@/lib/motion";
 import { formatWeight, money } from "@/lib/pricing";
 import type { SaleItem } from "@/lib/types";
 
-export function TrayBar({ trays, no, block, focus, trayAction, href }: {
+export function TrayBar({ trays, no, block, focus, trayAction, href, onPick }: {
   trays: SaleItem[];
   /** the cut's number, and whether what leads is its block */
   no: string; block: boolean;
@@ -23,11 +22,12 @@ export function TrayBar({ trays, no, block, focus, trayAction, href }: {
   focus?: string | null;
   /** a tray's order button, or what stands in its place (sold, held, in the cart) */
   trayAction: (t: SaleItem) => React.ReactNode;
-  /** in the feed: a photo opens the cut's page at that tray; on the page it opens full screen */
+  /** in the feed: a photo opens the cut's page at that tray */
   href?: (label?: string) => string;
+  /** on the cut's page: a photo shows that tray in the page's big frame */
+  onPick?: (t: SaleItem) => void;
 }) {
   const sec = useRef<HTMLElement>(null);
-  const [viewer, setViewer] = useState<SaleItem | null>(null);
   const key = trays.map((t) => t.id).join(",");
 
   useIsoLayoutEffect(() => {
@@ -84,7 +84,7 @@ export function TrayBar({ trays, no, block, focus, trayAction, href }: {
                 focus === t.label ? "border-brand ring-2 ring-brand" : "border-ivory", sold && "grayscale")}>
               {href
                 ? <Link href={href(t.label ?? undefined)} data-media-frame aria-label={t.code} className={photo}>{img}</Link>
-                : <button type="button" onClick={() => cover && setViewer(t)} aria-label={he.cut.showPhoto(t.code)} className={photo}>{img}</button>}
+                : <button type="button" onClick={() => cover && onPick?.(t)} aria-label={he.cut.showPhoto(t.code)} className={photo}>{img}</button>}
               <div className="flex flex-1 flex-col gap-0.5 px-2 pt-1.5 pb-2">
                 <span className="text-[12px] font-semibold whitespace-nowrap">
                   <span className="code !text-[12px]">{t.label}</span>{t.steak_count ? ` · ${he.item.steaks(t.steak_count)}` : ""}
@@ -96,9 +96,6 @@ export function TrayBar({ trays, no, block, focus, trayAction, href }: {
           );
         })}
       </ul>
-      {viewer && coverOf(viewer.cut_media) && (
-        <PhotoViewer photos={[coverOf(viewer.cut_media)!]} start={0} title={viewer.code} code={viewer.code} onClose={() => setViewer(null)} />
-      )}
     </section>
   );
 }

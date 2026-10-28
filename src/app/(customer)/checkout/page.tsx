@@ -109,6 +109,7 @@ export default function CheckoutPage() {
       item_id: line.itemId, mode: line.mode,
       requested_g: line.mode === "remainder_slice" ? line.grams : null,
       thickness_cm: line.mode === "remainder_slice" ? line.thicknessCm : null,
+      steaks: line.mode === "remainder_slice" ? line.steaks ?? null : null,
     })));
     const p_receive = Object.fromEntries(parts.map((p) => [p.g.butcherId, p.d.method === "delivery"
       ? { method: "delivery", window: p.d.window,
@@ -479,6 +480,6 @@ function PaySheet({ hold, busy, onPay, onBack, parts, breeds }: {
 
 /** What a cart line buys, in the words of the order (orderWhat). */
 function lineWhat(line: CartLine, cut: SaleItem | null): string {
-  return orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
+  return orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, slice_steaks: line.steaks, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
     cut ? { label: cut.label, steak_count: cut.steak_count } : null);
 }

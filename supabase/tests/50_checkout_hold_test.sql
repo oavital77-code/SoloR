@@ -51,7 +51,8 @@ select set_config('t.item', pg_temp.remainder(1000)::text, false);
 select set_config('t.live', pg_temp.remainder(2000)::text, false);
 
 create or replace function pg_temp.cart(p_mode text, p_g int) returns jsonb language sql as $$
-  select jsonb_build_array(jsonb_build_object('item_id', current_setting('t.item'), 'mode', p_mode, 'requested_g', p_g)) $$;
+  select jsonb_build_array(jsonb_build_object('item_id', current_setting('t.item'), 'mode', p_mode, 'requested_g', p_g,
+    'steaks', case when p_mode = 'remainder_slice' then 3 end, 'thickness_cm', case when p_mode = 'remainder_slice' then 2.2 end)) $$;
 grant execute on function pg_temp.cart(text, int) to authenticated;
 
 -- ── customer 1 holds a 600 g slice ──
@@ -119,6 +120,8 @@ select pg_temp.check((select status from holds where id = current_setting('t.h4'
 reset role;
 select pg_temp.check((select weight_g = 300 and status = 'published' from items where id = current_setting('t.item')::uuid), 'stock moved on payment: 900 − 600');
 select pg_temp.check((select count(*) from order_items where item_id = current_setting('t.item')::uuid) = 1, 'one order line');
+select pg_temp.check((select slice_steaks = 3 and slice_thickness_cm = 2.2 from order_items where item_id = current_setting('t.item')::uuid),
+                     'the slice line keeps how many steaks and the thickness that follows');
 set role authenticated;
 
 -- ── contact and receive checks ──

@@ -96,11 +96,11 @@ export function formatDateTime(iso: string): string {
   });
 }
 
-/** "יחידה 523-1 · 3 סטייקים · 1.24 ק״ג" / "כל השארית · 1.1 ק״ג" / "פרוס לי 600 גר׳ · עובי 2 ס״מ" */
-export function orderWhat(o: Pick<OrderItem, "mode" | "requested_g" | "slice_thickness_cm" | "est_weight_g">,
+/** "יחידה 523-1 · 3 סטייקים · 1.24 ק״ג" / "כל השארית · 1.1 ק״ג" / "פרוס לי 600 גר׳ · 3 סטייקים · עובי 2.2 ס״מ" */
+export function orderWhat(o: Pick<OrderItem, "mode" | "requested_g" | "slice_thickness_cm" | "est_weight_g"> & { slice_steaks?: number | null },
                           item?: Pick<Item, "label" | "steak_count"> | null): string {
   const w = formatWeight(o.est_weight_g);
   if (o.mode === "unit") return he.orders.whatUnit(item?.label ?? "", item?.steak_count ?? null, w);
   if (o.mode === "remainder_all") return he.orders.whatAll(w);
-  return he.orders.whatSlice(formatWeight(o.requested_g ?? o.est_weight_g), o.slice_thickness_cm);
+  return he.orders.whatSlice(formatWeight(o.requested_g ?? o.est_weight_g), o.slice_thickness_cm, o.slice_steaks ?? null);
 }

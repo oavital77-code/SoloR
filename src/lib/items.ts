@@ -8,8 +8,9 @@ import type { CutMedia, Item, LineMode, Parent, SaleItem } from "./types";
 export const HOLD_MINUTES = 10;
 export const SLICE_MIN_G = 200;
 export const SLICE_STEP_G = 50;
-export const SLICE_THICKNESS_CM = [1.5, 2, 2.5, 3, 4];
-/** the thickness a steak is cut at when the customer leaves it to the butcher */
+/** the thinnest steak "פרוס לי" cuts (founders 28.10.2026) */
+export const SLICE_MIN_CM = 1.5;
+/** the usual steak, for reading the trays' steaks and for the first count offered */
 export const DEFAULT_STEAK_CM = 2.5;
 
 // grams per centimetre of thickness of one steak across the cut — typical cross-sections, used when the cut's own
@@ -31,6 +32,16 @@ export function sliceSteaks(grams: number, cm: number, gPerCm: number): { count:
   const each = Math.max(1, gPerCm * cm);
   const count = Math.max(1, Math.round(grams / each));
   return { count, each: Math.round(grams / count / 10) * 10 };
+}
+
+/** "פרוס לי" by steaks: how thick each of `count` steaks of `grams` comes out (to a millimetre), never under 1.5 cm */
+export function sliceThickness(grams: number, count: number, gPerCm: number): number {
+  return Math.max(SLICE_MIN_CM, Math.round((grams / Math.max(1, count) / gPerCm) * 10) / 10);
+}
+
+/** the most steaks `grams` makes without going under 1.5 cm */
+export function maxSliceSteaks(grams: number, gPerCm: number): number {
+  return Math.max(1, Math.floor(grams / (gPerCm * SLICE_MIN_CM)));
 }
 
 /** the most of a balance a slice may take (95%) */

@@ -89,4 +89,12 @@ describe("upload content type", () => {
     expect(bareType("video/webm;codecs=vp8")).toBe("video/webm");
     expect(bareType("image/jpeg")).toBe("image/jpeg");
   });
+  it("פרוס לי: the thickness follows from the grams and the steaks, never under 1.5 cm", async () => {
+    const { sliceThickness, maxSliceSteaks } = await import("./items");
+    expect(sliceThickness(600, 3, 100)).toBe(2);
+    expect(sliceThickness(700, 3, 115)).toBe(2);
+    expect(sliceThickness(300, 4, 100)).toBe(1.5);
+    expect(maxSliceSteaks(600, 100)).toBe(4);
+    expect(maxSliceSteaks(200, 140)).toBe(1);
+  });
 });

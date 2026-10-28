@@ -335,13 +335,9 @@ export const he = {
     sliceMe: "פרוס לי",
     sliceUpTo: (w: string) => `עד ${w}`,
     sliceNote: "המחיר משוער לפי הגרמים וננעל בהזמנה. החיתוך בפועל עשוי לסטות מעט.",
-    thickness: "עובי",
-    thicknessAny: "לבחירת הקצב",
     steaksHow: "כמה סטייקים",
-    steaksMoreAt: (n: number, cm: number) => `ל־${n} סטייקים: עובי ${cm} ס״מ ←`,
-    steaksAllLeft: "זה כל מה שנשאר בגוש",
     steaksEach: (count: number, each: number, cm: number) =>
-      `≈ ${count === 1 ? "סטייק אחד" : `${count} סטייקים`} בעובי ${cm} ס״מ · כ־${each} גר׳ כל אחד`,
+      `${count === 1 ? "סטייק אחד" : `${count} סטייקים`} · כ־${each} גר׳ כל אחד · עובי ≈ ${cm} ס״מ`,
     approx: (price: string) => `≈ ${price}`,
     order: "הזמן",
     inCart: "בסל",
@@ -489,7 +485,8 @@ export const he = {
     whatUnit: (label: string, steaks: number | null, weight: string) =>
       [`מגש ${label}`, steaks ? (steaks === 1 ? "סטייק אחד" : `${steaks} סטייקים`) : null, weight].filter(Boolean).join(" · "),
     whatAll: (weight: string) => `כל הגוש · ${weight}`,
-    whatSlice: (weight: string, cm: number | null) => `פרוס לי ${weight}${cm ? ` · עובי ${cm} ס״מ` : ""}`,
+    whatSlice: (weight: string, cm: number | null, steaks: number | null) =>
+      `פרוס לי ${weight}${steaks ? ` · ${steaks === 1 ? "סטייק אחד" : `${steaks} סטייקים`}` : ""}${cm ? ` · עובי ${cm} ס״מ` : ""}`,
     pickupDetails: "פרטי איסוף",
     cancel: "בטל הזמנה",
     cancelConfirm: "לבטל את ההזמנה? המלאי יחזור לקצב.",

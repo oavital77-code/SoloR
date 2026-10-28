@@ -103,7 +103,7 @@ function CartRow({ row: { line, cut, price, problem } }: { row: Row }) {
   const cover = cut ? coverOf(cut.cut_media) : undefined;
   const href = parentPath(line.parentId ?? String(line.parentCode), line.code.replace(/^SOL-/, ""));
   const cap = cut ? sliceCapG(cut.weight_g ?? 0) : 0;
-  const what = orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
+  const what = orderWhat({ mode: line.mode, requested_g: line.grams, slice_thickness_cm: line.thicknessCm, slice_steaks: line.steaks, est_weight_g: cut?.weight_g ?? line.grams ?? 0 },
     cut ? { label: cut.label, steak_count: cut.steak_count } : null);
   return (
     <li className={clsx("sr-cartrow sr-cartrow--nested", problem && "sr-cartrow--sold")}>

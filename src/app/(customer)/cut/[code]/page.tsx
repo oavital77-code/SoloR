@@ -23,7 +23,7 @@ import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
 import { useCart } from "@/lib/cart";
 import { readSolorLabel } from "@/lib/barcode";
-import { breedLabel, cutTitle, formatDateTime, timeAgo } from "@/lib/cut-helpers";
+import { breedLabel, coverOf, cutTitle, formatDateTime, timeAgo } from "@/lib/cut-helpers";
 import { demoCredits, isDemoMedia } from "@/lib/demo-credits";
 import { isolateTimes } from "@/lib/hours";
 import { canBuyUnit, clipNo, displayCode, isAvailable, isReserved, linePrice, toSaleItems, type ItemRow } from "@/lib/items";
@@ -91,7 +91,20 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
     return () => { sb.removeChannel(ch); };
   }, [pid, load]);
 
-  // opened from a post: scroll to that item once it is on the page
+  // a tray's photo tapped (here, or in the post that opened the page): it shows in the big frame (founders 28.10.2026)
+  const hero = useRef<HTMLDivElement>(null);
+  const [picked, setPicked] = useState<CutMedia | null>(null);
+  const [show, setShow] = useState<{ path: string; n: number } | null>(null);
+  const pick = (t: SaleItem, scroll = true) => {
+    const m = coverOf(t.cut_media);
+    if (!m) return;
+    setPicked(m);
+    setShow((s) => ({ path: m.storage_path, n: (s?.n ?? 0) + 1 }));
+    // on a phone the frame is above the row
+    if (scroll && window.innerWidth < 1024) hero.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // opened from a post: a tray shows in the big frame; the block is scrolled to
   const scrolled = useRef(false);
   const [focus, setFocus] = useState<string | null>(null);
   useEffect(() => {
@@ -102,8 +115,11 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
     const el = document.getElementById(`i-${want}`);
     if (!el) return;
     setFocus(want);
+    const handedOff = takeHandoff();
+    const tray = items.find((i) => i.kind === "unit" && i.label === want);
+    if (tray) { pick(tray, false); el.scrollIntoView({ block: "nearest", inline: "center" }); window.scrollTo({ top: 0 }); return; }
     // the post's picture is growing into the frame at the top: stay there; the slicing below leads to the item
-    if (!takeHandoff()) el.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+    if (!handedOff) el.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
@@ -112,7 +128,9 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   const units = items.filter((i) => i.kind === "unit" && i.status !== "withdrawn").sort((a, b) => (a.unit_no ?? 0) - (b.unit_no ?? 0));
   const remainder = items.find((i) => i.kind === "remainder" && i.status !== "withdrawn") ?? null;
   const title = parent ? cutTitle(parent, breeds) || he.butcher.untitled : "";
-  const media = useMemo(() => pageMedia(parent, items), [parent, items]);
+  const base = useMemo(() => pageMedia(parent, items), [parent, items]);
+  const media = useMemo(() => (picked && !base.some((m) => m.storage_path === picked.storage_path)
+    ? [...base, { ...picked, is_cover: false, sort_order: base.length }] : base), [base, picked]);
   const allGone = items.length > 0 && !items.some(isAvailable);
   const ready = state === "ok" && !!parent && items.length > 0;
   useGrowFromPost(ready);
@@ -162,8 +180,8 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
 
       {state === "ok" && parent && items.length > 0 && (
         <article className="flex flex-col text-start lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-8 lg:pt-16">
-          <div className="lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
-            <PostMedia media={media} title={title} code={displayCode(clipNo(parent.code))} eager videoFirst state={allGone ? "sold" : null}
+          <div ref={hero} className="scroll-mt-16 lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
+            <PostMedia media={media} title={title} code={displayCode(clipNo(parent.code))} eager videoFirst state={allGone ? "sold" : null} show={show}
               badge={<span className={STICKER}>{remainder ? leadLabel(parent, remainder) : he.item.allTrays(clipNo(parent.code))}</span>} />
           </div>
 
@@ -198,7 +216,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
                       : <p className="m-0 text-[15px] font-bold text-sold">{leadLabel(parent, remainder)}</p>}
                   </div>
                 )}
-                <TrayBar trays={units} no={clipNo(parent.code)} block={!!remainder} focus={focus}
+                <TrayBar trays={units} no={clipNo(parent.code)} block={!!remainder} focus={focus} onPick={pick}
                   trayAction={(u) => <TrayAction item={u} reserved={isReserved(u, held.get(u.id))} />} />
               </div>
             </div>
@@ -294,7 +312,7 @@ function TrayAction({ item, reserved }: { item: SaleItem; reserved: boolean }) {
   if (inCart) return <span className={clsx(chip, "text-success")}><IconCheck className="size-4" />{he.item.inCart}</span>;
   return (
     <button type="button" className="sr-btn !min-h-11 !px-6" disabled={!canBuyUnit(item)}
-      onClick={() => add(item, "unit", null, null, linePrice(item, "unit"))}>
+      onClick={() => add(item, "unit", null, null, linePrice(item, "unit"), null)}>
       {he.item.order}
     </button>
   );

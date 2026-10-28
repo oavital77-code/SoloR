@@ -172,9 +172,9 @@ function Price({ cut, muted }: { cut: SaleItem; muted?: boolean }) {
 export function useAddToCart(source: "feed" | "post") {
   const toast = useToast();
   const lines = useCart();
-  return (cut: SaleItem, ...[mode, grams, thicknessCm, total]: Parameters<OnOrder>) => {
+  return (cut: SaleItem, ...[mode, grams, thicknessCm, total, steaks]: Parameters<OnOrder>) => {
     const had = lines.some((l) => l.itemId === cut.id);
-    cart.put({ itemId: cut.id, code: cut.code, parentCode: cut.parent_code, parentId: cut.parent_id, butcherId: cut.butcher_id, mode, grams, thicknessCm, estAgorot: total });
+    cart.put({ itemId: cut.id, code: cut.code, parentCode: cut.parent_code, parentId: cut.parent_id, butcherId: cut.butcher_id, mode, grams, thicknessCm, steaks, estAgorot: total });
     track("add_to_cart", { item_id: cut.id, mode, grams, source, price: total });
     toast(had ? he.cart.updated : he.cart.added, { tone: "success" });
     if (!had) {
@@ -228,7 +228,7 @@ function AddPill({ cut, soldOut, reserved, preview, onChoose }: {
   if (preview) return <button type="button" tabIndex={-1} className={cls}>{he.cart.add}</button>;
   if (soldOut || reserved) return <button type="button" disabled className={cls}>{soldOut ? he.post.soldStamp : he.post.reserved}</button>;
   if (unit && inCart) return <button type="button" disabled className={clsx(cls, "sr-btn--quiet")}><IconCheck className="size-5" />{he.post.inCart}</button>;
-  const onClick = () => (unit ? add(cut, "unit", null, null, linePrice(cut, "unit")) : onChoose());
+  const onClick = () => (unit ? add(cut, "unit", null, null, linePrice(cut, "unit"), null) : onChoose());
   return (
     <button type="button" onClick={onClick} className={clsx(cls, inCart && "sr-btn--quiet")}>
       {inCart ? <><IconCheck className="size-5" />{he.post.inCart}</> : he.cart.add}
@@ -269,7 +269,7 @@ function TrayAdd({ cut }: { cut: SaleItem }) {
     );
   }
   return (
-    <button type="button" className="sr-btn !min-h-11 !px-5 !text-[15px] !font-bold" onClick={() => add(cut, "unit", null, null, linePrice(cut, "unit"))}>
+    <button type="button" className="sr-btn !min-h-11 !px-5 !text-[15px] !font-bold" onClick={() => add(cut, "unit", null, null, linePrice(cut, "unit"), null)}>
       {he.cart.add}
     </button>
   );

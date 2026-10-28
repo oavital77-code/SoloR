@@ -239,6 +239,8 @@ export interface OrderItem {
   /** slices only: the grams asked for (and the thickness, optional) */
   requested_g: number | null;
   slice_thickness_cm: number | null;
+  /** slices: how many steaks the customer asked for (0022) */
+  slice_steaks?: number | null;
   /** the line's weight: the unit's, the remainder's at purchase, or the slice asked for */
   est_weight_g: number;
   price_per_kg_agorot: number;

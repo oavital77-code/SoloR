@@ -16,9 +16,10 @@ export interface CartLine {
   parentId?: string;
   butcherId: string;
   mode: LineMode;
-  /** slices only: grams asked for and the thickness (optional) */
+  /** slices only: grams asked for, the thickness, and how many steaks (the thickness follows from grams and steaks) */
   grams: number | null;
   thicknessCm: number | null;
+  steaks?: number | null;
   /** price estimate when added, for the cart bar; the cart page shows live prices */
   estAgorot: number;
   addedAt: number;
@@ -62,11 +63,12 @@ export function sanitizeCart(raw: unknown): CartLine[] {
     const slice = l.mode === "remainder_slice";
     const grams = slice ? Math.max(SLICE_MIN_G, Math.round((Number(l.grams) || 0) / SLICE_STEP_G) * SLICE_STEP_G) : null;
     const thick = slice && Number(l.thicknessCm) >= 1 && Number(l.thicknessCm) <= 8 ? Number(l.thicknessCm) : null;
+    const steaks = slice && Number(l.steaks) >= 1 && Number(l.steaks) <= 40 ? Math.round(Number(l.steaks)) : null;
     seen.add(l.itemId);
     out.push({
       itemId: l.itemId, code: String(l.code ?? ""), parentCode: Number(l.parentCode) || 0,
       ...(typeof l.parentId === "string" ? { parentId: l.parentId } : {}), butcherId: String(l.butcherId ?? ""),
-      mode: l.mode, grams, thicknessCm: thick,
+      mode: l.mode, grams, thicknessCm: thick, ...(steaks ? { steaks } : {}),
       estAgorot: Math.max(0, Math.round(Number(l.estAgorot) || 0)), addedAt: Number(l.addedAt) || 0,
     });
   }
