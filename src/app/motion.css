@@ -10,7 +10,8 @@
 html[data-bp-seen] [data-bp-loader] { display: none; }
 [data-bp-loader] { animation: bp-loader-bail 0.3s 9s forwards; }
 @keyframes bp-loader-bail { to { opacity: 0; visibility: hidden; pointer-events: none; } }
-[data-bp-loader] .bp-loader__butcher { opacity: 0; visibility: hidden; transform: scale(0.6); clip-path: circle(42% at 50% 54%); transform-origin: 50% 80%; }
+[data-bp-loader] .bp-loader__butcher { opacity: 0; visibility: hidden; transform: scale(0.6); transform-origin: 50% 80%; }
+[data-bp-loader] .bp-arm__flesh { opacity: 0; }
 [data-bp-loader] .bp-word { opacity: 0; visibility: hidden; transform: translateY(22px); }
 [data-bp-loader] .bp-slash path { stroke-dasharray: 1; stroke-dashoffset: 1; }
 [data-bp-loader] .bp-flash { opacity: 0; }

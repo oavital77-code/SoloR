@@ -13,7 +13,7 @@ import { mediaUrl, photosOf, videoOf } from "@/lib/cut-helpers";
 import type { CutMedia } from "@/lib/types";
 import { track as logEvent } from "@/lib/track";
 
-export function PostMedia({ media, title, code, href, eager, state, children, videoFirst, wide, show }: {
+export function PostMedia({ media, title, code, href, eager, state, children, videoFirst, wide, show, badge }: {
   media: CutMedia[]; title: string; code: string;
   /** the feed post (design: V3): the work video leads, playing muted, the photos follow */
   videoFirst?: boolean;
@@ -25,6 +25,8 @@ export function PostMedia({ media, title, code, href, eager, state, children, vi
   state?: "sold" | "reserved" | null;
   /** brings this photo (by its storage path) into view; `n` changes on every ask, so the same photo can be asked again */
   show?: { path: string; n: number } | null;
+  /** on the first photo (the cut's own): its sticker */
+  badge?: React.ReactNode;
 }) {
   const photos = photosOf(media);
   const video = videoOf(media);
@@ -117,10 +119,11 @@ export function PostMedia({ media, title, code, href, eager, state, children, vi
                   <Photo m={m} title={title} code={code} i={i} eager={eager && i === 0} />
                 </Link>
               ) : (
-                <button type="button" className="h-full w-full" onClick={() => setViewer(i)} aria-label={he.cut.mediaAlt(title, code, i + 1)}>
+                <button type="button" className="h-full w-full" onClick={() => setViewer(photos.indexOf(m))} aria-label={he.cut.mediaAlt(title, code, i + 1)}>
                   <Photo m={m} title={title} code={code} i={i} eager={eager && i === 0} />
                 </button>
               )}
+              {badge && m.type !== "video" && m === photos[0] && badge}
             </div>
           ))}
         </div>

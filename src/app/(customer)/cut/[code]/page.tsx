@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { PostMedia } from "@/components/PostMedia";
 import { Rise } from "@/components/motion/Rise";
-import { BuyBar, SlicedCut } from "@/components/motion/SlicedCut";
+import { BuyBar, TrayBar } from "@/components/motion/TrayBar";
 import { useGrowFromPost } from "@/components/motion/useGrowFromPost";
 import { takeHandoff } from "@/lib/handoff";
 import { ShopMark } from "@/components/ShopMark";
@@ -23,7 +23,7 @@ import { useToast } from "@/components/Toast";
 import { he } from "@/lib/i18n/he";
 import { useCart } from "@/lib/cart";
 import { readSolorLabel } from "@/lib/barcode";
-import { breedLabel, coverOf, cutTitle, formatDateTime, mediaUrl, timeAgo } from "@/lib/cut-helpers";
+import { breedLabel, cutTitle, formatDateTime, timeAgo } from "@/lib/cut-helpers";
 import { demoCredits, isDemoMedia } from "@/lib/demo-credits";
 import { isolateTimes } from "@/lib/hours";
 import { canBuyUnit, clipNo, displayCode, isAvailable, isReserved, linePrice, toSaleItems, type ItemRow } from "@/lib/items";
@@ -103,7 +103,7 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
     if (!el) return;
     setFocus(want);
     // the post's picture is growing into the frame at the top: stay there; the slicing below leads to the item
-    if (!takeHandoff()) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (!takeHandoff()) el.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
@@ -113,14 +113,6 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   const remainder = items.find((i) => i.kind === "remainder" && i.status !== "withdrawn") ?? null;
   const title = parent ? cutTitle(parent, breeds) || he.butcher.untitled : "";
   const media = useMemo(() => pageMedia(parent, items), [parent, items]);
-  // a tap on a tray's (or the block's) photo shows it in the big frame; on a phone the frame is above: scroll to it
-  const hero = useRef<HTMLDivElement>(null);
-  const [show, setShow] = useState<{ path: string; n: number } | null>(null);
-  const showPhoto = (m: CutMedia | undefined) => {
-    if (!m) return;
-    setShow((s) => ({ path: m.storage_path, n: (s?.n ?? 0) + 1 }));
-    if (window.innerWidth < 1024) hero.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
   const allGone = items.length > 0 && !items.some(isAvailable);
   const ready = state === "ok" && !!parent && items.length > 0;
   useGrowFromPost(ready);
@@ -170,8 +162,9 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
 
       {state === "ok" && parent && items.length > 0 && (
         <article className="flex flex-col text-start lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-8 lg:pt-16">
-          <div ref={hero} className="lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
-            <PostMedia media={media} title={title} code={displayCode(clipNo(parent.code))} eager videoFirst state={allGone ? "sold" : null} show={show} />
+          <div className="lg:sticky lg:top-20 lg:overflow-hidden lg:rounded-3xl">
+            <PostMedia media={media} title={title} code={displayCode(clipNo(parent.code))} eager videoFirst state={allGone ? "sold" : null}
+              badge={<span className={STICKER}>{remainder ? leadLabel(parent, remainder) : he.item.allTrays(clipNo(parent.code))}</span>} />
           </div>
 
           <div className="flex flex-col gap-4 px-4 pt-5 lg:px-0 lg:pt-0">
@@ -195,14 +188,19 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
             {parent.butcher_marbling ? <Marbling n={parent.butcher_marbling} /> : null}
 
             <div ref={family} aria-label={he.item.family(clipNo(parent.code))} className="mt-3">
-              <SlicedCut trays={units} focus={focus} onPhoto={showPhoto}
-                lead={remainder
-                  ? { no: clipNo(parent.code), block: true, id: remainder.label ?? "", cover: coverOf(remainder.cut_media) ?? coverOf(parent.cut_media ?? []), sold: !isAvailable(remainder),
-                      label: [he.item.blockShort(clipNo(parent.code)), formatWeight(remainder.weight_g ?? 0),
-                        isAvailable(remainder) ? `${money(remainder.price_per_kg_agorot ?? 0)}/${he.item.kgShort}` : he.item.soldOut].join(" · ") }
-                  : { no: clipNo(parent.code), block: false, cover: coverOf(parent.cut_media ?? []), label: he.item.allTrays(clipNo(parent.code)) }}
-                leadBuy={remainder && isAvailable(remainder) ? <LeadBuy item={remainder} held={held.get(remainder.id)} trays={units} /> : undefined}
-                trayAction={(u) => <TrayAction item={u} reserved={isReserved(u, held.get(u.id))} />} />
+              {/* founders 28.10.2026 ("בר 1"): the block's buying, then what was cut from it in a row of cards */}
+              <div className="flex flex-col gap-4">
+                {remainder && (
+                  <div id={`i-${remainder.label}`} className={clsx("scroll-mt-24 rounded-2xl border-2 bg-ink-2 p-3",
+                    focus === remainder.label ? "border-brand" : "border-ivory")}>
+                    {isAvailable(remainder)
+                      ? <LeadBuy item={remainder} held={held.get(remainder.id)} trays={units} />
+                      : <p className="m-0 text-[15px] font-bold text-sold">{leadLabel(parent, remainder)}</p>}
+                  </div>
+                )}
+                <TrayBar trays={units} no={clipNo(parent.code)} block={!!remainder} focus={focus}
+                  trayAction={(u) => <TrayAction item={u} reserved={isReserved(u, held.get(u.id))} />} />
+              </div>
             </div>
 
             <Certificate parent={parent} items={items} breeds={breeds} />
@@ -230,7 +228,8 @@ export default function ParentPage({ params }: { params: Promise<{ code: string 
   );
 }
 
-/** The cutting video first (R12: shown on the parent's own page), the cut's own photos, then the cover of every tray. */
+/** The cutting video first (R12: shown on the parent's own page), then the cut's own photos — or, with none, the cover
+ * of every tray (the trays have their own row under it). */
 function pageMedia(parent: (Parent & { cut_media?: CutMedia[] }) | null, items: SaleItem[]): CutMedia[] {
   const out: CutMedia[] = [];
   const video = items.flatMap((i) => i.cut_media).find((m) => m.type === "video");
@@ -240,7 +239,7 @@ function pageMedia(parent: (Parent & { cut_media?: CutMedia[] }) | null, items: 
     seen.add(m.storage_path);
     out.push({ ...m, is_cover: out.length === (video ? 1 : 0), sort_order: out.length });
   }
-  for (const i of items) {
+  for (const i of out.length > (video ? 1 : 0) ? [] : items) {
     for (const m of i.cut_media.filter((x) => x.type === "photo").sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order)) {
       if (seen.has(m.storage_path)) continue;
       seen.add(m.storage_path);
@@ -250,6 +249,12 @@ function pageMedia(parent: (Parent & { cut_media?: CutMedia[] }) | null, items: 
   }
   return parent ? out : [];
 }
+
+const STICKER = "pointer-events-none absolute top-3 right-3 z-[1] -rotate-[4deg] border-2 border-[#111111] bg-sticker px-2.5 py-0.5 font-mono text-[13px] font-semibold whitespace-nowrap text-[#111111]";
+
+/** "הגוש 61 · 780 גר׳ · ₪690/ק״ג" (or sold) */
+const leadLabel = (parent: Parent, r: SaleItem) => [he.item.blockShort(clipNo(parent.code)), formatWeight(r.weight_g ?? 0),
+  isAvailable(r) ? `${money(r.price_per_kg_agorot ?? 0)}/${he.item.kgShort}` : he.item.soldOut].join(" · ");
 
 const firstPublished = (items: SaleItem[]) =>
   items.map((i) => i.published_at!).filter(Boolean).sort()[0] ?? new Date().toISOString();

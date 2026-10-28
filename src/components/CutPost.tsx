@@ -12,7 +12,7 @@ import { PostMedia } from "./PostMedia";
 import { ShopMark } from "./ShopMark";
 import { usePostView } from "./usePostView";
 import { useReveal } from "./motion/useReveal";
-import { SlicedCut } from "./motion/SlicedCut";
+import { TrayBar } from "./motion/TrayBar";
 import { handOffFrom } from "@/lib/handoff";
 import { flyToCart } from "@/lib/flyToCart";
 import { markSoldNotice } from "@/lib/impressions";
@@ -24,7 +24,7 @@ import { useToast } from "./Toast";
 import { he } from "@/lib/i18n/he";
 import { cart, useCart } from "@/lib/cart";
 import { coverOf, cutTitle, mediaUrl, photosOf, timeAgo, videoOf } from "@/lib/cut-helpers";
-import { clipNo, displayCode, isAvailable, linePrice, parentPath, type Held } from "@/lib/items";
+import { clipNo, isAvailable, linePrice, parentPath, type Held } from "@/lib/items";
 import { agingMethodLabel } from "@/lib/labels";
 import { shopPath } from "@/lib/market";
 import { formatWeight, money } from "@/lib/pricing";
@@ -58,9 +58,8 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
   const family = !preview && !!trays && trays.length > 0;
   const headless = family && cut.kind === "unit";
   const media = useMemo(() => (family ? familyMedia(cut, trays!) : cut.cut_media), [family, cut, trays]);
-  // the cutting video gets its own frame; the photos (the cut's own first) follow in theirs
-  const video = videoOf(media);
-  const photos = useMemo(() => photosOf(media), [media]);
+  // the cutting video and the cut's own photo swipe side to side; the trays are in the row under them
+  const swipe = useMemo(() => [videoOf(media), photosOf(media)[0]].filter((m): m is CutMedia => !!m), [media]);
   const clip = clipNo(cut.parent_code);
   const leadLabel = headless ? he.item.allTrays(clip)
     : cut.kind === "unit" ? [cut.label, cut.weight_g ? formatWeight(cut.weight_g) : null, money(linePrice(cut, "unit"))].filter(Boolean).join(" · ")
@@ -79,19 +78,13 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
     : cut.split ? `${he.item.remainder} · ${he.item.canSlice}` : he.item.wholeByWeight;
   const Wrap = preview ? "span" : Link;
 
-  const factCells = [
-    { k: he.cut.aging, v: cut.is_aged && cut.aging_days ? `${he.post.days(cut.aging_days)}${method ? ` · ${method}` : ""}` : he.post.notAged },
-    headless ? { k: he.post.traysShort, v: String(trays!.length) }
-      : { k: cut.kind === "remainder" ? he.post.leftShort : he.post.weightShort, v: cut.weight_g ? formatWeight(cut.weight_g) : "—" },
-    { k: he.cut.pricePerKg, v: cut.price_per_kg_agorot ? money(cut.price_per_kg_agorot) : "—" },
-    { k: he.post.codeShort, v: <span className="code !text-[12px] whitespace-nowrap">{headless ? displayCode(clipNo(cut.parent_code)) : cut.code}</span> },
-  ];
+  const aged = cut.is_aged && cut.aging_days ? `${he.post.days(cut.aging_days)}${method ? ` · ${method}` : ""}` : null;
   return (
     <article ref={ref} id={`post-${cut.id}`} onClickCapture={preview ? undefined : (e) => {
       // opening the cut's page: its picture grows from here into the page's frame
       const a = (e.target as HTMLElement).closest("a");
       if (a?.pathname.startsWith("/cut/")) {
-        handOffFrom(a.closest<HTMLElement>("[data-media-frame]") ?? e.currentTarget.querySelector<HTMLElement>("[data-lead] [data-media-frame]"));
+        handOffFrom(a.closest<HTMLElement>("[data-media-frame]") ?? e.currentTarget.querySelector<HTMLElement>("[data-media-frame]"));
       }
     }} className="overflow-hidden rounded-[26px] border-2 border-ivory bg-ink-2 text-start shadow-[var(--shadow-card)]">
       <div className="flex flex-col gap-2 px-4 pt-3.5 pb-3 lg:px-[18px]">
@@ -107,45 +100,36 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
         </header>
         <p data-reveal="title" className="m-0 text-[15px] leading-[22px]">
           <Wrap href={href} className="font-black">{kind}{breed && <> · {breed}</>}.</Wrap>{" "}
-          <span className="font-medium">{part}.</span>
+          <span className="font-medium">{part}{aged && <> · {aged}</>}.</span>
           {cut.description && <> {shortNote(cut.description)}</>}
         </p>
       </div>
 
-      {/* founders 24.10.2026: the facts first, then the cutting video, then the cut's photo with its number */}
-      <dl className="m-0 grid grid-cols-4 border-y border-line">
-        {factCells.map((f) => (
-          <div key={f.k} className="min-w-0 border-s border-line px-3 py-2.5 first:border-s-0 lg:px-3.5">
-            <dt className="text-[11px] text-stone">{f.k}</dt>
-            <dd className="m-0 text-[15px] leading-5 font-bold">{f.v}</dd>
+      {/* founders 28.10.2026 ("בר 1"): the cutting video and the cut swipe side to side, its price under them, and
+          what was cut from it always in sight in a row of its own */}
+      <div data-reveal="photo">
+        <PostMedia media={swipe} title={title} code={cut.code} eager={eager} videoFirst href={preview ? undefined : href}
+          state={headless ? null : state} badge={<span className={STICKER}>{leadLabel}</span>}>
+          {!headless && overlay && <div className="pointer-events-none absolute inset-0 overflow-hidden">{overlay}</div>}
+        </PostMedia>
+      </div>
+      {!headless && (
+        <div className="flex items-center gap-3 border-y-2 border-ivory bg-ink-3 px-4 py-2.5 lg:px-[18px]">
+          {onPriceTap
+            ? <button type="button" onClick={onPriceTap} className="rounded-lg underline decoration-dashed underline-offset-4"><Price cut={cut} /></button>
+            : <Price cut={cut} muted={soldOut} />}
+          {shop && !preview && <Link href={href} className="ms-auto hidden min-h-11 items-center px-2 text-sm font-medium sm:flex">{he.item.toPage}</Link>}
+          <div className={clsx((!shop || preview) && "ms-auto", "max-sm:ms-auto")}>
+            <AddPill cut={cut} soldOut={soldOut} reserved={!!reserved} preview={preview} onChoose={() => setOpen(true)} />
           </div>
-        ))}
-      </dl>
-
-      {video && (
-        <div data-reveal="photo" className="border-b-2 border-ivory">
-          <PostMedia media={[video]} title={title} code={cut.code} eager={eager} videoFirst wide />
         </div>
       )}
-
-      {/* founders 25.10.2026: as on the cut's page — the cut on top, its trays opening out of it, each with its add */}
-      <div className="px-3 pt-5 pb-4 lg:px-4">
-        <SlicedCut trays={family ? trays! : []} onPhoto={() => {}} href={preview ? undefined : (label) => parentPath(cut.parent_id, label ?? cut.label)}
-          lead={{ cover: photos[0], id: headless ? undefined : cut.label ?? undefined, label: leadLabel, no: clip, block: !headless && cut.kind === "remainder" }}
-          leadOverlay={headless ? null : overlay}
-          leadBuy={headless ? undefined : (
-            <div className="flex items-center gap-3">
-              {onPriceTap
-                ? <button type="button" onClick={onPriceTap} className="rounded-lg underline decoration-dashed underline-offset-4"><Price cut={cut} /></button>
-                : <Price cut={cut} muted={soldOut} />}
-              {shop && !preview && <Link href={href} className="ms-auto hidden min-h-11 items-center px-2 text-sm font-medium sm:flex">{he.item.toPage}</Link>}
-              <div className={clsx((!shop || preview) && "ms-auto", "max-sm:ms-auto")}>
-                <AddPill cut={cut} soldOut={soldOut} reserved={!!reserved} preview={preview} onChoose={() => setOpen(true)} />
-              </div>
-            </div>
-          )}
-          trayAction={(t) => <TrayAdd cut={t} />} />
-      </div>
+      {family && (
+        <div className="px-3 pt-3 pb-3 lg:px-4">
+          <TrayBar trays={trays!} no={clip} block={!headless && cut.kind === "remainder"} trayAction={(t) => <TrayAdd cut={t} />}
+            href={(label) => parentPath(cut.parent_id, label ?? cut.label)} />
+        </div>
+      )}
 
       {related && related.length > 0 && shop && (
         <div className="flex flex-col gap-2.5 border-t border-line px-4 pt-3 pb-4 lg:px-[18px]">
@@ -166,6 +150,8 @@ export function CutPost({ cut, breeds, shop, now, source = "feed", gone, reserve
 }
 
 /** "אנטריקוט · בלאק אנגוס" → the cut in the serif, the breed after it, quieter. */
+const STICKER = "pointer-events-none absolute top-3 right-3 z-[1] -rotate-[4deg] border-2 border-[#111111] bg-sticker px-2.5 py-0.5 font-mono text-[12px] font-semibold whitespace-nowrap text-[#111111]";
+
 function splitTitle(title: string): [string, string | null] {
   const i = title.indexOf(" · ");
   return i < 0 ? [title, null] : [title.slice(0, i), title.slice(i + 3)];
