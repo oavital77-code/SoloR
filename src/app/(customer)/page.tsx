@@ -14,7 +14,7 @@ import { useLiveFeed } from "@/components/customer/useLiveFeed";
 import { ErrorState, Skeleton } from "@/components/ui";
 import { he } from "@/lib/i18n/he";
 import { isReserved } from "@/lib/feed";
-import { onePerParent, parentPath } from "@/lib/items";
+import { onePerParent } from "@/lib/items";
 import { clsx } from "clsx";
 import { ShopMark } from "@/components/ShopMark";
 import { Ltr } from "@/components/ui";
@@ -116,7 +116,8 @@ export default function FeedPage() {
       {/* the red "עכשיו" strip is off while the pilot has one or two shops (founders 26.10.2026) */}
       {SHOW_TICKER && <LiveTicker events={events} />}
 
-      <div className="lg:grid lg:grid-cols-[270px_minmax(0,660px)_290px] lg:justify-center lg:gap-8 lg:px-8 lg:pt-7">
+      {/* a wide screen (founders 28.10.2026): the shops beside the feed, no live log; the posts two or three to a row */}
+      <div className="lg:mx-auto lg:grid lg:max-w-[1440px] lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-8 lg:px-8 lg:pt-7">
         <ShopsAside butchers={butchers} now={now} />
 
         <div className="min-w-0">
@@ -128,12 +129,12 @@ export default function FeedPage() {
           </header>
 
           {!ready ? (
-            <div className="flex flex-col gap-5 px-4 lg:px-0">{[0, 1].map((i) => <Skeleton key={i} className="h-[560px] rounded-[22px]" />)}</div>
+            <div className="flex flex-col gap-5 px-4 lg:grid lg:grid-cols-2 lg:px-0 xl:grid-cols-3">{[0, 1].map((i) => <Skeleton key={i} className="h-[560px] rounded-[22px]" />)}</div>
           ) : posts.length === 0 ? (
             <FeedEnd title={he.feed.emptyToday} butchers={butchers} />
           ) : (
             <>
-              <ul className="m-0 flex list-none flex-col gap-5 p-0 px-3 lg:px-0">
+              <ul className="m-0 flex list-none flex-col gap-5 p-0 px-3 lg:grid lg:grid-cols-2 lg:items-start lg:px-0 xl:grid-cols-3">
                 {posts.slice(0, limit).map(({ cut, gone, trays }, i) => (
                   <li key={cut.id}>
                     <CutPost cut={cut} breeds={breeds} shop={shopOf(cut.butcher_id)} now={now} gone={gone}
@@ -146,8 +147,6 @@ export default function FeedPage() {
             </>
           )}
         </div>
-
-        <LiveLog events={events} />
       </div>
     </main>
   );
@@ -190,25 +189,6 @@ function ShopsAside({ butchers, now }: { butchers: Butcher[]; now: number }) {
     </aside>
   );
 }
-
-/** "מה קורה בדלפקים" (design: V3): the dark live panel beside the feed, with the time of each thing. */
-function LiveLog({ events }: { events: LiveEvent[] }) {
-  return (
-    <aside aria-label={he.live.log} className="hidden lg:block">
-      <div data-theme="night" className="sticky top-24 flex flex-col gap-3 rounded-[20px] bg-ink p-[18px] text-start text-ivory">
-        <h2 className="m-0 flex items-center gap-2 text-[17px] font-bold"><span className="live-dot" aria-hidden />{he.live.log}</h2>
-        {events.length === 0 ? <p className="m-0 text-sm text-stone">{he.feed.emptyToday}</p> : events.map((e) => (
-          <Link key={e.id} href={parentPath(e.parentId)} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 text-[13px] leading-[19px]">
-            <span className={clsx(e.kind === "sold" ? "text-stone" : "text-brand")}><Ltr>{clock(e.at)}</Ltr></span>
-            <span>{e.text}</span>
-          </Link>
-        ))}
-      </div>
-    </aside>
-  );
-}
-
-const clock = (iso: string) => new Date(iso).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
 
 /** End of the feed (and the empty feed): say so, and offer the shops' pages (spec §2.2, §4.4). */
 function FeedEnd({ title, hint, butchers }: { title: string; hint?: string; butchers: Butcher[] }) {
