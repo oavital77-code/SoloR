@@ -2,6 +2,17 @@
 // The choice is kept on the device; with none yet, a camera plugged in by cable is taken over the tablet's own.
 
 const KEY = "bp.camera";
+const APP_KEY = "bp.camera.app";
+
+/** the shop records in the camera's own app (a camera on a cable that only its app can read): the screen asks for
+ * the video file instead of opening a camera */
+export function recordsInApp(): boolean {
+  try { return window.localStorage.getItem(APP_KEY) === "1"; } catch { return false; }
+}
+
+export function setRecordsInApp(on: boolean) {
+  try { if (on) window.localStorage.setItem(APP_KEY, "1"); else window.localStorage.removeItem(APP_KEY); } catch { /* ignore */ }
+}
 
 export function savedCamera(): string | null {
   try { return window.localStorage.getItem(KEY); } catch { return null; }

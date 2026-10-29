@@ -15,10 +15,10 @@ import { he } from "@/lib/i18n/he";
 import { errorCode, errorText } from "@/lib/errors";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { uploadParentVideo } from "@/lib/video-upload";
-import { cameraConstraints, externalCamera, saveCamera, savedCamera } from "@/lib/camera";
+import { cameraConstraints, externalCamera, recordsInApp, saveCamera, savedCamera, setRecordsInApp } from "@/lib/camera";
 import type { Parent } from "@/lib/types";
 
-type Phase = "starting" | "camera" | "recording" | "paused" | "native" | "failed" | "busy";
+type Phase = "starting" | "camera" | "recording" | "paused" | "native" | "failed" | "busy" | "app";
 
 const MIME = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
 
@@ -94,7 +94,8 @@ function Recording() {
       setPhase("native");
     }
   }, []);
-  useEffect(() => { if (parent && phase === "starting") openCamera(); }, [parent, phase, openCamera]);
+  // a shop that records in the camera's own app gets the upload screen, no camera of the tablet
+  useEffect(() => { if (parent && phase === "starting") { if (recordsInApp()) setPhase("app"); else openCamera(); } }, [parent, phase, openCamera]);
   useEffect(() => () => stream.current?.getTracks().forEach((t) => t.stop()), []);
 
   useEffect(() => {
@@ -144,6 +145,17 @@ function Recording() {
     setPhase("starting");
   }
 
+  // the camera's own app from now on (kept on the tablet), or back to recording here
+  function recordInApp(on: boolean) {
+    setRecordsInApp(on);
+    const r = rec.current;
+    if (r && r.state !== "inactive") { r.ondataavailable = null; r.onstop = null; try { r.stop(); } catch { /* ignore */ } }
+    rec.current = null;
+    chunks.current = [];
+    stream.current?.getTracks().forEach((t) => t.stop());
+    setPhase(on ? "app" : "starting");
+  }
+
   // a video shot elsewhere (the camera's own app): it stands for the recording
   function uploaded(f: File) {
     const r = rec.current;
@@ -165,6 +177,8 @@ function Recording() {
         <p className="m-0 text-[17px]">{he.flow.inProgressHint}</p>
         <button type="button" className="sr-cbtn sr-cbtn--new" onClick={async () => {
           const { data } = await supabaseBrowser().from("parents").select("*").eq("id", inProgress).maybeSingle();
+          // still recording: it is this very screen, so take it up here (the page does not open again)
+          if (data && (data as Parent).status === "recording") { setInProgress(null); setParent(data as Parent); return; }
           router.replace(data ? parentStep(data as Parent) : "/butcher");
         }}>{he.flow.backToIt}</button>
         <button type="button" className="sr-cbtn sr-cbtn--quiet" onClick={() => start(true)}>{he.flow.pauseAndNew}</button>
@@ -189,6 +203,11 @@ function Recording() {
           <button type="button" className="sr-cbtn sr-cbtn--new" onClick={() => finish(null)}>{he.flow.continueWithout}</button>
           <button type="button" className="sr-cbtn sr-cbtn--quiet" onClick={again}>{he.flow.recAgain}</button>
         </>
+      ) : phase === "app" ? (
+        <>
+          <button type="button" className="sr-cbtn sr-cbtn--new" onClick={() => uploadInput.current?.click()}>{he.flow.uploadIt}</button>
+          <button type="button" className="sr-cbtn sr-cbtn--quiet" onClick={() => finish(null)}>{he.flow.continueWithout}</button>
+        </>
       ) : phase === "native" ? (
         <>
           <button type="button" className="sr-cbtn sr-cbtn--new" onClick={() => fileInput.current?.click()}>{he.flow.openCamera}</button>
@@ -200,6 +219,16 @@ function Recording() {
       <input ref={uploadInput} hidden type="file" accept="video/*"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) uploaded(f); }} />
 
+      {phase === "app" ? (
+        <div className="flex flex-col gap-3 rounded-3xl bg-ink-2 p-5 text-start">
+          <b className="text-[19px]">{he.flow.inAppTitle}</b>
+          <ol className="m-0 flex list-none flex-col gap-2.5 p-0 text-[16px] leading-snug">
+            {he.flow.inAppSteps.map((t, i) => (
+              <li key={i} className="flex gap-3"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand text-sm font-black text-on-brand">{i + 1}</span>{t}</li>
+            ))}
+          </ol>
+        </div>
+      ) : (
       <div className="relative aspect-[3/4] max-h-[62dvh] overflow-hidden rounded-3xl bg-black">
         <video ref={video} muted playsInline className="h-full w-full object-cover" />
         {live && (
@@ -237,8 +266,15 @@ function Recording() {
         {phase === "native" && <p className="absolute inset-x-6 top-1/2 m-0 -translate-y-1/2 text-center text-white/85">{he.flow.cameraOff}</p>}
         {phase === "failed" && <p className="absolute inset-x-6 top-1/2 m-0 -translate-y-1/2 text-center text-xl font-bold text-white">{he.flow.recFailed}</p>}
       </div>
+      )}
       {parent && (live || phase === "native") && (
         <button type="button" className="min-h-11 self-center text-sm font-semibold underline" onClick={() => uploadInput.current?.click()}>{he.flow.uploadVideo}</button>
+      )}
+      {parent && (live || phase === "native") && (
+        <button type="button" className="min-h-11 self-center text-sm font-semibold underline" onClick={() => recordInApp(true)}>{he.flow.inApp}</button>
+      )}
+      {parent && phase === "app" && (
+        <button type="button" className="min-h-11 self-center text-sm font-semibold underline" onClick={() => recordInApp(false)}>{he.flow.recordHere}</button>
       )}
       {parent && <button type="button" className="min-h-11 self-center text-sm font-semibold text-stone underline" onClick={() => setDiscarding(true)}>{he.flow.discard}</button>}
       <ConfirmDialog open={discarding} text={he.flow.discard} confirmLabel={he.flow.discard} danger
